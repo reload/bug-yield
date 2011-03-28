@@ -61,7 +61,8 @@ class TimeSync extends BugYieldCommand {
 				}
 			}
 		}
-
+    $output->writeln(sprintf('Collected %d projects', sizeof($projects)));
+		
 		//Collect ticket entries from projects
     $ticketEntries = array();
 		foreach($projects as $project) {
@@ -81,15 +82,44 @@ class TimeSync extends BugYieldCommand {
 		try {
 			$fogbugz = $this->getFogBugzApi();
 			foreach ($ticketEntries as $entry) {
-				//One entry may - but shouldn't - contain multiple ticket ids
-				foreach(self::getTickedIds($entry) as $id) {
-	        $response = $fogbugz->search($id);
-		      
-	        $cases = array();
-		      foreach ($response->_data as $case) {
-		        $cases[] = $case;
-		      }
-		      $output->writeln(sprintf('Collected %d ticket(s) for entry %s', sizeof($cases), $entry->get('notes')));
+        //One entry may - but shouldn't - contain multiple ticket ids
+        $ticketIds = self::getTickedIds($entry);
+				
+        $entryText = sprintf('Entry #%d: %s (%s)', $entry->get('id'), $entry->get('notes'), $entry->get('hours'));
+        //In case there are several ids in an entry then distribute the the time spent evenly
+				$hoursPerTicket = round(floatval($entry->get('hours')) / sizeof($ticketIds), 2);
+        
+				foreach($ticketIds as $id) {
+					//Get the case  with title and associated events. 
+					//Limit by one to make sure we only get one.
+					$response = $fogbugz->search($id, 'sTitle,hrsElapsedExtra,events', 1);
+					$case = array_shift($response->_data);
+					
+					//Determine if the entry has already been tracked
+					$alreadyTracked = false;
+					if (isset($case->_data['events'])) {
+						foreach ($case->_data['events']->_data as $event) {
+							$text = $event->_data['s'];
+							if (is_string($text) && preg_match('/^Entry #'.$entry->get('id').':/', $text)) {
+								$alreadyTracked = true;
+								break 2;
+							}
+						}
+					}
+					 
+					if (!$alreadyTracked) {
+						//Update case with new entry and time spent
+            $params['token'] = $fogbugz->getToken()->_data['token'];
+            $params['cmd'] = 'edit';
+						$params['ixBug'] = $case->_data['ixBug'];
+						$params['sEvent'] = $entryText;
+						$params['hrsElapsedExtra'] = $case->_data['hrsElapsedExtra'] + $hoursPerTicket;
+            
+	          $request = new \FogBugz_Request($fogbugz);
+	          $request->setParams($params);
+	          $response = $request->go();
+	          $output->writeln(sprintf('Updated ticket #%d: Added ‰d hours', $id, $hoursPerTicket));
+	        }
 				}
 			}
 		} catch (FogBugz_Exception $e) {
