@@ -9,6 +9,7 @@ require_once __DIR__.'/vendor/Symfony/Component/ClassLoader/UniversalClassLoader
 $loader = new UniversalClassLoader();
 $loader->registerNamespaces(array(
   'Symfony' => __DIR__.'/vendor',
+  'BugYield' => __DIR__.'/lib',
 ));
 $loader->register();
 
@@ -19,5 +20,5 @@ require_once 'vendor/fogbugz-php-library/src/fogbugz_init.php';
 require_once 'vendor/hapi/HarvestAPI.php';
 spl_autoload_register( array('HarvestAPI', 'autoload') );
 
-$app = new Application('bug-yield', '0.1');
+$app = new BugYield\BugYield();
 $app->run();
