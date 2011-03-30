@@ -3,7 +3,6 @@
 namespace BugYield\Command;
 
 use Symfony\Component\Console\Input\InputOption;
-
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
@@ -13,19 +12,16 @@ class TimeSync extends BugYieldCommand {
 	protected function configure() {
 		$this
 		->setName('bugyield:timesync')
-		->setAliases(array('ts', 'sync'))
+		->setAliases(array('ts', 'timesync'))
 		->setDescription('Sync time registration from Harvest to FogBugz')
 		->setDefinition(array(
-		    new InputOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'Harvest Project (id, name or code). Use "all" for all projects.', NULL),
-		  ));
+			new InputOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'Harvest Project (id, name or code). Use "all" for all projects.', NULL),
+		));
 		parent::configure();
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$this->loadConfig($input);
-
-		//Setup Harvest API access
-		$harvest = $this->getHarvestApi();
 
 		$output->writeln('Collecting entries from Harvest');
 
@@ -35,69 +31,21 @@ class TimeSync extends BugYieldCommand {
 			$projectIds = array($projectIds);
 		}
 
-		//Collect projects from Harvest
-    $projects = array();
-    
-    //Prepare by getting all projects
-		$result = $harvest->getProjects();
-		$harvestProjects = ($result->isSuccess()) ? $result->get('data') : array();
-    
-		//Collect all requested projects
-		$unknownProjectIds = array();
-		foreach ($projectIds as $projectId) {
-			if (is_numeric($projectId)) {
-				//If numeric id then try to get a specific project
-				$result = $harvest->getProject($projectId);
-				if ($result->isSuccess()) {
-					$projects[] = $result->get('data');
-				} else {
-					$unknownProjectIds[] = $projectId;
-				}
-			} else {
-				$identified = false;
-				foreach($harvestProjects as $project) {
-					if (is_string($projectId)) {
-						//If "all" then add all projects
-						if ($projectId == 'all') {
-							$projects[] = $project;
-							$identified = true;
-						}
-						//If string id then get project by name or shorthand (code)
-						elseif ($project->get('name') == $projectId || $project->get('code') == $projectId) {
-							$projects[] = $project;
-							$identified = true;
-						}
-					}
-				}
-				if (!$identified) {
-					$unknownProjectIds[] = $projectId;
-				}
-			}
-		}
-		$output->writeln(sprintf('Collected %d projects', sizeof($projects)));
-		if (sizeof($unknownProjectIds) > 0) {
-			$output->writeln(sprintf('Error: Unknown project ids %s', implode(', ', $unknownProjectIds)));
-		}
+		$projects = $this->getProjects($projectIds);
 
+		$output->writeln(sprintf('Collected %d projects', sizeof($projects)));
 		if (sizeof($projects) == 0) {
 			//We have no projects to work with so bail
 			return;
 		}
 
-		//Collect ticket entries from projects
-		$ticketEntries = array();
-		foreach($projects as $project) {
-			$range = new \Harvest_Range('19000101', date('Ymd'));
-			$result = $harvest->getProjectEntries($project->get('id'), $range);
-			if ($result->isSuccess()) {
-				foreach ($result->get('data') as $entry) {
-					if (sizeof(self::getTickedIds($entry)) > 0) {
-						$ticketEntries[] = $entry;
-					}
-				}
-			}
-		}
+		$ticketEntries = $this->getTicketEntries($projects);
+		 
 		$output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
+		if (sizeof($ticketEntries) == 0) {
+			//We have no entries containing ticket ids so bail
+			return;
+		}
 
 		//Update FogBugz with time registrations
 		try {
@@ -110,7 +58,7 @@ class TimeSync extends BugYieldCommand {
 				$response = $harvest->getTask($entry->get('task-id'));
 				$taskName = ($response->isSuccess()) ? $response->get('data')->get('name') : 'Unknown';
 
-				$entryText = sprintf('Entry #%d (%s/%s): %s', $entry->get('id'), $entry->get('hours'), $taskName, $entry->get('notes'));
+				$entryText = sprintf('Entry #%d [%s/%s]: %s', $entry->get('id'), $entry->get('hours'), $taskName, $entry->get('notes'));
 
 				//In case there are several ids in an entry then distribute the the time spent evenly
 				$hoursPerTicket = round(floatval($entry->get('hours')) / sizeof($ticketIds), 2);
@@ -120,13 +68,13 @@ class TimeSync extends BugYieldCommand {
 					//Limit by one to make sure we only get one.
 					$response = $fogbugz->search($id, 'sTitle,hrsElapsedExtra,events', 1);
 					$case = array_shift($response->_data);
-						
+
 					//Copy the entry text for the ticket. We may need to manipulate it further before posting
 					$ticketText = $entryText;
-						
+
 					//Calculate the total number of hours for the ticket
 					$totalHours = $case->_data['hrsElapsedExtra'] + $hoursPerTicket;
-						
+
 					//Determine if the entry has already been tracked
 					$alreadyTracked = false;
 					if (isset($case->_data['events'])) {
@@ -135,7 +83,7 @@ class TimeSync extends BugYieldCommand {
 						$events = array_reverse($case->_data['events']->_data);
 						foreach ($events as $event) {
 							$text = (isset($event->_data['sHtml'])) ? $event->_data['sHtml'] : $event->_data['s'];
-							if (is_string($text) && preg_match('/^Entry\s#'.$entry->get('id').'\s\((.*)\/(.*)\):/', $text, $matches)) {
+							if (is_string($text) && preg_match('/^Entry\s#'.$entry->get('id').'\s\[(.*)\/(.*)\]:/', $text, $matches)) {
 								//Entry has already been tracked. Determine if data has been updated in Harvest since
 								if ($matches[1] == $entry->get('hours') &&
 								$matches[2] == $taskName) {
@@ -143,7 +91,7 @@ class TimeSync extends BugYieldCommand {
 								} else {
 									//Show that the entry has been updated
 									$ticketText .= ' (updated)';
-										
+
 									//Entry has already been tracked but number of hours have been updated
 									//so we need to subtract the previously entered number of hours.
 									$totalHours -= $matches[1];
@@ -152,14 +100,15 @@ class TimeSync extends BugYieldCommand {
 							}
 						}
 					}
-						
+
 					if (!$alreadyTracked) {
 						//Update case with new or updated entry and time spent
 						$params['token'] = $fogbugz->getToken()->_data['token'];
 						$params['cmd'] = 'edit';
 						$params['ixBug'] = $case->_data['ixBug'];
 						$params['sEvent'] = $ticketText;
-						//We need to use , (comma) as seperator when reporting hours with decimals
+						//We need to use , (comma) instead of . (period) as seperator when reporting
+						//hours with decimals. Silly FogBugz.
 						$params['hrsElapsedExtra'] = number_format($totalHours, 2, ',', '');
 
 						$request = new \FogBugz_Request($fogbugz);
@@ -178,16 +127,4 @@ class TimeSync extends BugYieldCommand {
 		}
 	}
 
-	/**
-	 * Extract ticket ids from entries if available
-	 * @param \Harvest_DayEntry $entry
-	 * @return array Array of ticket ids
-	 */
-	protected static function getTickedIds(\Harvest_DayEntry $entry) {
-		$ids = array();
-		if (preg_match_all('/#(\d+)/', $entry->get('notes'), $matches)) {
-			$ids = $matches[1];
-		}
-		return array_unique($ids);
-	}
 }
