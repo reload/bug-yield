@@ -99,21 +99,22 @@ class TimeSync extends BugYieldCommand {
 					$alreadyTracked = false;
 					if (isset($case->_data['events'])) {
 						foreach ($case->_data['events']->_data as $event) {
-							$text = $event->_data['s'];
+							$text = (isset($event->_data['sHtml'])) ? $event->_data['sHtml'] : $event->_data['s'];
 							if (is_string($text) && preg_match('/^Entry #'.$entry->get('id').':/', $text)) {
 								$alreadyTracked = true;
-								break 2;
+								break;
 							}
 						}
 					}
-					 
+					
 					if (!$alreadyTracked) {
 						//Update case with new entry and time spent
             $params['token'] = $fogbugz->getToken()->_data['token'];
             $params['cmd'] = 'edit';
 						$params['ixBug'] = $case->_data['ixBug'];
 						$params['sEvent'] = $entryText;
-						$params['hrsElapsedExtra'] = $case->_data['hrsElapsedExtra'] + $hoursPerTicket;
+						//We need to use , (comma) as seperator when reporting hours with decimals
+						$params['hrsElapsedExtra'] = number_format(($case->_data['hrsElapsedExtra'] + $hoursPerTicket), 2, ',', '');
             
 	          $request = new \FogBugz_Request($fogbugz);
 	          $request->setParams($params);
