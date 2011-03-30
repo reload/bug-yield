@@ -119,7 +119,9 @@ class TimeSync extends BugYieldCommand {
 	          $request = new \FogBugz_Request($fogbugz);
 	          $request->setParams($params);
 	          $response = $request->go();
-	          $output->writeln(sprintf('Updated ticket #%d: Added ‰d hours', $id, $hoursPerTicket));
+	          if ($response instanceof \FogBugz_Response_Case) {
+  	          $output->writeln(sprintf('Updated ticket #%d: Added %f hours', $id, round($hoursPerTicket, 2)));
+	          }
 	        }
 				}
 			}
