@@ -13,10 +13,7 @@ class TimeSync extends BugYieldCommand {
 		$this
 		->setName('bugyield:timesync')
 		->setAliases(array('ts', 'timesync'))
-		->setDescription('Sync time registration from Harvest to FogBugz')
-		->setDefinition(array(
-			new InputOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'Harvest Project (id, name or code). Use "all" for all projects.', NULL),
-		));
+		->setDescription('Sync time registration from Harvest to FogBugz');
 		parent::configure();
 	}
 
@@ -24,14 +21,8 @@ class TimeSync extends BugYieldCommand {
 		$this->loadConfig($input);
 
 		$output->writeln('Collecting entries from Harvest');
-
-		//Select projects for processing based on input or configuration
-		$projectIds = ($project = $input->getOption('harvest-project')) ? $project : $this->getHarvestProjects();
-		if (!is_array($projectIds)) {
-			$projectIds = array($projectIds);
-		}
-
-		$projects = $this->getProjects($projectIds);
+		
+		$projects = $this->getProjects($this->getProjectIds($input));
 
 		$output->writeln(sprintf('Collected %d projects', sizeof($projects)));
 		if (sizeof($projects) == 0) {

@@ -15,9 +15,15 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	private $fogbugzConfig;
 
 	protected function configure() {
+		$this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
 		$this->addOption('config', NULL, InputOption::VALUE_OPTIONAL, 'Path to the configuration file', 'config.yml');
 	}
 
+	/**
+	 * Returns a connection to the Harvest API based on the configuration.
+	 * 
+	 * @return \HarvestAPI
+	 */
 	protected function getHarvestApi() {
 		$harvest = new \HarvestAPI();
 		$harvest->setAccount($this->harvestConfig['account']);
@@ -31,19 +37,47 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 		return $this->harvestConfig['projects'];
 	}
 
+	/**
+	 * Returns a connection to the FogBugz API based on the configuration.
+	 * 
+	 * @return \FogBugz
+	 */
 	protected function getFogBugzApi() {
 		$fogbugz = new \FogBugz($this->fogbugzConfig['url'], $this->fogbugzConfig['username'], $this->fogbugzConfig['password']);
 		$fogbugz->logon();
 		return $fogbugz;
 	}
 
+	/**
+	 * Loads the configuration from a yaml file
+	 * 
+	 * @param InputInterface $input
+	 * @throws Exception
+	 */
 	protected function loadConfig(InputInterface $input) {
-		$config_file = $input->getOption('config');
-		if (file_exists($config_file)) {
-			$config = Yaml::load($config_file);
+		$configFile = $input->getOption('config');
+		if (file_exists($configFile)) {
+			$config = Yaml::load($configFile);
 			$this->harvestConfig = $config['harvest'];
 			$this->fogbugzConfig = $config['fogbugz'];
+		} else {
+			throw new Exception(sprintf('Missing configuration file %s', $configFile));
 		}
+	}
+	
+	/**
+	 * Returns the project ids for this command from command line options or configuration.
+	 * 
+	 * @param InputInterface $input
+	 * @return array An array of project identifiers
+	 */
+	protected function getProjectIds(InputInterface $input) {
+		$projectIds = ($project = $input->getOption('harvest-project')) ? $project : $this->getHarvestProjects();
+		if (!is_array($projectIds)) {
+			$projectIds = explode(',', $projectIds);
+			array_walk($projectIds, 'trim');
+		}
+		return $projectIds;
 	}
 
 	/**

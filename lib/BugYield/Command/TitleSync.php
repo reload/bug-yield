@@ -14,10 +14,7 @@ class TitleSync extends BugYieldCommand {
 		$this
 		->setName('bugyield:titlesync')
 		->setAliases(array('ts', 'titlesync'))
-		->setDescription('Sync ticket titles from FogBugz to Harvest')
-		->setDefinition(array(
-			new InputOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'Harvest Project (id, name or code). Use "all" for all projects.', NULL),
-		));
+		->setDescription('Sync ticket titles from FogBugz to Harvest');
 		parent::configure();
 	}
 
@@ -29,13 +26,7 @@ class TitleSync extends BugYieldCommand {
 
 		$output->writeln('Collecting entries from Harvest');
 
-		//Select projects for processing based on input or configuration
-		$projectIds = ($project = $input->getOption('harvest-project')) ? $project : $this->getHarvestProjects();
-		if (!is_array($projectIds)) {
-			$projectIds = array($projectIds);
-		}
-
-		$projects = $this->getProjects($projectIds);
+		$projects = $this->getProjects($this->getProjectIds($input));
 		if (sizeof($projects) == 0) {
 			//We have no projects to work with so bail
 			return;
