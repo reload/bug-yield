@@ -4,6 +4,10 @@ BugYield is a console application which tracks changes to tickets (issues, work 
 
 BugYield currently supports the ticket management system "FogBugz":http://fogbugz.com and time tracking system "Harvest":http://harvestapp.com.
 
+h2. Installation
+
+Clone the repository and remember to initialize submodules. Downloads are currently not functional as GitHub does not include submodules.
+
 h2. Configuration
 
 BugYield needs to know where and how to access the systems involved. This configuration is handled by a config.yml file. Copy the provided config.sample.yml and update it with account information. If your configuration file is not located in the TickTrac root directory you can specify the path to the config file using the <code>--config</code> option.
