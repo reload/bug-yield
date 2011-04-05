@@ -3,6 +3,7 @@ harvest:
   username: bugyield@mycompany.com
   password: 1234
   ssl: true
+  projects: "alias,name,id"
 fogbugz:
   url: https://mycompany.fogbugz.com
   username: bugyield@mycompany.com
