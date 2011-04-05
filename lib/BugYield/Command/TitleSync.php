@@ -24,13 +24,20 @@ class TitleSync extends BugYieldCommand {
 		//Setup Harvest API access
 		$harvest = $this->getHarvestApi();
 
-		$output->writeln('Collecting entries from Harvest');
+		$output->writeln('Verifying projects in Harvest');
 
 		$projects = $this->getProjects($this->getProjectIds($input));
 		if (sizeof($projects) == 0) {
 			//We have no projects to work with so bail
+			$output->writeln(sprintf('Could not find any projects matching: %s', $input));
 			return;
 		}
+
+		foreach ($projects as $Harvest_Project) {
+		  $output->writeln(sprintf('Working with project: %s', $Harvest_Project->get("name")));
+		}
+
+		$output->writeln('Collecting entries from Harvest');
 
 		$ticketEntries = $this->getTicketEntries($projects);
 		$output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
@@ -71,9 +78,19 @@ class TitleSync extends BugYieldCommand {
 
 				if ($update) {
 					//Update the entry in Harvest
-					$harvest->updateEntry($entry);
+					$result = $harvest->updateEntry($entry);
+          if($result->isSuccess()) {
+            $output->writeln(sprintf('Updated entry #%d: %s', $entry->get('id'), $entry->get('notes')));
+          }
+          else
+          {
+            $errormsg[] = sprintf('FAILED (HTTP Code: %d) to update entry #%d: %s (EntryDate: %s)', $result->get('code'), $entry->get('id'), $entry->get('notes'), $entry->get('created-at'));
 
-					$output->writeln(sprintf('Updated entry #%d: %s', $entry->get('id'), $entry->get('notes')));
+            foreach ($errormsg as $msg) {
+               $output->writeln($msg);
+               error_log(date("d-m-Y H:i:s") . " | " . $msg . "\n", 3, "error.log");
+            }
+          }
 				}
 			}
 		} catch (FogBugz_Exception $e) {
