@@ -12,7 +12,7 @@ class TimeSync extends BugYieldCommand {
 	protected function configure() {
 		$this
 		->setName('bugyield:timesync')
-		->setAliases(array('ts', 'timesync'))
+		->setAliases(array('tim', 'timesync'))
 		->setDescription('Sync time registration from Harvest to FogBugz');
 		parent::configure();
 	}

@@ -13,7 +13,7 @@ class TitleSync extends BugYieldCommand {
 	protected function configure() {
 		$this
 		->setName('bugyield:titlesync')
-		->setAliases(array('ts', 'titlesync'))
+		->setAliases(array('tit', 'titlesync'))
 		->setDescription('Sync ticket titles from FogBugz to Harvest');
 		parent::configure();
 	}
