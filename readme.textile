@@ -6,11 +6,13 @@ BugYield currently supports the ticket management system "FogBugz":http://fogbug
 
 h2. Installation
 
-Clone the repository and remember to initialize submodules. Downloads are currently not functional as GitHub does not include submodules.
+Clone the repository and remember to initialize submodules ("git submodule init" and "git submodule update"). Downloads are currently not functional as GitHub does not include submodules.
+CURL and PHP 5.3 must be installed (5.2 won't cut it!).
+You might need to change the #! path in the "bugyield" file. Use "which php" in order to find the proper path.
 
 h2. Configuration
 
-BugYield needs to know where and how to access the systems involved. This configuration is handled by a config.yml file. Copy the provided config.sample.yml and update it with account information. If your configuration file is not located in the TickTrac root directory you can specify the path to the config file using the <code>--config</code> option.
+BugYield needs to know where and how to access the systems involved. This configuration is handled by a config.yml file. Copy the provided config.sample.yml and update it with account information. If your configuration file is not located in the root directory you can specify the path to the config file using the <code>--config</code> option.
 
 h2. Usage
 
@@ -21,7 +23,7 @@ BugYield currently supports two use cases:
 
 BugYield works in the context of one or more Harvest projects identified through their id, full name or code. Projects can be specified in the configuration or using the <code>--harvest-project</code> option.
 
-Run <code>bugyield</code> from the command line to show all available commands.
+Run <code>./bugyield</code> from the command line to show all available commands.
 
 h3. Time synchronization
 
@@ -33,13 +35,14 @@ It works like this:
 # Run the timesync command
 # The elapsed time field for the FogBugz ticket is updated and a new comment is added to the ticket showing the entry id, the time spent, the task type and the notes from Harvest
 
-If the time or task for the Harvest entry is changed at a later point in time, subsequent execution of the timesybc command adds a new comment to the ticket and the elapsed time field is adjusted accordingly.
+If the time or task for the Harvest entry is changed at a later point in time, subsequent execution of the timesync command adds a new comment to the ticket and the elapsed time field is adjusted accordingly.
 
 If a Harvest entry contains multiple ticket ids the time spent is distributed evenly across the mentioned tickets.
 
 h3. Title synchronization
 
 BugYield can update entries in Harvest with ticket titles from FogBugz. This makes it easier to show how much time has been spent on a ticket and how this corresponds with estimates.
+NOTE: When an entry has been submitted and thereby locked, then we can't edit the entry, and it will fail.
 
 It works like this:
 
