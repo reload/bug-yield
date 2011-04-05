@@ -372,9 +372,16 @@
      * @param $entry    Day Entry
      * @return Harvest_Result
      */
-    public function updateEntry( $entry ) 
+    public function updateEntry( $entry, $by_another_user = true ) 
     {
-        $url = "daily/update/$entry->id";
+        $url = "daily/update/".$entry->id;
+
+        // if the connecting user is admin and is editing entries for another user
+        // @see http://www.getharvest.com/api/time-tracking#other-users
+        if($by_another_user) {
+          $url .= "?of_user=".$entry->get("user-id");
+        }
+
         return $this->performPOST( $url, $entry->toXML() );
     }
 
@@ -2429,7 +2436,11 @@
             $http = "https://";
         }
         $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $http . $this->_account . ".harvestapp.com/" . $url );
+
+        $finalurl = $http . $this->_account . ".harvestapp.com/" . $url;
+        //error_log($finalurl);
+
+        curl_setopt($ch, CURLOPT_URL, $finalurl);
         curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
 		curl_setopt($ch, CURLOPT_FOLLOWLOCATION, 1);
 		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
