@@ -134,8 +134,9 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	 * Return ticket entries from projects.
 	 *
 	 * @param array $projects An array of projects
+	 * @param boolean $ignore_locked Should we filter the closed/billed entries? We cannot update them...
 	 */
-	protected function getTicketEntries($projects) {
+	protected function getTicketEntries($projects, $ignore_locked = true) {
 		//Setup Harvest API access
 		$harvest = $this->getHarvestApi();
 		 
@@ -146,6 +147,10 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 			$result = $harvest->getProjectEntries($project->get('id'), $range);
 			if ($result->isSuccess()) {
 				foreach ($result->get('data') as $entry) {
+				  if($ignore_locked == true && ($entry->get("is-closed") == "true" || $entry->get("is-billed") == "true")) {
+				    continue;
+				  }
+
 					if (sizeof(self::getTickedIds($entry)) > 0) {
 						//If the entry has ticket ids it is a ticket entry
 						$ticketEntries[] = $entry;
