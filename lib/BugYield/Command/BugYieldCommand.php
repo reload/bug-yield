@@ -143,10 +143,12 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 		//Collect the ticket entries
 		$ticketEntries = array();
 		foreach($projects as $project) {
-			$range = new \Harvest_Range('19000101', date('Ymd'));
+			$range = new \Harvest_Range('19000101', date('Ymd')); //@TODO this should be dynamic, a sensible default would be to only view the last week or so
 			$result = $harvest->getProjectEntries($project->get('id'), $range);
 			if ($result->isSuccess()) {
 				foreach ($result->get('data') as $entry) {
+
+				  // check that the entry is actually writeable
 				  if($ignore_locked == true && ($entry->get("is-closed") == "true" || $entry->get("is-billed") == "true")) {
 				    continue;
 				  }
