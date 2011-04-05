@@ -20,18 +20,25 @@ class TimeSync extends BugYieldCommand {
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$this->loadConfig($input);
 
-		$output->writeln('Collecting entries from Harvest');
+		//Setup Harvest API access
+		$harvest = $this->getHarvestApi();
 		
-		$projects = $this->getProjects($this->getProjectIds($input));
+		$output->writeln('Verifying projects in Harvest');
 
-		$output->writeln(sprintf('Collected %d projects', sizeof($projects)));
+		$projects = $this->getProjects($this->getProjectIds($input));
 		if (sizeof($projects) == 0) {
 			//We have no projects to work with so bail
+			$output->writeln(sprintf('Could not find any projects matching: %s', $input));
 			return;
 		}
 
-		$ticketEntries = $this->getTicketEntries($projects);
-		 
+		foreach ($projects as $Harvest_Project) {
+		  $output->writeln(sprintf('Working with project: %s', $Harvest_Project->get("name")));
+		}
+
+		$output->writeln('Collecting entries from Harvest');
+	
+		$ticketEntries = $this->getTicketEntries($projects);	 
 		$output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
 		if (sizeof($ticketEntries) == 0) {
 			//We have no entries containing ticket ids so bail
