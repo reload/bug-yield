@@ -2512,7 +2512,9 @@
         }
         if( "2" == substr( $code, 0, 1 ) ) {
 			if( $multi == "id" ) {
-				$rData = $this->_headers["Location"];
+			  if(isset($this->_headers["Location"])) {
+			    $rData = $this->_headers["Location"];
+			  }
 			} else if( $multi === true ) {
                 $rData = $this->parseItems( $rData );
             } else if( $multi == "raw" ) {
