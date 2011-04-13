@@ -22,7 +22,7 @@ class TimeSync extends BugYieldCommand {
 
 		//Setup Harvest API access
 		$harvest = $this->getHarvestApi();
-		
+
 		$output->writeln('Verifying projects in Harvest');
 
 		$projects = $this->getProjects($this->getProjectIds($input));
@@ -55,8 +55,12 @@ class TimeSync extends BugYieldCommand {
 				//Determine task
 				$response = $harvest->getTask($entry->get('task-id'));
 				$taskName = ($response->isSuccess()) ? $response->get('data')->get('name') : 'Unknown';
+				
+				$harvestUserName      = $this->getUserNameById($entry->get("user-id"));
+				$harvestProjectName   = self::getProjectNameById($projects,$entry->get("project-id"));
+				$harvestTimestamp     = $entry->get("spent-at");
 
-				$entryText = sprintf('Entry #%d [%s/%s]: %s', $entry->get('id'), $entry->get('hours'), $taskName, $entry->get('notes'));
+				$entryText = sprintf('Entry #%d [%s/%s]: "%s" by %s @ %s in "%s"', $entry->get('id'), $entry->get('hours'), $taskName, $entry->get('notes'), $harvestUserName, $harvestTimestamp, $harvestProjectName);
 
 				//In case there are several ids in an entry then distribute the the time spent evenly
 				$hoursPerTicket = round(floatval($entry->get('hours')) / sizeof($ticketIds), 2);

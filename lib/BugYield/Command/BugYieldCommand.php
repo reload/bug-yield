@@ -13,6 +13,9 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
 	private $harvestConfig;
 	private $fogbugzConfig;
+	
+	/* singletons for caching data */
+	private $harvestUsers = null;
 
 	protected function configure() {
 		$this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
@@ -131,6 +134,33 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	}
 
 	/**
+	 * Collect users from Harvest
+	 *
+	 */
+	protected function getUsers() {
+
+    if(is_array($this->harvestUsers))
+    {
+      return $this->harvestUsers;
+    }  
+      
+		//Setup Harvest API access
+		$harvest = $this->getHarvestApi();
+
+		//Prepare by getting all projects
+		$result = $harvest->getUsers();
+		$harvestUsers = ($result->isSuccess()) ? $result->get('data') : array();
+
+    $this->harvestUsers = $harvestUsers;
+
+    // Array of Harvest_User objects
+		return $harvestUsers;
+
+	}
+
+
+
+	/**
 	 * Return ticket entries from projects.
 	 *
 	 * @param array $projects An array of projects
@@ -175,5 +205,44 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       $ids = $matches[1];
     }
     return array_unique($ids);
+  }
+  
+	/**
+	 * Look through the projects array and return a name
+	 * @param Array $projects array of Harvest_Project objects
+	 * @param Integer $projectId 
+	 * @return String Name of the project
+	 */  
+  protected static function getProjectNameById($projects,$projectId) {
+    $projectName = "Unknown";
+    foreach ($projects as $project) {
+      if($project->get("id") == $projectId) {
+        $projectName = $project->get("name");
+        break;
+      }
+    }
+    return $projectName;
+  }
+
+	/**
+	 * Fetch the Harvest User by id
+	 * @param Integer $harvest_user_id 
+	 * @return String Full name
+	 */  
+  protected function getUserNameById($harvest_user_id) {
+    $username = "Unknown";
+    
+    $harvestUsers = $this->getUsers();
+    
+    if(isset($harvestUsers[$harvest_user_id])) {
+      $Harvest_User = $harvestUsers[$harvest_user_id];
+      $username = $Harvest_User->get("first-name") . " " . $Harvest_User->get("last-name");
+    }
+
+    return $username;
+    
   }  
+  
+  
+    
 }
