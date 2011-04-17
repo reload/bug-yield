@@ -36,9 +36,14 @@ class TimeSync extends BugYieldCommand {
 		  $output->writeln(sprintf('Working with project: %s', $Harvest_Project->get("name")));
 		}
 
-		$output->writeln('Collecting entries from Harvest');
+	  $ignore_locked  = false;
+	  $from_date      = date("Ymd",time()-(86400*$this->getHarvestDaysBack()));
+	  $to_date        = date("Ymd");
 	
-		$ticketEntries = $this->getTicketEntries($projects);	 
+		$output->writeln(sprintf("Collecting Harvest entries between %s to %s",$from_date,$to_date));
+
+		$ticketEntries = $this->getTicketEntries($projects, $ignore_locked, $from_date, $to_date);
+
 		$output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
 		if (sizeof($ticketEntries) == 0) {
 			//We have no entries containing ticket ids so bail
@@ -127,6 +132,7 @@ class TimeSync extends BugYieldCommand {
 		} catch (FogBugz_Exception $e) {
 			$output->writeln('Error communicating with FogBugz: '. $e->getMessage());
 		}
-	}
 
+		$output->writeln("TimeSync completed");
+	}
 }
