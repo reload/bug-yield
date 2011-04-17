@@ -1,4 +1,6 @@
 #!/usr/bin/env php
-<?php
 
+<?php
+$abspath = realpath(__DIR__);
+chdir($abspath);
 include(__DIR__.'/bugyield.php');
