@@ -37,9 +37,14 @@ class TitleSync extends BugYieldCommand {
 		  $output->writeln(sprintf('Working with project: %s', $Harvest_Project->get("name")));
 		}
 
-		$output->writeln('Collecting entries from Harvest');
+	  $ignore_locked  = true;
+	  $from_date      = date("Ymd",time()-(86400*$this->getHarvestDaysBack()));
+	  $to_date        = date("Ymd");
 
-		$ticketEntries = $this->getTicketEntries($projects);
+		$output->writeln(sprintf("Collecting Harvest entries between %s to %s",$from_date,$to_date));
+
+		$ticketEntries = $this->getTicketEntries($projects, $ignore_locked, $from_date, $to_date);
+
 		$output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
 		if (sizeof($ticketEntries) == 0) {
 			//We have no entries containing ticket ids so bail
@@ -58,7 +63,7 @@ class TitleSync extends BugYieldCommand {
 					$response = $fogbugz->search($ticketId, 'sTitle', 1);
 
 					if ($case = array_shift($response->_data)) {
-						preg_match('/#'.$ticketId.'(\[.*?\])?/', $entry->get('notes'), $matches);
+						preg_match('/#'.$ticketId.'(?:\[(.*?)\])?/', $entry->get('notes'), $matches);
 						if (isset($matches[1])) {
 							if ($matches[1] != $case->_data['sTitle']) {
 								//Entry note includes ticket title it does not match current title
@@ -70,7 +75,7 @@ class TitleSync extends BugYieldCommand {
 						} else {
 							//Entry note does not include ticket title so add it
 							$entry->set('notes', str_replace('#'.$ticketId, '#'.$ticketId.'['.$case->_data['sTitle'].']', $entry->get('notes')));
-							 
+
 							$update = true;
 						}
 					}
@@ -96,5 +101,7 @@ class TitleSync extends BugYieldCommand {
 		} catch (FogBugz_Exception $e) {
 			$output->writeln('Error communicating with FogBugz: '. $e->getMessage());
 		}
+
+		$output->writeln("TitleSync completed");
 	}
 }
