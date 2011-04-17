@@ -4,6 +4,7 @@ harvest:
   password: 1234
   ssl: true
   projects: "alias,name,id"
+  daysback: 7
 fogbugz:
   url: https://mycompany.fogbugz.com
   username: bugyield@mycompany.com
