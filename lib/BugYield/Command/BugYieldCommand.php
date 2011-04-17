@@ -39,6 +39,14 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	protected function getHarvestProjects() {
 		return $this->harvestConfig['projects'];
 	}
+	
+	/**
+	 * Number of days back compared to today to look for harvestentries
+	 * @return Integer Number of days
+	 */
+	protected function getHarvestDaysBack() {
+		return intval($this->harvestConfig['daysback']);
+	}	
 
 	/**
 	 * Returns a connection to the FogBugz API based on the configuration.
@@ -165,15 +173,27 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	 *
 	 * @param array $projects An array of projects
 	 * @param boolean $ignore_locked Should we filter the closed/billed entries? We cannot update them...
+	 * @param Integer $from_date Date in YYYYMMDD format
+	 * @param Integer $to_date Date in YYYYMMDD format  
 	 */
-	protected function getTicketEntries($projects, $ignore_locked = true) {
+	protected function getTicketEntries($projects, $ignore_locked = true, $from_date = null, $to_date = null) {
 		//Setup Harvest API access
 		$harvest = $this->getHarvestApi();
 		 
 		//Collect the ticket entries
 		$ticketEntries = array();
 		foreach($projects as $project) {
-			$range = new \Harvest_Range('19000101', date('Ymd')); //@TODO this should be dynamic, a sensible default would be to only view the last week or so
+		  
+		 if(!is_numeric($from_date)) {
+		   $from_date = "19000101";
+		 }
+		 
+		 if(!is_numeric($to_date)) {
+		   $to_date = date('Ymd');
+		 }
+		
+			$range = new \Harvest_Range($from_date, $to_date);
+			
 			$result = $harvest->getProjectEntries($project->get('id'), $range);
 			if ($result->isSuccess()) {
 				foreach ($result->get('data') as $entry) {
