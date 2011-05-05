@@ -22,7 +22,8 @@ class TimeSync extends BugYieldCommand {
 
 		//Setup Harvest API access
 		$harvest = $this->getHarvestApi();
-
+    
+    $output->writeln('TimeSync executed: ' . date('Ymd H:i:s'));
 		$output->writeln('Verifying projects in Harvest');
 
 		$projects = $this->getProjects($this->getProjectIds($input));

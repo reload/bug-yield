@@ -24,6 +24,7 @@ class TitleSync extends BugYieldCommand {
 		//Setup Harvest API access
 		$harvest = $this->getHarvestApi();
 
+    $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
 		$output->writeln('Verifying projects in Harvest');
 
 		$projects = $this->getProjects($this->getProjectIds($input));
