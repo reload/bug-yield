@@ -46,6 +46,9 @@ class TitleSync extends BugYieldCommand {
 
 		$ticketEntries = $this->getTicketEntries($projects, $ignore_locked, $from_date, $to_date);
 
+
+
+
 		$output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
 		if (sizeof($ticketEntries) == 0) {
 			//We have no entries containing ticket ids so bail
@@ -57,6 +60,14 @@ class TitleSync extends BugYieldCommand {
 			$fogbugz = $this->getFogBugzApi();
 			foreach ($ticketEntries as $entry) {
 				$update = false;
+
+          // check for active timers - if we update the entry, then the timer will be disrupted, and odd things start to happen :-/
+          if(strlen($entry->get("timer-started-at")) != 0)
+          {
+            // we have an active timer, bounce off!
+              $output->writeln(sprintf('SKIPPED (active timer) entry #%d: %s', $entry->get('id'), $entry->get('notes')));
+              continue;     
+          }
 
 				//One entry may - but shouldn't - contain multiple ticket ids
 				foreach (self::getTickedIds($entry) as $ticketId) {

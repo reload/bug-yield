@@ -55,6 +55,15 @@ class TimeSync extends BugYieldCommand {
 		try {
 			$fogbugz = $this->getFogBugzApi();
 			foreach ($ticketEntries as $entry) {
+			  
+        // check for active timers - let's not update fogbugz with timers still running...
+        if(strlen($entry->get("timer-started-at")) != 0)
+        {
+          // we have an active timer, bounce off!
+            $output->writeln(sprintf('SKIPPED (active timer) entry #%d: %s', $entry->get('id'), $entry->get('notes')));
+            continue;     
+        }			  
+			  
 				//One entry may - but shouldn't - contain multiple ticket ids
 				$ticketIds = self::getTickedIds($entry);
 
