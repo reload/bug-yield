@@ -241,9 +241,16 @@
      * @param int $entry_id Entry Identifier
      * @return Harvest_Result
      */
-    public function getEntry( $entry_id ) 
+    public function getEntry( $entry_id, $user_id = false ) 
     {
         $url = "daily/show/" . $entry_id;
+
+        // if the connecting user is admin and is editing entries for another user
+        // @see http://www.getharvest.com/api/time-tracking#other-users
+        if($user_id) {
+          $url .= "?of_user=".$user_id;
+        }
+
         return $this->performGET( $url, false );
     }
 
