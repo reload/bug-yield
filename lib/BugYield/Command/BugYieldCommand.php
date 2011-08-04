@@ -13,6 +13,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
 	private $harvestConfig;
 	private $fogbugzConfig;
+	private $bugyieldConfig;
 	
 	/* singletons for caching data */
 	private $harvestUsers = null;
@@ -32,7 +33,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 		$harvest->setAccount($this->harvestConfig['account']);
 		$harvest->setUser($this->harvestConfig['username']);
 		$harvest->setPassword($this->harvestConfig['password']);
-		$harvest->setSSL($this->harvestConfig['account']);
+		$harvest->setSSL($this->harvestConfig['ssl']);
 		return $harvest;
 	}
 
@@ -49,6 +50,23 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	}	
 
 	/**
+	 * Fetch url to FB
+	 * @return String Url
+	 */
+	protected function getFogBugzURL() {
+		return $this->fogbugzConfig['url'];
+	}
+	
+  protected function getHarvestURL() {
+    $http = "http://";
+    if( $this->harvestConfig['ssl'] == true ) {
+        $http = "https://";
+    }
+
+    return $http . $this->harvestConfig['account'] . ".harvestapp.com/";
+  }
+
+	/**
 	 * Returns a connection to the FogBugz API based on the configuration.
 	 * 
 	 * @return \FogBugz
@@ -57,6 +75,14 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 		$fogbugz = new \FogBugz($this->fogbugzConfig['url'], $this->fogbugzConfig['username'], $this->fogbugzConfig['password']);
 		$fogbugz->logon();
 		return $fogbugz;
+	}
+	
+	protected function getBugyieldEmailFrom() {
+	  return $this->bugyieldConfig["email_from"];
+	}
+
+	protected function getBugyieldEmailFallback() {
+	  return $this->bugyieldConfig["email_fallback"];
 	}
 
 	/**
@@ -71,11 +97,13 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 			$config = Yaml::load($configFile);
 			$this->harvestConfig = $config['harvest'];
 			$this->fogbugzConfig = $config['fogbugz'];
+			$this->bugyieldConfig = $config['bugyield'];
+
 		} else {
 			throw new Exception(sprintf('Missing configuration file %s', $configFile));
 		}
 	}
-	
+
 	/**
 	 * Returns the project ids for this command from command line options or configuration.
 	 * 
@@ -151,7 +179,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     {
       return $this->harvestUsers;
     }  
-      
+
 		//Setup Harvest API access
 		$harvest = $this->getHarvestApi();
 
@@ -165,8 +193,6 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 		return $harvestUsers;
 
 	}
-
-
 
 	/**
 	 * Return ticket entries from projects.
@@ -187,13 +213,13 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 		 if(!is_numeric($from_date)) {
 		   $from_date = "19000101";
 		 }
-		 
+
 		 if(!is_numeric($to_date)) {
 		   $to_date = date('Ymd');
 		 }
-		
+
 			$range = new \Harvest_Range($from_date, $to_date);
-			
+
 			$result = $harvest->getProjectEntries($project->get('id'), $range);
 			if ($result->isSuccess()) {
 				foreach ($result->get('data') as $entry) {
@@ -226,7 +252,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     }
     return array_unique($ids);
   }
-  
+
 	/**
 	 * Look through the projects array and return a name
 	 * @param Array $projects array of Harvest_Project objects
@@ -248,7 +274,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	 * Fetch the Harvest User by id
 	 * @param Integer $harvest_user_id 
 	 * @return String Full name
-	 */  
+	 */
   protected function getUserNameById($harvest_user_id) {
     $username = "Unknown";
     
@@ -259,10 +285,91 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       $username = $Harvest_User->get("first-name") . " " . $Harvest_User->get("last-name");
     }
 
-    return $username;
-    
+    return $username;    
   }  
   
-  
+
+	/**
+	 * Fetch the Harvest Entry by id
+	 * @param Integer $harvestEntryId
+	 * @param Integer $harvest_user_id 	  
+	 * @return Harvest_Entry Entry object
+	 */
+  protected function getEntryById($harvestEntryId, $user_id = false) {
+    $harvest = $this->getHarvestApi();
+    $entry = false;
     
+    $result = $harvest->getEntry($harvestEntryId, $user_id);
+    
+    if ($result->isSuccess()) {
+			$entry = $result->get('data');
+    }
+    
+    return $entry;
+    
+  }
+  
+	/**
+	 * Fetch the Harvest user by searching for the full name
+	 * This will of course make odd results if you have two or more active users with exactly the same name...
+	 *
+	 * @param String $fullname 
+	 * @return Harvest_User User object
+	 */  
+  protected function getHarvestUserByFullName($fullname) {
+    $user = false;
+    $fullname = trim($fullname);
+    
+    foreach($this->getUsers() as $Harvest_User) {
+      // only search for active users.
+      // prey that you do not have two users with identical names. TODO this is a possible bug in spe
+      if($Harvest_User->get("is-active") == "false") {
+        continue;
+      }
+
+      $tmpFullName = trim($Harvest_User->get("first-name") . " " . $Harvest_User->get("last-name"));
+      if($fullname == $tmpFullName) {
+        // yay, we have a winner! :-)
+        $user = $Harvest_User;
+        break;
+      } 
+    }
+
+    return $user;
+  }
+
+	/**
+	 * Fetch the Harvest data from the FogBugz updates. 
+	 *
+	 * @param FogBugz_Response_Cases $response
+	 * @return Array Matches from the regex preg_match
+	 */
+  protected function getHarvestEntriesFromFBTicket(\FogBugz_Response_Cases $response) {
+
+    $harvestEntries = array();
+
+    if(!isset($response->_data)) {
+      error_log("no data from this response");
+      return $harvestEntries;
+    }
+
+    foreach($response->_data as $case) {
+
+      $fbId = $case->_data['ixBug'];
+  		if (isset($case->_data['events'])) {
+  			//Reverse the order of events to get the most recent first.
+  			//These will contain the latest updates in regard to time and task.
+  			$events = $case->_data['events']->_data;
+  			foreach ($events as $event) {
+  				$text = (isset($event->_data['sHtml'])) ? $event->_data['sHtml'] : $event->_data['s'];
+  				if (is_string($text) && preg_match('/^Entry\s#([0-9]+)\s\[(.*?)\/(.*?)\]:(?:.*?)by\s(.*?)@\s([0-9-]+)\sin\s(.*?)$/', $text, $matches)) {
+            $harvestEntries[$fbId][] = $matches; 
+  				}
+  			}
+  		}
+      
+    }
+    
+    return $harvestEntries;
+  }
 }

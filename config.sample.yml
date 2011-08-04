@@ -9,3 +9,6 @@ fogbugz:
   url: https://mycompany.fogbugz.com
   username: bugyield@mycompany.com
   password: abcd
+bugyield:
+  email_from: bugyield@mycompany.com
+  email_fallback: bugyield@mycompany.com
