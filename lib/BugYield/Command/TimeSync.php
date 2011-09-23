@@ -112,6 +112,12 @@ class TimeSync extends BugYieldCommand {
 							$text = (isset($event->_data['sHtml'])) ? $event->_data['sHtml'] : $event->_data['s'];
 							if (is_string($text) && preg_match('/^Entry\s#'.$entry->get('id').'\s\[(.*?)\/(.*?)\]:/', $text, $matches)) {
 								//Entry has already been tracked. Determine if data has been updated in Harvest since
+
+								// decode the matches array
+								for ($i=0; $i < count($matches) ; $i++) {
+								  $matches[$i] = trim(html_entity_decode($matches[$i], ENT_COMPAT, "UTF-8"));
+								}
+
 								if ($matches[1] == $entry->get('hours') &&
 								$matches[2] == $taskName) {
 									$alreadyTracked = true;

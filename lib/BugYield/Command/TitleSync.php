@@ -77,6 +77,8 @@ class TitleSync extends BugYieldCommand {
 					if ($case = array_shift($response->_data)) {
 						preg_match('/#'.$ticketId.'(?:\[(.*?)\])?/', $entry->get('notes'), $matches);
 						if (isset($matches[1])) {
+
+						  // No bugs found here yet, but I suspect that we should html_entity_code the matches array
 							if ($matches[1] != $case->_data['sTitle']) {
 								//Entry note includes ticket title it does not match current title
 								//so update it
