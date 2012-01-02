@@ -43,11 +43,9 @@ class TitleSync extends BugYieldCommand {
 	  $to_date        = date("Ymd");
 
 		$output->writeln(sprintf("Collecting Harvest entries between %s to %s",$from_date,$to_date));
+		if($ignore_locked) $output->writeln("-- Ignoring entries already billed or otherwise closed.");
 
 		$ticketEntries = $this->getTicketEntries($projects, $ignore_locked, $from_date, $to_date);
-
-
-
 
 		$output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
 		if (sizeof($ticketEntries) == 0) {
