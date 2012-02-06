@@ -3,12 +3,17 @@ harvest:
   username: bugyield@mycompany.com
   password: 1234
   ssl: true
-  projects: "alias,name,id"
   daysback: 7
+bugyield:
+  email_from: bugyield@mycompany.com
+  email_fallback: bugyield@mycompany.com
 fogbugz:
   url: https://mycompany.fogbugz.com
   username: bugyield@mycompany.com
   password: abcd
-bugyield:
-  email_from: bugyield@mycompany.com
-  email_fallback: bugyield@mycompany.com
+  projects: "alias,name,id"
+jira:
+  accout: my-company
+  username: my-username
+  password: 5678
+  projects: "alias,name,id"

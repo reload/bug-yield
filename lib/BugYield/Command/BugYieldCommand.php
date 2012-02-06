@@ -12,15 +12,18 @@ use Symfony\Component\Console\Command\Command;
 abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Command {
 
 	private $harvestConfig;
-	private $fogbugzConfig;
 	private $bugyieldConfig;
 	
+	private $bugtrackerConfig;
+	protected $bugtracker;
+
 	/* singletons for caching data */
 	private $harvestUsers = null;
 
 	protected function configure() {
 		$this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
 		$this->addOption('config', NULL, InputOption::VALUE_OPTIONAL, 'Path to the configuration file', 'config.yml');
+		$this->addOption('bugtracker', NULL, InputOption::VALUE_OPTIONAL, 'Bug Tracker to yield', 'fogbugz');
 	}
 
 	/**
@@ -38,7 +41,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	}
 
 	protected function getHarvestProjects() {
-		return $this->harvestConfig['projects'];
+		return $this->bugtrackerConfig['projects'];
 	}
 	
 	/**
@@ -54,7 +57,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	 * @return String Url
 	 */
 	protected function getFogBugzURL() {
-		return $this->fogbugzConfig['url'];
+		return $this->bugtrackerConfig['url'];
 	}
 	
   protected function getHarvestURL() {
@@ -71,10 +74,18 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	 * 
 	 * @return \FogBugz
 	 */
-	protected function getFogBugzApi() {
-		$fogbugz = new \FogBugz($this->fogbugzConfig['url'], $this->fogbugzConfig['username'], $this->fogbugzConfig['password']);
-		$fogbugz->logon();
-		return $fogbugz;
+	protected function getBugTrackerApi(InputInterface $input) {
+	  switch ($input->getOption('bugtracker')) {
+	  case 'jira':
+	    $this->bugtracker = new \JiraBugTracker;
+	    break;
+	  case 'fogbugz':
+	  default:
+	    $this->bugtracker = new \FogBugzBugTracker;
+	    break;
+	  }
+
+	  $this->bugtracker->getApi($this->bugtrackerConfig['url'], $this->bugtrackerConfig['username'], $this->bugtrackerConfig['password']);
 	}
 	
 	protected function getBugyieldEmailFrom() {
@@ -96,9 +107,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 		if (file_exists($configFile)) {
 			$config = Yaml::load($configFile);
 			$this->harvestConfig = $config['harvest'];
-			$this->fogbugzConfig = $config['fogbugz'];
 			$this->bugyieldConfig = $config['bugyield'];
-
+			$this->bugtrackerConfig = $config[$input->getOption('bugtracker')];
 		} else {
 			throw new Exception(sprintf('Missing configuration file %s', $configFile));
 		}
@@ -229,7 +239,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 				    continue;
 				  }
 
-					if (sizeof(self::getTickedIds($entry)) > 0) {
+					if (sizeof($this->getTicketIds($entry)) > 0) {
 						//If the entry has ticket ids it is a ticket entry
 						$ticketEntries[] = $entry;
 					}
@@ -245,12 +255,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 	 * @param \Harvest_DayEntry $entry
 	 * @return array Array of ticket ids
 	 */
-	protected static function getTickedIds(\Harvest_DayEntry $entry) {
-    $ids = array();
-    if (preg_match_all('/#(\d+)/', $entry->get('notes'), $matches)) {
-      $ids = $matches[1];
-    }
-    return array_unique($ids);
+	protected function getTicketIds(\Harvest_DayEntry $entry) {
+	  return $this->bugtracker->extractIds($entry->get('notes'));
   }
 
 	/**

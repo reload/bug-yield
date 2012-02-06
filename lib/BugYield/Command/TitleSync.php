@@ -14,12 +14,13 @@ class TitleSync extends BugYieldCommand {
 		$this
 		->setName('bugyield:titlesync')
 		->setAliases(array('tit', 'titlesync'))
-		->setDescription('Sync ticket titles from FogBugz to Harvest');
+		->setDescription('Sync ticket titles from bug tracker to Harvest');
 		parent::configure();
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output) {
 		$this->loadConfig($input);
+		$this->getBugTrackerApi($input);
 
 		//Setup Harvest API access
 		$harvest = $this->getHarvestApi();
@@ -53,9 +54,8 @@ class TitleSync extends BugYieldCommand {
 			return;
 		}
 
-		//Update Harvest entries with FogBugz ticket titles in the format #[ticket-id]([ticket-title])
+		//Update Harvest entries with bug tracker ticket titles in the format [ticket-id]([ticket-title])
 		try {
-			$fogbugz = $this->getFogBugzApi();
 			foreach ($ticketEntries as $entry) {
 				$update = false;
 
@@ -63,30 +63,30 @@ class TitleSync extends BugYieldCommand {
           if(strlen($entry->get("timer-started-at")) != 0)
           {
             // we have an active timer, bounce off!
-              $output->writeln(sprintf('SKIPPED (active timer) entry #%d: %s', $entry->get('id'), $entry->get('notes')));
+              $output->writeln(sprintf('SKIPPED (active timer) entry %s: %s', $entry->get('id'), $entry->get('notes')));
               continue;     
           }
 
 				//One entry may - but shouldn't - contain multiple ticket ids
-				foreach (self::getTickedIds($entry) as $ticketId) {
-					//Get the case with title. Limit by one to make sure we only get one.
-					$response = $fogbugz->search($ticketId, 'sTitle', 1);
+				foreach ($this->getTicketIds($entry) as $ticketId) {
+					//Get the case title.
+					$title = $this->bugtracker->getTitle($ticketId);
 
-					if ($case = array_shift($response->_data)) {
-						preg_match('/#'.$ticketId.'(?:\[(.*?)\])?/', $entry->get('notes'), $matches);
+					if ($title) {
+						preg_match('/'.$ticketId.'(?:\[(.*?)\])?/', $entry->get('notes'), $matches);
 						if (isset($matches[1])) {
 
 						  // No bugs found here yet, but I suspect that we should html_entity_code the matches array
-							if ($matches[1] != $case->_data['sTitle']) {
+							if ($matches[1] != $title) {
 								//Entry note includes ticket title it does not match current title
 								//so update it
-								$entry->set('notes', preg_replace('/#'.$ticketId.'(\[.*?\])/', '#'.$ticketId.'['.$case->_data['sTitle'].']', $entry->get('notes')));
+								$entry->set('notes', preg_replace('/'.$ticketId.'(\[.*?\])/', $ticketId.'['.$title.']', $entry->get('notes')));
 
 								$update = true;
 							}
 						} else {
 							//Entry note does not include ticket title so add it
-							$entry->set('notes', str_replace('#'.$ticketId, '#'.$ticketId.'['.$case->_data['sTitle'].']', $entry->get('notes')));
+							$entry->set('notes', str_replace($ticketId, $ticketId.'['.$title.']', $entry->get('notes')));
 
 							$update = true;
 						}
@@ -97,11 +97,11 @@ class TitleSync extends BugYieldCommand {
 					//Update the entry in Harvest
 					$result = $harvest->updateEntry($entry);
           if($result->isSuccess()) {
-            $output->writeln(sprintf('Updated entry #%d: %s', $entry->get('id'), $entry->get('notes')));
+            $output->writeln(sprintf('Updated entry %s: %s', $entry->get('id'), $entry->get('notes')));
           }
           else
           {
-            $errormsg[] = sprintf('FAILED (HTTP Code: %d) to update entry #%d: %s (EntryDate: %s)', $result->get('code'), $entry->get('id'), $entry->get('notes'), $entry->get('created-at'));
+            $errormsg[] = sprintf('FAILED (HTTP Code: %d) to update entry %s: %s (EntryDate: %s)', $result->get('code'), $entry->get('id'), $entry->get('notes'), $entry->get('created-at'));
 
             foreach ($errormsg as $msg) {
                $output->writeln($msg);
@@ -110,8 +110,8 @@ class TitleSync extends BugYieldCommand {
           }
 				}
 			}
-		} catch (FogBugz_Exception $e) {
-			$output->writeln('Error communicating with FogBugz: '. $e->getMessage());
+		} catch (Exception $e) {
+			$output->writeln('Error communicating with bug tracker: '. $e->getMessage());
 		}
 
 		$output->writeln("TitleSync completed");
