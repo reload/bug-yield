@@ -75,11 +75,10 @@ class JiraBugTracker implements BugTracker {
     // value is ignored so we just set it to NULL.
     $worklog->timeSpentInSeconds = NULL;
     
-
     // If this is an existing entry update it - otherwise add it.
     if (isset($worklog->id)) {
       // Jira can't log entries with hours == 0
-      if ((int)$timelog->hours == 0) {
+      if ($timelog->hours == 0) {
         $this->api->deleteWorklogAndAutoAdjustRemainingEstimate($this->token, $worklog->id);
       }
       else {
@@ -88,8 +87,11 @@ class JiraBugTracker implements BugTracker {
     }
     else {
       // Jira can't log entries with hours == 0
-      if ((int)$timelog->hours != 0) {
+      if ($timelog->hours != 0) {
         $this->api->addWorklogAndAutoAdjustRemainingEstimate($this->token, $ticketId, $worklog);
+      }
+      else {
+	// intentionally left blank
       }
     }
   }
