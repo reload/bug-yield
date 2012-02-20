@@ -343,39 +343,4 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
     return $user;
   }
-
-  /**
-   * Fetch the Harvest data from the FogBugz updates. 
-   *
-   * @param FogBugz_Response_Cases $response
-   * @return Array Matches from the regex preg_match
-   */
-  protected function getHarvestEntriesFromFBTicket(\FogBugz_Response_Cases $response) {
-
-    $harvestEntries = array();
-
-    if(!isset($response->_data)) {
-      error_log("no data from this response");
-      return $harvestEntries;
-    }
-
-    foreach($response->_data as $case) {
-
-      $fbId = $case->_data['ixBug'];
-      if (isset($case->_data['events'])) {
-        //Reverse the order of events to get the most recent first.
-        //These will contain the latest updates in regard to time and task.
-        $events = $case->_data['events']->_data;
-        foreach ($events as $event) {
-          $text = (isset($event->_data['sHtml'])) ? $event->_data['sHtml'] : $event->_data['s'];
-          if (is_string($text) && preg_match('/^Entry\s#([0-9]+)\s\[(.*?)\/(.*?)\]:(?:.*?)by\s(.*?)@\s([0-9-]+)\sin\s(.*?)$/', $text, $matches)) {
-            $harvestEntries[$fbId][] = $matches; 
-          }
-        }
-      }
-      
-    }
-    
-    return $harvestEntries;
-  }
 }
