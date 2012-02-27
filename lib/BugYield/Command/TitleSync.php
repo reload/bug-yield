@@ -73,20 +73,20 @@ class TitleSync extends BugYieldCommand {
           $title = $this->bugtracker->getTitle($ticketId);
 
           if ($title) {
-            preg_match('/'.$ticketId.'(?:\[(.*?)\])?/', $entry->get('notes'), $matches);
+            preg_match('/'.$ticketId.'(?:\[(.*?)\])?/i', $entry->get('notes'), $matches);
             if (isset($matches[1])) {
 
               // No bugs found here yet, but I suspect that we should html_entity_code the matches array
               if ($matches[1] != $title) {
                 //Entry note includes ticket title it does not match current title
                 //so update it
-                $entry->set('notes', preg_replace('/'.$ticketId.'(\[.*?\])/', $ticketId.'['.$title.']', $entry->get('notes')));
+                $entry->set('notes', preg_replace('/'.$ticketId.'(\[.*?\])/i', $ticketId.'['.$title.']', $entry->get('notes')));
 
                 $update = true;
               }
             } else {
               //Entry note does not include ticket title so add it
-              $entry->set('notes', str_replace($ticketId, $ticketId.'['.$title.']', $entry->get('notes')));
+              $entry->set('notes', preg_replace('/'.$ticketId.'/i', strtoupper($ticketId).'['.$title.']', $entry->get('notes')));
 
               $update = true;
             }

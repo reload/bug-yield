@@ -23,8 +23,8 @@ class JiraBugTracker implements BugTracker {
 
   public function extractIds($string) {
     $ids = array();
-    if (preg_match_all('/(#[A-Z]+-\d+)/', $string, $matches)) {
-      $ids = $matches[1];
+    if (preg_match_all('/(#[A-Za-z]+-\d+)/', $string, $matches)) {
+      $ids = array_map('strtoupper', $matches[1]);
     }
     return array_unique($ids);
   }
