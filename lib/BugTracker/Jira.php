@@ -45,6 +45,9 @@ class JiraBugTracker implements BugTracker {
 
   public function saveTimelogEntry($ticketId, $timelog) {
     $ticketId = ltrim($ticketId, '#');
+    // weed out newlines in notes
+    $timelog->notes = preg_replace('/[\n\r]+/m' , ' ', $timelog->notes);
+
     $worklog = new stdClass;
 
     // Set the Jira worklog ID on the worklog object if this Harvest
@@ -52,7 +55,14 @@ class JiraBugTracker implements BugTracker {
     $entries = $this->getTimelogEntries($ticketId);
     foreach ($entries as $entry) {
       if ($entry->harvestId == $timelog->harvestId) {
+	// if we are about to update an existing Harvest entry set the
+	// Jira id on the worklog entry
         $worklog->id = $entry->remoteId;
+      }
+      else if (isset($entry->harvestId)) {
+	// if this is an existing Harvest entry - but it doesn't match
+	// this Jira entry continue to the next entry
+	continue;
       }
 
       // Bail out if we don't need to actually update anything.
