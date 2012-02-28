@@ -54,14 +54,15 @@ class JiraBugTracker implements BugTracker {
     // entry is already tracked in Jira.
     $entries = $this->getTimelogEntries($ticketId);
     foreach ($entries as $entry) {
-      if ($entry->harvestId == $timelog->harvestId) {
+      if (isset($entry->harvestId) && ($entry->harvestId == $timelog->harvestId)) {
 	// if we are about to update an existing Harvest entry set the
 	// Jira id on the worklog entry
         $worklog->id = $entry->remoteId;
       }
-      else if (isset($entry->harvestId)) {
+      else {
 	// if this is an existing Harvest entry - but it doesn't match
-	// this Jira entry continue to the next entry
+	// this Jira entry OR if this is not a BugYield entry continue
+	// to the next entry
 	continue;
       }
 
