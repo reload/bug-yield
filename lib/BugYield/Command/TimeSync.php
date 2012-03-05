@@ -106,13 +106,16 @@ class TimeSync extends BugYieldCommand {
 	    $this->bugtracker->saveTimelogEntry($id, $worklog);	    
 	  } 
 	  catch (\Exception $e) {
-	    $email = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
+	    $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
+	    $subject = $id . ': time sync exception';
 	    $body = array();
 	    $body[] = 'Trying to sync Harvest entry:';
 	    $body[] = print_r($worklog, TRUE);
 	    $body[] = 'Failed with exeception:';
 	    $body[] = $e->getMessage();
-	    mail($email, $id . ': time sync exception', implode("\n", $body));
+	    $headers = array();
+	    $headers[] = 'From: "BugYield" <' . self::getBugyieldEmailFrom() . '>';
+	    mail($to, $subject, implode("\n", $body), implode("\r\n", $headers));
 	  }
         }
       }
