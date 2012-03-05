@@ -296,6 +296,25 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   
 
   /**
+   * Fetch the Harvest User Email by id
+   * @param Integer $harvest_user_id 
+   * @return String Full name
+   */
+  protected function getUserEmailById($harvest_user_id) {
+    $email = self::getBugyieldEmailFallback();
+    
+    $harvestUsers = $this->getUsers();
+    
+    if(isset($harvestUsers[$harvest_user_id])) {
+      $Harvest_User = $harvestUsers[$harvest_user_id];
+      $email = $Harvest_User->get("email");
+    }
+
+    return $email;    
+  }  
+  
+
+  /**
    * Fetch the Harvest Entry by id
    * @param Integer $harvestEntryId
    * @param Integer $harvest_user_id      

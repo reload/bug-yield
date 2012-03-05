@@ -102,7 +102,18 @@ class TimeSync extends BugYieldCommand {
         foreach($ticketIds as $id) {
 	  // saveTimelogEntry() will handle whether to add or update
 	  // entries.
-          $this->bugtracker->saveTimelogEntry($id, $worklog);
+	  try {
+	    $this->bugtracker->saveTimelogEntry($id, $worklog);	    
+	  } 
+	  catch (\Exception $e) {
+	    $email = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
+	    $body = array();
+	    $body[] = 'Trying to sync Harvest entry:';
+	    $body[] = print_r($worklog, TRUE);
+	    $body[] = 'Failed with exeception:';
+	    $body[] = $e->getMessage();
+	    mail($email, $id . ': time sync exception', implode("\n", $body));
+	  }
         }
       }
 
