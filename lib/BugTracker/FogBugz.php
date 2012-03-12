@@ -31,8 +31,7 @@ class FogBugzBugTracker implements BugTracker {
   public function getTimelogEntries($ticketId) {
     $ticketId = ltrim($ticketId, '#');
     $response = $this->api->search($ticketId, 'sTitle,hrsElapsedExtra,events', 1);
-    // @todo extract harvest related worklog entries
-    return $checkFogBugzEntries = self::getHarvestEntriesFromFBTicket($response);
+    return self::getHarvestEntriesFromFBTicket($response);
   }
 
   /**
@@ -47,39 +46,67 @@ class FogBugzBugTracker implements BugTracker {
    *   remoteId - for internal use
    */
   public function saveTimelogEntry($ticketId, $timelog) {
+    // Sanitize input.
     $ticketId = ltrim($ticketId, '#');
+    $timelog->notes = preg_replace('/[\r\n]+/', ' ', $timelog->notes);
 
+    $update = FALSE;
+    $elapsed_hours = 0;
     $entries = $this->getTimelogEntries($ticketId);
+
+    // Calculate all registered elapsed hours.
     foreach ($entries as $entry) {
-      // Bail out if we don't need to actually update anything.
-      if ($entry->harvestId == $timelog->harvestId &&
-          $entry->user      == $timelog->user      &&
-          $entry->hours     == $timelog->hours     &&
-          $entry->spentAt   == $timelog->spentAt   &&
-          $entry->project   == $timelog->project   &&
-          $entry->taskName  == $timelog->taskName  &&
-          $entry->notes     == $timelog->notes) {
+      $elapsed_hours += $entry->hours;
+    }
+
+    // If Entry is already registered - do an update if anything
+    // changed.
+    if (array_key_exists($timelog->harvestId, $entries)) {
+      // Bail out if nothing changed
+      if ($entries[$timelog->harvestId]->harvestId == $timelog->harvestId &&
+          $entries[$timelog->harvestId]->user      == $timelog->user      &&
+          $entries[$timelog->harvestId]->hours     == $timelog->hours     &&
+          $entries[$timelog->harvestId]->spentAt   == $timelog->spentAt   &&
+          $entries[$timelog->harvestId]->project   == $timelog->project   &&
+          $entries[$timelog->harvestId]->taskName  == $timelog->taskName  &&
+          $entries[$timelog->harvestId]->notes     == $timelog->notes) {
         return;
       }
+
+      // Adjust elapsed hours and mark as an update entry.
+      $elapsed_hours -= $entries[$timelog->harvestId]->hours;
+      $update = TRUE;
     }
 
-    $worklog->comment = $this->formatComment($timelog);
-    $worklog->startDate = date('c', strtotime($timelog->spentAt));
-    $worklog->timeSpent = $timelog->hours . 'h';
+    // Advance elapsed hours.
+    $elapsed_hours += $timelog->hours;
 
-    // Caveat in the Jira API - the parameter below must be set but the
-    // value is ignored so we just set it to NULL.
-    $worklog->timeSpentInSeconds = NULL;
+    //Update case with new or updated entry and time spent
+    $params = array();
+    $params['token']  = $this->api->getToken()->_data['token'];
+    $params['cmd']    = 'edit';
+    $params['ixBug']  = $ticketId;
+    $params['sEvent'] = vsprintf('Entry #%d [%s/%s]: "%s" by %s @ %s in "%s"%s',
+				 array(
+				       $timelog->harvestId,
+				       $timelog->hours,
+				       $timelog->taskName,
+				       $timelog->notes,
+				       $timelog->user,
+				       $timelog->spentAt,
+				       $timelog->project,
+				       $update ? ' (updated)' : '',
+				       ));
+
+    // We need to use , (comma) instead of . (period) as separator
+    // when reporting hours with decimals. Silly FogBugz.
+    $params['hrsElapsedExtra'] = number_format($elapsed_hours, 2, ',', '');
     
-    // If this is an existing entry update it - otherwise add it.
-    if (isset($worklog->id)) {
-      $this->api->updateWorklogAndAutoAdjustRemainingEstimate($this->token, $ticketId, $worklog);      
-    }
-    else {
-      $this->api->addWorklogAndAutoAdjustRemainingEstimate($this->token, $ticketId, $worklog);
-    }
+    // Add the (updated) data to the FogBugz entry.
+    $request = new \FogBugz_Request($this->api);
+    $request->setParams($params);
+    $response = $request->go();
   }
-
 
   /**
    * Fetch the Harvest data from the FogBugz updates. 
@@ -87,7 +114,7 @@ class FogBugzBugTracker implements BugTracker {
    * @param FogBugz_Response_Cases $response
    * @return Array Matches from the regex preg_match
    */
-  protected function getHarvestEntriesFromFBTicket(\FogBugz_Response_Cases $response, $include_overwritten_entries = FALSE) {
+  private function getHarvestEntriesFromFBTicket(\FogBugz_Response_Cases $response, $include_overwritten_entries = FALSE) {
     
     $harvestEntries = array();
 
@@ -97,7 +124,6 @@ class FogBugzBugTracker implements BugTracker {
     }
     
     foreach($response->_data as $case) {
-
       $fbId = $case->_data['ixBug'];
       if (isset($case->_data['events'])) {
         //Reverse the order of events to get the most recent first.
@@ -111,7 +137,7 @@ class FogBugzBugTracker implements BugTracker {
             $timelog->hours     = $matches[2];
             $timelog->taskName  = $matches[3];
             $timelog->notes     = trim(trim(strip_tags(html_entity_decode($matches[4], ENT_COMPAT, "UTF-8"))), '"');
-            $timelog->user      = $matches[5];
+            $timelog->user      = trim(trim(strip_tags(html_entity_decode($matches[5], ENT_COMPAT, "UTF-8"))), '"');
             $timelog->spentAt   = $matches[6];
             $timelog->project   = trim(trim(strip_tags(html_entity_decode($matches[7], ENT_COMPAT, "UTF-8"))), '"');
             $timelog->updated   = isset($matches[8]) ? TRUE : FALSE;
