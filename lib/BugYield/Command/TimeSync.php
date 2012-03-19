@@ -113,6 +113,9 @@ class TimeSync extends BugYieldCommand {
 	    $body[] = print_r($worklog, TRUE);
 	    $body[] = 'Failed with exeception:';
 	    $body[] = $e->getMessage();
+	    $body[] = '';
+	    $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
+	    $body[] = 'in Harvest please ask your friendly BugYield administrator: ' . self::getBugyieldEmailFrom();
 	    $headers = array();
 	    $headers[] = 'From: "BugYield" <' . self::getBugyieldEmailFrom() . '>';
 	    mail($to, $subject, implode("\n", $body), implode("\r\n", $headers));
