@@ -86,19 +86,20 @@ class JiraBugTracker implements BugTracker {
     // value is ignored so we just set it to NULL.
     $worklog->timeSpentInSeconds = NULL;
     
+    // Load issue so we can check its status and decided whether it
+    // is in an editable state.
+    $issue = $this->api->getIssue($this->token, $ticketId);
+    
+    // Reopen issue if status is "Closed" (6) which is non-editable.
+    echo $ticketId . ':' . print_r($issue, true);
+    if ($issue->status == 6) {
+      $fields[] = array();
+      // Action ID 3 is "Reopen issue".
+      $this->api->progressWorkflowAction($this->token, $issue->key, 3, $fields);
+    }
+
     // If this is an existing entry update it - otherwise add it.
     if (isset($worklog->id)) {
-      // Load issue so we can check its status and decided whether it
-      // is in an editable state.
-      $issue = $this->api->getIssue($this->token, $ticketId);
-
-      // Reopen issue if status is "Closed" (6) which is non-editable.
-      if ($issue->status == 6) {
-	$fields[] = array();
-	// Action ID 3 is "Reopen issue".
-	$this->api->progressWorkflowAction($this->token, $issue->key, 3, $fields);
-      }
-
       // Update the Registered time. Jira can't log worklog entries
       // with hours == 0 so delete the worklog entry in that case.
       if ($timelog->hours == 0) {
@@ -106,15 +107,6 @@ class JiraBugTracker implements BugTracker {
       }
       else {
         $this->api->updateWorklogAndAutoAdjustRemainingEstimate($this->token, $worklog);
-      }
-
-      // If issue status was "Closed" (6) we need to close the issue
-      // again (and set status and resolution back to original
-      // values).
-      if ($issue->status == 6) {
-	$fields[] = array('id' => 'resolution', 'values' => array($issue->resolution));
-	$fields[] = array('id' => 'status', 'values' => array($issue->status));
-	$this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);
       }
     }
     else {
@@ -125,6 +117,15 @@ class JiraBugTracker implements BugTracker {
       else {
 	// intentionally left blank
       }
+    }
+
+    // If issue status was "Closed" (6) we need to close the issue
+    // again (and set status and resolution back to original
+    // values).
+    if ($issue->status == 6) {
+      $fields[] = array('id' => 'resolution', 'values' => array($issue->resolution));
+      $fields[] = array('id' => 'status', 'values' => array($issue->status));
+      $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);
     }
   }
 
