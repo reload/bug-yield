@@ -91,7 +91,6 @@ class JiraBugTracker implements BugTracker {
     $issue = $this->api->getIssue($this->token, $ticketId);
     
     // Reopen issue if status is "Closed" (6) which is non-editable.
-    echo $ticketId . ':' . print_r($issue, true);
     if ($issue->status == 6) {
       $fields[] = array();
       // Action ID 3 is "Reopen issue".
