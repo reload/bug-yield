@@ -192,6 +192,8 @@ class TimeSync extends BugYieldCommand {
             }
             else {
               $output->writeln(sprintf('WARNING: Could not find email for this user: %s', $hEntryUser));
+              $output->writeln('-------- As the user cannot be found, the following checks will fail as well, so this entry will be skipped. Check user names for spelling errors etc.');
+              continue;
             }
 
             // basis data
