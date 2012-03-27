@@ -12,7 +12,15 @@ class JiraBugTracker implements BugTracker {
 
   public function getTitle($ticketId) {
     $ticketId = ltrim($ticketId, '#');
-    $response = $this->api->getIssue($this->token, $ticketId);
+
+    // the Jira throws an exception if the issue does not exists or are unreachable. We don't want that, hence the try/catch
+    try {
+      $response = $this->api->getIssue($this->token, $ticketId);
+    } catch (Exception $e) {
+      //TODO: Valuable information will be returned from Jira here, we should log it somewhere. E.g.:
+      // com.atlassian.jira.rpc.exception.RemotePermissionException: This issue does not exist or you don't have permission to view it.
+      return FALSE;
+    }
 
     if (is_object($response) && isset($response->summary)) {
       return $response->summary;
