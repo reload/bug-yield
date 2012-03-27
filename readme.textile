@@ -58,3 +58,12 @@ h2. To do
 
 * Support for more ticket management ("Lighthouse":http://lighthouseapp.com) and time tracking systems.
 * Improve error handling
+
+h2. Known errors and problems
+
+Note to self:
+When synchronizing with FogBugz we sometimes get SSL certificate errors. A quick fix is to make CURL ignore invalid SSL certifikates. Do that by adding this line to vendor/fogbugz-php-library/src/fogbugz_request.php on line 32:
+<code>
+curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,false); // added by rasmus, ignore SSL verification. @See http://unitstep.net/blog/2009/05/05/using-curl-in-php-to-access-https-ssltls-protected-sites/
+</code>
+I'm sure that there are better ways of handling this issue...
