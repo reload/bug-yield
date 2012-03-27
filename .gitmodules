@@ -1,12 +1,12 @@
 [submodule "vendor/fogbugz-php-library"]
 	path = vendor/fogbugz-php-library
-	url = https://github.com/kasperg/Fogbugz-PHP-Library.git
+	url = git://github.com/kasperg/Fogbugz-PHP-Library.git
 [submodule "vendor/Symfony/Component/ClassLoader"]
 	path = vendor/Symfony/Component/ClassLoader
-	url = https://github.com/symfony/ClassLoader.git
+	url = git://github.com/symfony/ClassLoader.git
 [submodule "vendor/Symfony/Component/Console"]
 	path = vendor/Symfony/Component/Console
-	url = https://github.com/symfony/Console.git
+	url = git://github.com/symfony/Console.git
 [submodule "vendor/Symfony/Component/Yaml"]
 	path = vendor/Symfony/Component/Yaml
-	url = https://github.com/symfony/Yaml.git
+	url = git://github.com/symfony/Yaml.git
