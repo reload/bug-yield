@@ -69,6 +69,7 @@ class TitleSync extends BugYieldCommand {
 
         //One entry may - but shouldn't - contain multiple ticket ids
         foreach ($this->getTicketIds($entry) as $ticketId) {
+
           //Get the case title.
           $title = $this->bugtracker->getTitle($ticketId);
 
@@ -76,7 +77,7 @@ class TitleSync extends BugYieldCommand {
             preg_match('/'.$ticketId.'(?:\[(.*?)\])?/i', $entry->get('notes'), $matches);
             if (isset($matches[1])) {
 
-              // No bugs found here yet, but I suspect that we should html_entity_code the matches array
+              // No bugs found here yet, but I suspect that we should encode the matches array. NOTE: Added CDATA later on...
               if ($matches[1] != $title) {
                 //Entry note includes ticket title it does not match current title
                 //so update it
@@ -94,6 +95,10 @@ class TitleSync extends BugYieldCommand {
         }
 
         if ($update) {
+
+          // adding CDATA tags around the notes - or Harvest will fail on chars as < > & -- Harvest removes < and > in the website editor btw
+          $entry->set('notes', '<![CDATA['.$entry->get('notes') . ']]>');
+
           //Update the entry in Harvest
           $result = $harvest->updateEntry($entry);
           if($result->isSuccess()) {
