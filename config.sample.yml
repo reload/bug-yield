@@ -7,13 +7,21 @@ harvest:
 bugyield:
   email_from: bugyield@mycompany.com
   email_fallback: bugyield@mycompany.com
-fogbugz:
+a-label:
+  bugtracker: fogbugz
   url: https://mycompany.fogbugz.com
   username: bugyield@mycompany.com
   password: abcd
   projects: "alias,name,id"
-jira:
-  accout: my-company
+another-label:
+  bugtracker: jira
+  url: https://mycompany.atlassian.net
   username: my-username
   password: 5678
+  projects: "alias,name,id"
+yet-another-label:
+  bugtracker: jira
+  url: https://othercompany.atlassian.net
+  username: other-username
+  password: 1234
   projects: "alias,name,id"
