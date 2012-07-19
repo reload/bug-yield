@@ -56,10 +56,20 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * Fetch url to FB
    * @return String Url
    */
-  protected function getFogBugzURL() {
+  protected function getBugtrackerURL() {
     return $this->bugtrackerConfig['url'];
   }
-        
+
+  /**
+   * Create direct url to ticket
+   *
+   * @param String $ticketId ID of ticket, eg "4564" or "SCL-34"
+   * @return String Url
+   */
+  protected function getBugtrackerTicketURL($ticketId) {
+    return sprintf($this->bugtrackerConfig['url'] . $this->bugtrackerConfig['url_ticket_pattern'], $ticketId);
+  }
+
   protected function getHarvestURL() {
     $http = "http://";
     if( $this->harvestConfig['ssl'] == true ) {
@@ -341,7 +351,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     return $entry;
     
   }
-  
+
   /**
    * Fetch the Harvest user by searching for the full name
    * This will of course make odd results if you have two or more active users with exactly the same name...
