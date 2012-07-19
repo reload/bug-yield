@@ -126,9 +126,17 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       $config = Yaml::load($configFile);
       $this->harvestConfig = $config['harvest'];
       $this->bugyieldConfig = $config['bugyield'];
-      $this->bugtrackerConfig = $config[$input->getOption('bugtracker')];
+
+      if(isset($config[$input->getOption('bugtracker')])) {
+        $this->bugtrackerConfig = $config[$input->getOption('bugtracker')];
+      }
+      else
+      {
+        throw new \Exception(sprintf('Configuration file error: Uknown bugtracker label "%s"', $input->getOption('bugtracker')));
+      }
+
     } else {
-      throw new Exception(sprintf('Missing configuration file %s', $configFile));
+      throw new \Exception(sprintf('Missing configuration file %s', $configFile));
     }
   }
 
