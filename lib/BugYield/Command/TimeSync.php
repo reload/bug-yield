@@ -100,150 +100,152 @@ class TimeSync extends BugYieldCommand {
         $worklog->notes     = $entry->get('notes');
         
         foreach($ticketIds as $id) {
-	  // saveTimelogEntry() will handle whether to add or update
-	  // entries.
-	  try {
-	    $this->bugtracker->saveTimelogEntry($id, $worklog);	    
-	  } 
-	  catch (\Exception $e) {
-	    $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
-	    $subject = $id . ': time sync exception';
-	    $body = array();
-	    $body[] = 'Trying to sync Harvest entry:';
-	    $body[] = print_r($worklog, TRUE);
-	    $body[] = 'Failed with exeception:';
-	    $body[] = $e->getMessage();
-	    $body[] = '';
-	    $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
-	    $body[] = 'in Harvest please ask your friendly BugYield administrator: ' . self::getBugyieldEmailFrom();
-	    $headers = array();
-	    $headers[] = 'From: "BugYield" <' . self::getBugyieldEmailFrom() . '>';
-	    mail($to, $subject, implode("\n", $body), implode("\r\n", $headers));
-	  }
+	        // entries.
+          try {
+            // saveTimelogEntry() will handle whether to add or update
+            $this->bugtracker->saveTimelogEntry($id, $worklog);
+            $checkBugtrackerEntries[$id] = $this->bugtracker->getTimelogEntries($id);
+          }
+          catch (\Exception $e) {
+            $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
+            $subject = $id . ': time sync exception';
+            $body = array();
+            $body[] = 'Trying to sync Harvest entry:';
+            $body[] = print_r($worklog, TRUE);
+            $body[] = 'Failed with exeception:';
+            $body[] = $e->getMessage();
+            $body[] = '';
+            $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
+            $body[] = 'in Harvest please ask your friendly BugYield administrator: ' . self::getBugyieldEmailFrom();
+            $headers = array();
+            $headers[] = 'From: "BugYield" <' . self::getBugyieldEmailFrom() . '>';
+            mail($to, $subject, implode("\n", $body), implode("\r\n", $headers));
+          }
         }
       }
 
-      /* // @todo error checking */
-      /* $possibleErrors = array(); */
+    /* // @todo error checking */
+// EXPERIMENTAL BY RASMUS, Only works in FOGBUGZ
 
-      /* foreach($checkFogBugzEntries as $fbId => $harvestEntriesData) { */
-      /*   foreach($harvestEntriesData as $hEntryData) { */
-      /*     $hEntryId = $hEntryData[1]; */
-      /*     if(!isset($checkHarvestEntries[$hEntryId]) || !in_array($fbId,$checkHarvestEntries[$hEntryId])) { */
-      /*       $possibleErrors[] = array($fbId => $hEntryData); */
-      /*     } */
-      /*   } */
-      /* } */
+    $possibleErrors = array();
+    $worklog = null;
+    $bugtrackerName   = $this->bugtracker->getName();
 
-      /* // if we have possible error, then look up the Harvest Entries, as they might just be old and therefore out of our current scope. */
-      /* // Or the entry could have been deleted or edited out, thereby making FB data out-of-sync. */
-      /* if(!empty($possibleErrors)) { */
-      /*   $realErrors = array(); */
+    foreach($checkBugtrackerEntries as $fbId => $harvestEntriesData) {
+      foreach($harvestEntriesData as $worklog) {
+        if(!isset($checkBugtrackerEntries[$worklog->harvestId]) || !in_array($fbId,$checkHarvestEntries[$worklog->harvestId])) {
+          $possibleErrors[] = array($fbId => $worklog);
+        }
+      }
+    }
 
-      /*   foreach($possibleErrors as $data) { */
-      /*     foreach($data as $fbId => $hEntryData) { */
+    // if we have possible error, then look up the Harvest Entries, as they might just be old and therefore out of our current scope.
+    // Or the entry could have been deleted or edited out, thereby making Bugtracker data out-of-sync.
+    if(!empty($possibleErrors)) {
+      $realErrors = array();
 
-      /*       $errorData      = array(); */
-      /*       $hUserId        = false; */
-      /*       $hUserEmail     = self::getBugyieldEmailFallback(); */
+      foreach($possibleErrors as $data) {
+        foreach($data as $fbId => $worklog) {
 
-      /*       $hEntryId       = $hEntryData[1]; */
-      /*       $hEntryUser     = trim(html_entity_decode($hEntryData[4], ENT_COMPAT, "UTF-8")); */
-      /*       $Harvest_User   = self::getHarvestUserByFullName($hEntryUser); */
+          $errorData      = array();
+          $hUserId        = false;
+          $hUserEmail     = self::getBugyieldEmailFallback();
 
-      /*       if($Harvest_User) { */
-      /*         $hUserId    = $Harvest_User->get("id"); */
-      /*         $hUserEmail = $Harvest_User->get("email"); */
+          $hEntryUser     = trim(html_entity_decode($worklog->user, ENT_COMPAT, "UTF-8"));
+          $Harvest_User   = self::getHarvestUserByFullName($hEntryUser);
 
-      /*         //$output->writeln(sprintf('DEBUG: User %s results in uid %d and email %s', $hEntryUser, $hUserId, $hUserEmail)); */
-      /*       } */
-      /*       else { */
-      /*         $output->writeln(sprintf('WARNING: Could not find email for this user: %s', $hEntryUser)); */
-      /*       } */
+          if($Harvest_User) {
+            $hUserId    = $Harvest_User->get("id");
+            $hUserEmail = $Harvest_User->get("email");
 
-      /*       // basis data */
-      /*       $errorData["bugID"]   = $fbId; */
-      /*       $errorData["name"]    = $hEntryUser; */
-      /*       $errorData["userid"]  = $hUserId; */
-      /*       $errorData["email"]   = $hUserEmail; */
-      /*       $errorData["date"]    = $hEntryData[5]; */
-      /*       $errorData["bugNote"] = html_entity_decode(strip_tags($hEntryData[0])); */
-      /*       $errorData["entryid"] = $hEntryId; */
+            //$output->writeln(sprintf('DEBUG: User %s results in uid %d and email %s', $hEntryUser, $hUserId, $hUserEmail));
+          }
+          else {
+            $output->writeln(sprintf('WARNING: Could not find email for this user: %s', $hEntryUser));
+            $output->writeln('-------- As the user cannot be found, the following checks will fail as well, so this entry will be skipped. Check user names for spelling errors etc.');
+            continue;
+          }
 
-      /*       // fetch entry from Harvest */
-      /*       if($entry = self::getEntryById($hEntryId,$hUserId)) { */
-      /*         // look for the ID */
-      /*         $ticketIds = self::getTickedIds($entry); */
-      /*         if(!in_array($fbId,$ticketIds)) { */
-      /*           // error found! The time entry still exist, but there is no reference to this bug anylonger */
+          // basis data
+          $errorData["bugID"]   = $fbId;
+          $errorData["name"]    = $hEntryUser;
+          $errorData["userid"]  = $hUserId;
+          $errorData["email"]   = $hUserEmail;
+          $errorData["date"]    = $worklog->spentAt;
+          $errorData["bugNote"] = html_entity_decode(strip_tags($worklog->notes));
+          $errorData["entryid"] = $worklog->harvestId;
 
-      /*           // check that the FB user matches the entry user. If not, load the proper user */
-      /*           if($hUserId != $entry->get("user-id")) { */
-      /*             // hmm, this is unusual... */
-      /*             $output->writeln(sprintf('WARNING: We have an errornous reference from BugID #%d to timeentry #%d where the users do not match: %s', $fbId, $entry->get("id"), var_export($hEntryData,true))); */
-      /*           } */
+          // fetch entry from Harvest
+          if($entry = self::getEntryById($worklog->harvestId,$hUserId)) {
+            // look for the ID
+            $ticketIds = self::getTicketIds($entry);
+            if(!in_array($fbId,$ticketIds)) {
+              // error found! The time entry still exist, but there is no reference to this bug anylonger
 
-      /*           // Add error 1 reason */
-      /*           $errorData["entryNote"] = $entry->get("notes"); */
-      /*           $errorData["reason"]  = sprintf("Error 1: The time entry (#%d) still exist in Harvest, but there is no reference to bug #%d from the entry.",$errorData["entryid"],$fbId); */
-      /*           $realErrors[] = $errorData; */
-      /*         } */
-      /*         else { */
-      /*           continue; */
-      /*         } */
-      /*       } */
-      /*       else { */
-      /*         // error found! No entry found in Harvest, FogBugz is referring to a timeentry that does not exist anylonger. */
-      /*         // add error 2 reason */
-      /*         $errorData["entryNote"] = "ENTRY DELETED"; */
-      /*         $errorData["reason"]  = sprintf("Error 2: No entry found in Harvest, FogBugz bug #%d is referring to a timeentry (#%d) that does not exist anylonger.",$fbId,$errorData["entryid"]);                       */
-      /*         $realErrors[] = $errorData; */
-      /*       } */
-      /*     } */
-      /*   } */
+              // check that the bugtracker user matches the entry user. If not, load the proper user
+              if($hUserId != $entry->get("user-id")) {
+                // hmm, this is unusual...
+                $output->writeln(sprintf('WARNING: We have an errornous reference from BugID %s to timeentry %s where the users do not match: %s', $fbId, $entry->get("id"), var_export($hEntryData,true)));
+              }
 
-      /*   if(!empty($realErrors)) { */
-      /*     $output->writeln(sprintf('ERRORs found: We have %d erroneous references from FogBugz to Harvest. Users will be notified by email, stand by...', count($realErrors))); */
+              // Add error 1 reason
+              $errorData["entryNote"] = $entry->get("notes");
+              $errorData["reason"]  = sprintf("Error 1: The time entry (%s) still exist in Harvest, but there is no reference to ticket %s from the entry. This could mean that you have changed or removed the ticketId in this particular Harvest time entry.",$errorData["entryid"],$fbId);
+              $realErrors[] = $errorData;
+            }
+            else {
+              continue;
+            }
+          }
+          else {
+            // error found! No entry found in Harvest, the Bugtracker is referring to a timeentry that does not exist anylonger.
+            // add error 2 reason
+            $errorData["entryNote"] = "ENTRY DELETED";
+            $errorData["reason"]  = sprintf("Error 2: No entry found in Harvest, %s ticket %s is referring to a timeentry (%s) that does not exist anylonger.",$bugtrackerName,$fbId,$errorData["entryid"]);		        
+            $realErrors[] = $errorData;
+          }
+        }
+      }
 
-      /*     foreach($realErrors as $errorData) { */
+      if(!empty($realErrors)) {
+        $output->writeln(sprintf('ERRORs found: We have %s erroneous references from %s to Harvest. Users will be notified by email, stand by...', count($realErrors), $bugtrackerName));
 
-      /*       // data for the mail */
-      /*       $unixdate         = strtotime($errorData["date"]); */
-      /*       $year             = date("Y",$unixdate); // YYYY */
-      /*       $dayno            = date("z",$unixdate)+1; // Day of the year, eg. 203 */
-      /*       $harvestEntryUrl  = sprintf(self::getHarvestURL() . "daily/%d/%d/%d#timer_link_%d", $errorData["userid"], $dayno, $year, $errorData["entryid"]); */
+        foreach($realErrors as $errorData) {
 
-      /*       // build the mail to be sent */
-      /*       $subject  = sprintf("BugYield Synchronisation error found in #%d registered %s by %s", $errorData["bugID"], $errorData["date"], $errorData["name"]); */
-      /*       $body     = sprintf("Hi %s,\nBugYield has found some inconsistencies between Harvest and data registrered on bug #%d. Please review this error:\n\n%s\n", $errorData["name"],$errorData["bugID"],$errorData["reason"]); */
-      /*       $body     .= sprintf("\nLink to FogBugz: %s", self::getFogBugzURL() . "/default.asp?".$errorData["bugID"]); */
-      /*       $body     .= sprintf("\nLink to Harvest: %s", $harvestEntryUrl); */
-      /*       $body     .= "\n\nData from Harvest:\n" . $errorData["entryNote"]; */
-      /*       $body     .= "\nData from FogBugz:\n" . $errorData["bugNote"]; */
-      /*       $body     .= "\n\nIMPORTANT: In order to fix this, you must manually edit the entries, e.g. by editing/removing the logdata from FogBugz and subtract the time added."; */
-      /*       $headers  = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion();        */
+          // data for the mail
+          $unixdate         = strtotime($errorData["date"]);
+          $year             = date("Y",$unixdate); // YYYY
+          $dayno            = date("z",$unixdate)+1; // Day of the year, eg. 203
+          $harvestEntryUrl  = sprintf(self::getHarvestURL() . "daily/%d/%d/%d#timer_link_%d", $errorData["userid"], $dayno, $year, $errorData["entryid"]);
 
+          // build the mail to be sent
+          $subject  = sprintf("BugYield Synchronisation error found in %s registered %s by %s", $errorData["bugID"], $errorData["date"], $errorData["name"]);
+          $body     = sprintf("Hi %s,\nBugYield has found some inconsistencies between Harvest and data registrered on bug %s. Please review this error:\n\n%s\n", $errorData["name"],$errorData["bugID"],$errorData["reason"]);
+          $body     .= sprintf("\nLink to %s: %s", $bugtrackerName, self::getBugtrackerTicketURL($this->bugtracker->sanitizeTicketId($errorData["bugID"])));
+          $body     .= sprintf("\nLink to Harvest: %s", $harvestEntryUrl);
+          $body     .= sprintf("\n\nData from Harvest:\n%s", $errorData["entryNote"]);
+          $body     .= sprintf("\nData from %s:\n%s",$bugtrackerName, $errorData["bugNote"]);
+          $body     .= sprintf("\n\nIMPORTANT: In order to fix this, you must manually edit the entries, e.g. by editing/removing the logdata from %s and subtract the time added.",$bugtrackerName);
+          $headers  = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion();
 
-      /*       $output->writeln(sprintf("  > Sync error found in #%d: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"])); */
+          $output->writeln(sprintf("  > Sync error found in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
 
+          if(!mail($errorData["email"], $subject, $body, $headers))
+          {
+            $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"]));
+            // send to admin instead
+            mail(self::getBugyieldEmailFallback(), "FALLBACK: " . $subject, $body, $headers);
+          }
+          else
+          {
+            $output->writeln(sprintf('  > Email sent to %s', $errorData["email"]));
+          }
+        }
+      }
+    }
 
-      /*       if(!mail($errorData["email"], $subject, $body, $headers)) */
-      /*         { */
-      /*           $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"])); */
-      /*           // send to admin instead */
-      /*           mail(self::getBugyieldEmailFallback(), "FALLBACK: " . $subject, $body, $headers); */
-      /*         } */
-      /*       else */
-      /*         { */
-      /*           $output->writeln(sprintf('  > Email sent to %s', $errorData["email"])); */
-      /*         } */
-      /*     } */
-      /*   } */
-      /* } */
-
-
-    } catch (FogBugz_Exception $e) {
-      $output->writeln('Error communicating with FogBugz: '. $e->getMessage());
+    } catch (\Exception $e) {
+      $output->writeln('Error communicating with TicketSystem: '. $e->getMessage());
     }
 
     $output->writeln("TimeSync completed");
