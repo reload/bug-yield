@@ -53,7 +53,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   }     
 
   /**
-   * Fetch url to FB
+   * Fetch url to the bugtracker
    * @return String Url
    */
   protected function getBugtrackerURL() {
@@ -78,6 +78,18 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     }
 
     return $http . $this->harvestConfig['account'] . ".harvestapp.com/";
+  }
+
+  /**
+   * Fetch email of email to notify extra if errors occur
+   * @return String Url
+   */
+  protected function getEmailNotifyOnError() {
+    $email = null;
+    if(isset($this->bugtrackerConfig['email_notify_on_error']) && !empty($this->bugtrackerConfig['email_notify_on_error'])) {
+      $email = trim($this->bugtrackerConfig['email_notify_on_error']);
+    }
+    return $email;
   }
 
   /**
@@ -106,7 +118,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
     $this->bugtracker->getApi($this->bugtrackerConfig['url'], $this->bugtrackerConfig['username'], $this->bugtrackerConfig['password']);
   }
-        
+
   protected function getBugyieldEmailFrom() {
     return $this->bugyieldConfig["email_from"];
   }
