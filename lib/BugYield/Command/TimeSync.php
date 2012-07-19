@@ -28,6 +28,7 @@ class TimeSync extends BugYieldCommand {
     $checkHarvestEntries = array();
 
     $output->writeln('TimeSync executed: ' . date('Ymd H:i:s'));
+    $output->writeln(sprintf('Bugtracker is %s (%s)', $this->bugtracker->getName(), $this->getBugtrackerURL()));
     $output->writeln('Verifying projects in Harvest');
 
     $projects = $this->getProjects($this->getProjectIds($input));
@@ -100,10 +101,13 @@ class TimeSync extends BugYieldCommand {
         $worklog->notes     = $entry->get('notes');
         
         foreach($ticketIds as $id) {
-	        // entries.
+          // entries.
           try {
             // saveTimelogEntry() will handle whether to add or update
             $this->bugtracker->saveTimelogEntry($id, $worklog);
+
+            // save entries for the error checking below.
+            // TODO: This runs every time a ticket has been referenced, it might be too heavy.
             $checkBugtrackerEntries[$id] = $this->bugtracker->getTimelogEntries($id);
           }
           catch (\Exception $e) {
@@ -124,8 +128,9 @@ class TimeSync extends BugYieldCommand {
         }
       }
 
-    /* // @todo error checking */
-// EXPERIMENTAL BY RASMUS, Only works in FOGBUGZ
+    // ERROR CHECKING BELOW
+    // This code will look for irregularities in the logged data, namely if the bugtracker is out-of-sync with Harvest
+    // Currently this runs whenever a ticket in the bugtracker has been referenced in Harvest - then all the logged entries are checked.
 
     $possibleErrors = array();
     $worklog = null;
@@ -150,6 +155,7 @@ class TimeSync extends BugYieldCommand {
           $errorData      = array();
           $hUserId        = false;
           $hUserEmail     = self::getBugyieldEmailFallback();
+          $notifyOnError  = self::getEmailNotifyOnError(); // email to notify on error, typically a PM
 
           $hEntryUser     = trim(html_entity_decode($worklog->user, ENT_COMPAT, "UTF-8"));
           $Harvest_User   = self::getHarvestUserByFullName($hEntryUser);
@@ -167,13 +173,14 @@ class TimeSync extends BugYieldCommand {
           }
 
           // basis data
-          $errorData["bugID"]   = $fbId;
-          $errorData["name"]    = $hEntryUser;
-          $errorData["userid"]  = $hUserId;
-          $errorData["email"]   = $hUserEmail;
-          $errorData["date"]    = $worklog->spentAt;
-          $errorData["bugNote"] = html_entity_decode(strip_tags($worklog->notes));
-          $errorData["entryid"] = $worklog->harvestId;
+          $errorData["bugID"]     = $fbId;
+          $errorData["name"]      = $hEntryUser;
+          $errorData["userid"]    = $hUserId;
+          $errorData["email"]     = $hUserEmail;
+          $errorData["date"]      = $worklog->spentAt;
+          $errorData["bugNote"]   = html_entity_decode(strip_tags($worklog->notes));
+          $errorData["entryid"]   = $worklog->harvestId;
+          $errorData["remoteId"]  = $worklog->remoteId;
 
           // fetch entry from Harvest
           if($entry = self::getEntryById($worklog->harvestId,$hUserId)) {
@@ -221,12 +228,16 @@ class TimeSync extends BugYieldCommand {
           // build the mail to be sent
           $subject  = sprintf("BugYield Synchronisation error found in %s registered %s by %s", $errorData["bugID"], $errorData["date"], $errorData["name"]);
           $body     = sprintf("Hi %s,\nBugYield has found some inconsistencies between Harvest and data registrered on bug %s. Please review this error:\n\n%s\n", $errorData["name"],$errorData["bugID"],$errorData["reason"]);
-          $body     .= sprintf("\nLink to %s: %s", $bugtrackerName, self::getBugtrackerTicketURL($this->bugtracker->sanitizeTicketId($errorData["bugID"])));
+          $body     .= sprintf("\nLink to %s: %s", $bugtrackerName, self::getBugtrackerTicketURL($this->bugtracker->sanitizeTicketId($errorData["bugID"]),$errorData["remoteId"]));
           $body     .= sprintf("\nLink to Harvest: %s", $harvestEntryUrl);
-          $body     .= sprintf("\n\nData from Harvest:\n%s", $errorData["entryNote"]);
-          $body     .= sprintf("\nData from %s:\n%s",$bugtrackerName, $errorData["bugNote"]);
+          $body     .= sprintf("\n\nCurrent data from Harvest entry:\n  %s", $errorData["entryNote"]);
+          $body     .= sprintf("\n\nOutdated Harvest data logged in %s:\n  %s",$bugtrackerName, $errorData["bugNote"]);
           $body     .= sprintf("\n\nIMPORTANT: In order to fix this, you must manually edit the entries, e.g. by editing/removing the logdata from %s and subtract the time added.",$bugtrackerName);
           $headers  = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+          // add CC if defined in the config
+          if(!empty($notifyOnError)) {
+            $headers  = 'Cc: ' . $notifyOnError . "\r\n";
+          }
 
           $output->writeln(sprintf("  > Sync error found in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
 
@@ -245,7 +256,7 @@ class TimeSync extends BugYieldCommand {
     }
 
     } catch (\Exception $e) {
-      $output->writeln('Error communicating with TicketSystem: '. $e->getMessage());
+      $output->writeln('Error communicating with bugtracker: '. $e->getMessage());
     }
 
     $output->writeln("TimeSync completed");
