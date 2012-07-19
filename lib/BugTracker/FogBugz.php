@@ -127,7 +127,7 @@ class FogBugzBugTracker implements BugTracker {
       error_log("no data from this response");
       return $harvestEntries;
     }
-    
+
     foreach($response->_data as $case) {
       $fbId = $case->_data['ixBug'];
       if (isset($case->_data['events'])) {
@@ -135,6 +135,7 @@ class FogBugzBugTracker implements BugTracker {
         //These will contain the latest updates in regard to time and task.
         $events = $case->_data['events']->_data;
         foreach ($events as $event) {
+
           $text = (isset($event->_data['sHtml'])) ? $event->_data['sHtml'] : $event->_data['s'];
           if (is_string($text) && preg_match('/^Entry\s#([0-9]+)\s\[(.*?)\/(.*?)\]:\s(.*?)by\s(.*?)@\s([0-9-]+)\sin\s(.*?)(\s\(updated\))?$/', $text, $matches)) {
             $timelog = new stdClass;
@@ -146,6 +147,7 @@ class FogBugzBugTracker implements BugTracker {
             $timelog->spentAt   = $matches[6];
             $timelog->project   = trim(trim(strip_tags(html_entity_decode($matches[7], ENT_COMPAT, "UTF-8"))), '"');
             $timelog->updated   = isset($matches[8]) ? TRUE : FALSE;
+            $timelog->remoteId  = $event->_data['ixBugEvent'];
             
             if ($include_overwritten_entries) {
               $harvestEntries[] = $timelog;
