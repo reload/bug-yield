@@ -1,6 +1,9 @@
 <?php
 
 interface BugTracker {
+
+  // Name of the tracker for presentation purposes.
+  public function getName();
   public function getApi($url, $username, $password);
   public function getTitle($ticketId);
   public function extractIds($string);
@@ -18,6 +21,8 @@ interface BugTracker {
    *   remoteId - for internal use
    */
   public function saveTimelogEntry($ticketId, $timelogEntry);
+
+  public function sanitizeTicketId($ticketId);
 }
 
 require_once __DIR__ . '/BugTracker/FogBugz.php';

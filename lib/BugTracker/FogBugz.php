@@ -3,6 +3,11 @@
 class FogBugzBugTracker implements BugTracker {
 
   private $api = NULL;
+  private $name = "FogBugz";
+
+  public function getName() {
+    return $this->name;
+  }
 
   public function getApi($url, $username, $password) {
     $this->api = new \FogBugz($url, $username, $password);
@@ -155,5 +160,13 @@ class FogBugzBugTracker implements BugTracker {
     }
     
     return $harvestEntries;
+  }
+
+  /**
+   * Return the TicketID in its purest form, e.g. removing #hashmarks
+   */
+  public function sanitizeTicketId($ticketId) {
+    $ticketId = intval(str_replace("#","",$ticketId));
+    return $ticketId;
   }
 }

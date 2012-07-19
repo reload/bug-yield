@@ -2,8 +2,13 @@
 
 class JiraBugTracker implements BugTracker {
 
-  private $api = NULL;
-  private $token = NULL;
+  private $api    = NULL;
+  private $token  = NULL;
+  private $name   = "Jira";
+
+  public function getName() {
+    return $this->name;
+  }
 
   public function getApi($url, $username, $password) {
     $this->api= new SoapClient($url . '/rpc/soap/jirasoapservice-v2?wsdl');
@@ -63,15 +68,15 @@ class JiraBugTracker implements BugTracker {
     $entries = $this->getTimelogEntries($ticketId);
     foreach ($entries as $entry) {
       if (isset($entry->harvestId) && ($entry->harvestId == $timelog->harvestId)) {
-	// if we are about to update an existing Harvest entry set the
-	// Jira id on the worklog entry
+        // if we are about to update an existing Harvest entry set the
+        // Jira id on the worklog entry
         $worklog->id = $entry->remoteId;
       }
       else {
-	// if this is an existing Harvest entry - but it doesn't match
-	// this Jira entry OR if this is not a BugYield entry continue
-	// to the next entry
-	continue;
+        // if this is an existing Harvest entry - but it doesn't match
+        // this Jira entry OR if this is not a BugYield entry continue
+        // to the next entry
+        continue;
       }
 
       // Bail out if we don't need to actually update anything.
@@ -122,7 +127,7 @@ class JiraBugTracker implements BugTracker {
         $this->api->addWorklogAndAutoAdjustRemainingEstimate($this->token, $ticketId, $worklog);
       }
       else {
-	// intentionally left blank
+        // intentionally left blank
       }
     }
 
@@ -163,5 +168,13 @@ class JiraBugTracker implements BugTracker {
                           $timelog->user,
                           $timelog->project,
                           ));
+  }
+
+  /**
+   * Preparing this for JIRA, e.g. removing #hashmark, transforming "#scl-123" to "SCL-123"
+   */
+  public function sanitizeTicketId($ticketId) {
+    $ticketId = trim(strtoupper(str_replace("#","",$ticketId)));
+    return $ticketId;
   }
 }
