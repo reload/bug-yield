@@ -75,7 +75,15 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @return \FogBugz
    */
   protected function getBugTrackerApi(InputInterface $input) {
-    switch ($input->getOption('bugtracker')) {
+    // The bugtracker system is defined in the config. As a fallback
+    // we use the config section label as bugtracker system
+    // identifier.
+    if (isset($this->bugtrackerConfig['bugtracker'])) {
+        $bugtracker =  $this->bugtrackerConfig['bugtracker'];
+      } else {
+        $bugtracker = $input->getOption('bugtracker');
+      }
+    switch ($bugtracker) {
     case 'jira':
       $this->bugtracker = new \JiraBugTracker;
       break;
