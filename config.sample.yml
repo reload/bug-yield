@@ -10,18 +10,25 @@ bugyield:
 a-label:
   bugtracker: fogbugz
   url: https://mycompany.fogbugz.com
+  url_ticket_pattern: /default.asp?%s #path to ticket via ID, will be prefixed with url
   username: bugyield@mycompany.com
   password: abcd
   projects: "alias,name,id"
 another-label:
   bugtracker: jira
   url: https://mycompany.atlassian.net
+  url_ticket_pattern: /%s #path to ticket via ID, will be prefixed with url
   username: my-username
   password: 5678
   projects: "alias,name,id"
 yet-another-label:
   bugtracker: jira
   url: https://othercompany.atlassian.net
+  url_ticket_pattern: /%s #path to ticket via ID, will be prefixed with url
   username: other-username
   password: 1234
-  projects: "alias,name,id"
+  # alternative syntax for easier reading
+  projects:
+    - project-one-alias
+    - project-two-alias
+    - project-three-alias
