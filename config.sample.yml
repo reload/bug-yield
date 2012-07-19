@@ -10,21 +10,26 @@ bugyield:
 a-label:
   bugtracker: fogbugz
   url: https://mycompany.fogbugz.com
-  url_ticket_pattern: /default.asp?%s #path to ticket via ID, will be prefixed with url
+  # FogBugz specific path to ticket via ID and EventID, will be prefixed with "url".
+  url_ticket_pattern: '/default.asp?%1$s#BugEvent.%2$d'
   username: bugyield@mycompany.com
   password: abcd
   projects: "alias,name,id"
+  email_notify_on_error: "bugyield+errors@company.com"
 another-label:
   bugtracker: jira
   url: https://mycompany.atlassian.net
-  url_ticket_pattern: /%s #path to ticket via ID, will be prefixed with url
+  # JIRA specific path to ticket via ID and WorklogID, will be prefixed with "url".
+  url_ticket_pattern: '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%3Aworklog-tabpanel#worklog-%2$d'
   username: my-username
   password: 5678
   projects: "alias,name,id"
+  email_notify_on_error: "bugyield+errors@company.com"  
 yet-another-label:
   bugtracker: jira
   url: https://othercompany.atlassian.net
-  url_ticket_pattern: /%s #path to ticket via ID, will be prefixed with url
+  # JIRA specific path to ticket via ID and WorklogID, will be prefixed with "url".
+  url_ticket_pattern: '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%3Aworklog-tabpanel#worklog-%2$d'
   username: other-username
   password: 1234
   # alternative syntax for easier reading
@@ -32,3 +37,4 @@ yet-another-label:
     - project-one-alias
     - project-two-alias
     - project-three-alias
+  email_notify_on_error: "bugyield+errors@company.com"
