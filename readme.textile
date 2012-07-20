@@ -1,8 +1,9 @@
 h1. BugYield
 
-BugYield is a console application which tracks changes to tickets (issues, work items, bugs whatever) across systems to avoid tedious double registrations. 
+BugYield is a console application which tracks changes to tickets (issues, work items, bugs whatever) across systems (two-way) to avoid tedious double registrations.
+Which means that the developers only need to track time in Harvest, and then ticket-titles will be transferred automatically from your ticket system to the Harvest time entry AND time spend on that ticket will be synchronized in the chosen ticket-system.
 
-BugYield currently supports the ticket management system "FogBugz":http://fogbugz.com and time tracking system "Harvest":http://harvestapp.com.
+BugYield currently supports two ticket management systems "FogBugz":http://fogbugz.com and "Jira":http://www.atlassian.com/software/jira and time tracking system "Harvest":http://harvestapp.com.
 
 h2. Installation
 
@@ -18,52 +19,66 @@ h2. Usage
 
 BugYield currently supports two use cases: 
 
-# *Time synchronization*: Mapping entries in Harvest to time elapsed in FogBugz tickets 
-# *Title synchronization*: Mapping ticket titles from FogBugz to Harvest entries
+# *Time synchronization*: Mapping entries in Harvest to time elapsed in FogBugz or Jira tickets 
+# *Title synchronization*: Mapping ticket titles from FogBugz or Jira to Harvest entries
 
 BugYield works in the context of one or more Harvest projects identified through their id, full name or code. Projects can be specified in the configuration or using the <code>--harvest-project</code> option.
 
 Run <code>./bugyield</code> from the command line to show all available commands.
 
+# *Time synchronization* example: 
+<code>./bugyield tim --bugtracker=a-label</code> Run BugYield with the bugtracker defined in config.yml with the label "a-label"
+
+# *Title synchronization* example: 
+<code>./bugyield tit --bugtracker=a-label</code> Run BugYield with the bugtracker defined in config.yml with the label "a-label"
+
+Just change the <code>--bugtracker=XXXX</code> with another label to run another bugtracker. We have current one FogBugz instance and two Jira bugtrackers configured in the same config.yml
+
+
 h3. Time synchronization
 
-BugYield can update tickets in FogBugz with time registrations in Harvest. This makes it easier to show how much time has been spent on a ticket and how this corresponds with estimates.
+BugYield can update tickets in FogBugz and Jira with time registrations in Harvest. This makes it easier to show how much time has been spent on a ticket and how this corresponds with estimates.
 
 It works like this:
 
 # Add <code>#[ticket-id]</code> without the []'s in the Harvest entry notes
 # Run the timesync command
-# The elapsed time field for the FogBugz ticket is updated and a new comment is added to the ticket showing the entry id, the time spent, the task type and the notes from Harvest
+# The elapsed time field for the FogBugz/Jira ticket is updated and a new comment/worklog is added to the ticket showing the entry id, the time spent, the task type and the notes from Harvest.
 
 If the time or task for the Harvest entry is changed at a later point in time, subsequent execution of the timesync command adds a new comment to the ticket and the elapsed time field is adjusted accordingly.
 
 If a Harvest entry contains multiple ticket ids the time spent is distributed evenly across the mentioned tickets.
 
+If BugYield detects serious inconsistencies, then it will email the offending user and optionally a separately defined email address (e.g. to the Project Manager).
+
 h3. Title synchronization
 
-BugYield can update entries in Harvest with ticket titles from FogBugz. This makes it easier to show how much time has been spent on a ticket and how this corresponds with estimates.
+BugYield can update entries in Harvest with ticket titles from FogBugz and Jira. This makes it easier register time on specific tickets without typing other than the ticket-number (prefixed with a <code>#</code>).
 NOTE: When an entry has been submitted and thereby locked, then we can't edit the entry, and it will fail.
 
 It works like this:
 
 # Add <code>#[ticket-id]</code> without the []'s in the Harvest entry notes
 # Run the titlesync command
-# The entry notes in Harvest are updated with the ticket titles from FogBugz replacing <code>#[ticket-id]</code> with <code>#[ticket-id]([ticket-title])</code>
+# The entry notes in Harvest are updated with the ticket titles from FogBugz/Jira replacing <code>#[ticket-id]</code> with <code>#[ticket-id]([ticket-title])</code>
 
-If a FogBugz ticket title is changed at a later point in time, subsequent execution of the titlesync command makes sure that the Harvest entry notes are updated accordingly.
-
-If a Harvest entry contains multiple ticket ids all the ticket time spent is distributed evenly across the mentioned tickets.
+If a FogBugz/Jira ticket title is changed at a later point in time, subsequent execution of the titlesync command makes sure that the Harvest entry notes are updated accordingly.
 
 h2. To do
 
 * Support for more ticket management ("Lighthouse":http://lighthouseapp.com) and time tracking systems.
-* Improve error handling
+* Performance-updates
 
 h2. Known errors and problems
 
-Note to self:
+h3. CURL and SSL errors
+
 When synchronizing with FogBugz we sometimes get SSL certificate errors. A quick fix is to make CURL ignore invalid SSL certifikates. Do that by adding this line to vendor/fogbugz-php-library/src/fogbugz_request.php on line 32:
 <code>
 curl_setopt($ch,CURLOPT_SSL_VERIFYPEER,false); // added by rasmus, ignore SSL verification. @See http://unitstep.net/blog/2009/05/05/using-curl-in-php-to-access-https-ssltls-protected-sites/
 </code>
 I'm sure that there are better ways of handling this issue...
+
+h3. Brackets in ticket titles
+
+If you put brackets in your ticket title, you make it difficult for BugYield to recognize our "codes". It will handle the ticket, but display warnings and remove any comments on the Harvest entry created by the user.
