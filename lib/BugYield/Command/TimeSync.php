@@ -108,7 +108,9 @@ class TimeSync extends BugYieldCommand {
 
             // save entries for the error checking below.
             // TODO: This runs every time a ticket has been referenced, it might be too heavy.
-            $checkBugtrackerEntries[$id] = $this->bugtracker->getTimelogEntries($id);
+            if(empty($uniqueTicketIds) || !array_key_exists($id,$uniqueTicketIds)) {
+              $uniqueTicketIds[$id] = $id;
+            }
           }
           catch (\Exception $e) {
             $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
@@ -132,9 +134,14 @@ class TimeSync extends BugYieldCommand {
     // This code will look for irregularities in the logged data, namely if the bugtracker is out-of-sync with Harvest
     // Currently this runs whenever a ticket in the bugtracker has been referenced in Harvest - then all the logged entries are checked.
 
+    $checkBugtrackerEntries = array();
     $possibleErrors = array();
     $worklog = null;
     $bugtrackerName   = $this->bugtracker->getName();
+
+    foreach($uniqueTicketIds as $id) {
+      $checkBugtrackerEntries[$id] = $this->bugtracker->getTimelogEntries($id);
+    }
 
     foreach($checkBugtrackerEntries as $fbId => $harvestEntriesData) {
       foreach($harvestEntriesData as $worklog) {
@@ -167,8 +174,8 @@ class TimeSync extends BugYieldCommand {
             //$output->writeln(sprintf('DEBUG: User %s results in uid %d and email %s', $hEntryUser, $hUserId, $hUserEmail));
           }
           else {
-            $output->writeln(sprintf('WARNING: Could not find email for this user: %s', $hEntryUser));
-            $output->writeln('-------- As the user cannot be found, the following checks will fail as well, so this entry will be skipped. Check user names for spelling errors etc.');
+            $output->writeln(sprintf('WARNING: Could not find email for this user: "%s"', $hEntryUser));
+            $output->writeln('-------- As the user cannot be found, the following checks will fail as well, so this entry will be skipped. Check user names for spelling errors, check ticket name for wierd characters breaking the regex etc.');
             continue;
           }
 

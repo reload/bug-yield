@@ -26,6 +26,7 @@ class TitleSync extends BugYieldCommand {
     $harvest = $this->getHarvestApi();
 
     $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
+    $output->writeln(sprintf('Bugtracker is %s (%s)', $this->bugtracker->getName(), $this->getBugtrackerURL()));
     $output->writeln('Verifying projects in Harvest');
 
     $projects = $this->getProjects($this->getProjectIds($input));
@@ -81,7 +82,17 @@ class TitleSync extends BugYieldCommand {
               if ($matches[1] != $title) {
                 //Entry note includes ticket title it does not match current title
                 //so update it
-                $entry->set('notes', preg_replace('/'.$ticketId.'(\[.*?\])/i', $ticketId.'['.$title.']', $entry->get('notes')));
+
+                // look for double brackets - in there are the original ticket name contains brakcets like this, then we have a problem as the regex will break: "[Bracket] - Antal af noder TEST"
+                if(strpos($title,"[") !== false || strpos($title,"]") !== false) {
+                  // hmm, brackets detected, initiate evasive maneuvre :-)
+                  $output->writeln(sprintf('WARNING (bad practice) ticket contains [brackets] in title %s: %s', $ticketId, $title));
+                  $entry->set('notes', $ticketId.'['.$title.'] (BugYield removed comments due to [brackets] in the ticket title)'); // we have to drop comments (if any) and just insert the ticket title, as we cannot differentiate what's title and whats comment.
+                }
+                else
+                {
+                  $entry->set('notes', preg_replace('/'.$ticketId.'(\[.*?\])/i', $ticketId.'['.$title.']', $entry->get('notes')));
+                }
 
                 $update = true;
               }
