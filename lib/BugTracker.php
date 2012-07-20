@@ -23,6 +23,8 @@ interface BugTracker {
   public function saveTimelogEntry($ticketId, $timelogEntry);
 
   public function sanitizeTicketId($ticketId);
+
+  public function getUrlTicketPattern();
 }
 
 require_once __DIR__ . '/BugTracker/FogBugz.php';
