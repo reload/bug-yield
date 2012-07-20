@@ -5,9 +5,14 @@ class JiraBugTracker implements BugTracker {
   private $api    = NULL;
   private $token  = NULL;
   private $name   = "Jira";
+  private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%3Aworklog-tabpanel#worklog-%2$d';
 
   public function getName() {
     return $this->name;
+  }
+
+  public function getUrlTicketPattern() {
+    return $this->urlTicketPattern;
   }
 
   public function getApi($url, $username, $password) {

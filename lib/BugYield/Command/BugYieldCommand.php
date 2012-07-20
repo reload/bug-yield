@@ -68,7 +68,15 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @return String Url
    */
   protected function getBugtrackerTicketURL($ticketId, $remoteId = null) {
-    return sprintf($this->bugtrackerConfig['url'] . $this->bugtrackerConfig['url_ticket_pattern'], $ticketId, $remoteId);
+
+    $urlTicketPattern = $this->bugtrackerConfig['url_ticket_pattern'];
+    if(is_null($urlTicketPattern) || empty($urlTicketPattern))
+    {
+      // fetch the default fallback url
+      $urlTicketPattern = $this->bugtracker->getUrlTicketPattern();
+    }
+
+    return sprintf($this->bugtrackerConfig['url'] . $urlTicketPattern, $ticketId, $remoteId);
   }
 
   protected function getHarvestURL() {

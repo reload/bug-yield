@@ -4,9 +4,14 @@ class FogBugzBugTracker implements BugTracker {
 
   private $api = NULL;
   private $name = "FogBugz";
+  private $urlTicketPattern = '/default.asp?%1$s#BugEvent.%2$d';
 
   public function getName() {
     return $this->name;
+  }
+
+  public function getUrlTicketPattern() {
+    return $this->urlTicketPattern;
   }
 
   public function getApi($url, $username, $password) {
