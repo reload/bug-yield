@@ -39,7 +39,11 @@ class TimeSync extends BugYieldCommand {
     }
 
     foreach ($projects as $Harvest_Project) {
-      $output->writeln(sprintf('Working with project: %s', $Harvest_Project->get("name")));
+      $archivedText = "";
+      if($Harvest_Project->get("active") == "false") {
+        $archivedText = sprintf("ARCHIVED (Latest activity: %s)", $Harvest_Project->get("hint-latest-record-at"));
+      }
+      $output->writeln(sprintf('Working with project: %s %s %s', self::mb_str_pad($Harvest_Project->get("name"), 40, " "), self::mb_str_pad($Harvest_Project->get("code"), 18, " "), $archivedText));
     }
 
     $ignore_locked  = false;
@@ -60,12 +64,14 @@ class TimeSync extends BugYieldCommand {
     //Update bug tracker with time registrations
     try {
       foreach ($ticketEntries as $entry) {
+        $this->debug(".");
                           
         // check for active timers - let's not update bug tracker with
         // timers still running...
         if(strlen($entry->get("timer-started-at")) != 0)
           {
             // we have an active timer, bounce off!
+            $this->debug("\n");
             $output->writeln(sprintf('SKIPPED (active timer) entry #%d: %s', $entry->get('id'), $entry->get('notes')));
             continue;
           }                       
@@ -104,7 +110,9 @@ class TimeSync extends BugYieldCommand {
           // entries.
           try {
             // saveTimelogEntry() will handle whether to add or update
+            $this->debug("/");
             $this->bugtracker->saveTimelogEntry($id, $worklog);
+            $this->debug("\\");
 
             // save entries for the error checking below.
             // TODO: This runs every time a ticket has been referenced, it might be too heavy.
@@ -133,6 +141,8 @@ class TimeSync extends BugYieldCommand {
     // ERROR CHECKING BELOW
     // This code will look for irregularities in the logged data, namely if the bugtracker is out-of-sync with Harvest
     // Currently this runs whenever a ticket in the bugtracker has been referenced in Harvest - then all the logged entries are checked.
+
+    $output->writeln(sprintf('Starting error checking: %d tickets will be checked...', sizeof($uniqueTicketIds)));
 
     $checkBugtrackerEntries = array();
     $possibleErrors = array();

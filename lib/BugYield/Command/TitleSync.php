@@ -37,7 +37,11 @@ class TitleSync extends BugYieldCommand {
     }
 
     foreach ($projects as $Harvest_Project) {
-      $output->writeln(sprintf('Working with project: %s', $Harvest_Project->get("name")));
+      $archivedText = "";
+      if($Harvest_Project->get("active") == "false") {
+        $archivedText = sprintf("ARCHIVED (Latest activity: %s)", $Harvest_Project->get("hint-latest-record-at"));
+      }
+      $output->writeln(sprintf('Working with project: %s %s %s', self::mb_str_pad($Harvest_Project->get("name"), 40, " "), self::mb_str_pad($Harvest_Project->get("code"), 18, " "), $archivedText));
     }
 
     $ignore_locked  = true;
@@ -59,11 +63,13 @@ class TitleSync extends BugYieldCommand {
     try {
       foreach ($ticketEntries as $entry) {
         $update = false;
+        $this->debug(".");
 
         // check for active timers - if we update the entry, then the timer will be disrupted, and odd things start to happen :-/
         if(strlen($entry->get("timer-started-at")) != 0)
           {
             // we have an active timer, bounce off!
+            $this->debug("\n");
             $output->writeln(sprintf('SKIPPED (active timer) entry %s: %s', $entry->get('id'), $entry->get('notes')));
             continue;     
           }
@@ -72,7 +78,9 @@ class TitleSync extends BugYieldCommand {
         foreach ($this->getTicketIds($entry) as $ticketId) {
 
           //Get the case title.
+          $this->debug("/");
           $title = $this->bugtracker->getTitle($ticketId);
+          $this->debug("\\");
 
           if ($title) {
             preg_match('/'.$ticketId.'(?:\[(.*?)\])?/i', $entry->get('notes'), $matches);
@@ -130,6 +138,7 @@ class TitleSync extends BugYieldCommand {
       $output->writeln('Error communicating with bug tracker: '. $e->getMessage());
     }
 
+    $this->debug("\n");
     $output->writeln("TitleSync completed");
   }
 }

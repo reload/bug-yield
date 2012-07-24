@@ -13,9 +13,9 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   private $harvestConfig;
   private $bugyieldConfig;
-        
   private $bugtrackerConfig;
   protected $bugtracker;
+  private $debug;
 
   /* singletons for caching data */
   private $harvestUsers = null;
@@ -24,6 +24,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     $this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
     $this->addOption('config', NULL, InputOption::VALUE_OPTIONAL, 'Path to the configuration file', 'config.yml');
     $this->addOption('bugtracker', NULL, InputOption::VALUE_OPTIONAL, 'Bug Tracker to yield', 'fogbugz');
+    $this->addOption('debug', NULL, InputOption::VALUE_OPTIONAL, 'Show debug info', false);
   }
 
   /**
@@ -142,6 +143,9 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @throws Exception
    */
   protected function loadConfig(InputInterface $input) {
+    // enable debug?
+    $this->debug = $input->getOption('debug');
+
     $configFile = $input->getOption('config');
     if (file_exists($configFile)) {
       $config = Yaml::load($configFile);
@@ -408,5 +412,17 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     }
 
     return $user;
+  }
+
+  // if debug is enabled by --debug=true in cmd, then print the statements
+  protected function debug($data) {
+    if($this->debug == true) {
+      print $data;
+    }
+  }
+
+  // little helper function for multibyte string padding
+  protected function mb_str_pad ($input, $pad_length, $pad_string, $pad_style = STR_PAD_RIGHT, $encoding="UTF-8") {
+     return str_pad($input, strlen($input)-mb_strlen($input,$encoding)+$pad_length, $pad_string, $pad_style);
   }
 }
