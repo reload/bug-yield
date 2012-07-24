@@ -97,21 +97,21 @@ class FogBugzBugTracker implements BugTracker {
     $params['cmd']    = 'edit';
     $params['ixBug']  = $ticketId;
     $params['sEvent'] = vsprintf('Entry #%d [%s/%s]: "%s" by %s @ %s in "%s"%s',
-				 array(
-				       $timelog->harvestId,
-				       $timelog->hours,
-				       $timelog->taskName,
-				       $timelog->notes,
-				       $timelog->user,
-				       $timelog->spentAt,
-				       $timelog->project,
-				       $update ? ' (updated)' : '',
-				       ));
+    array(
+          $timelog->harvestId,
+          $timelog->hours,
+          $timelog->taskName,
+          $timelog->notes,
+          $timelog->user,
+          $timelog->spentAt,
+          $timelog->project,
+          $update ? ' (updated)' : '',
+          ));
 
     // We need to use , (comma) instead of . (period) as separator
     // when reporting hours with decimals. Silly FogBugz.
     $params['hrsElapsedExtra'] = number_format($elapsed_hours, 2, ',', '');
-    
+
     // Add the (updated) data to the FogBugz entry.
     $request = new \FogBugz_Request($this->api);
     $request->setParams($params);
@@ -146,11 +146,11 @@ class FogBugzBugTracker implements BugTracker {
             $timelog = new stdClass;
             $timelog->harvestId = $matches[1];
             $timelog->hours     = $matches[2];
-            $timelog->taskName  = $matches[3];
-            $timelog->notes     = trim(trim(strip_tags(html_entity_decode($matches[4], ENT_COMPAT, "UTF-8"))), '"');
-            $timelog->user      = trim(trim(strip_tags(html_entity_decode($matches[5], ENT_COMPAT, "UTF-8"))), '"');
+            $timelog->taskName  = self::convertAndCleanData($matches[3]);
+            $timelog->notes     = self::convertAndCleanData($matches[4]);
+            $timelog->user      = self::convertAndCleanData($matches[5]);
             $timelog->spentAt   = $matches[6];
-            $timelog->project   = trim(trim(strip_tags(html_entity_decode($matches[7], ENT_COMPAT, "UTF-8"))), '"');
+            $timelog->project   = self::convertAndCleanData($matches[7]);
             $timelog->updated   = isset($matches[8]) ? TRUE : FALSE;
             $timelog->remoteId  = $event->_data['ixBugEvent'];
             
@@ -175,5 +175,13 @@ class FogBugzBugTracker implements BugTracker {
   public function sanitizeTicketId($ticketId) {
     $ticketId = intval(str_replace("#","",$ticketId));
     return $ticketId;
+  }
+
+  /**
+   * Fogbugz returns data in a wierd format. Convert and clean in up for easier comparison of strings
+   */
+  private function convertAndCleanData($data) {
+    $data = trim(trim(strip_tags(html_entity_decode(str_replace("&nbsp;"," ",$data), ENT_COMPAT, "UTF-8"))), '"');
+    return $data;
   }
 }
