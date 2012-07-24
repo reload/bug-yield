@@ -46,9 +46,10 @@ class TimeSync extends BugYieldCommand {
       $output->writeln(sprintf('Working with project: %s %s %s', self::mb_str_pad($Harvest_Project->get("name"), 40, " "), self::mb_str_pad($Harvest_Project->get("code"), 18, " "), $archivedText));
     }
 
-    $ignore_locked  = false;
-    $from_date      = date("Ymd",time()-(86400*$this->getHarvestDaysBack()));
-    $to_date        = date("Ymd");
+    $ignore_locked    = false;
+    $from_date        = date("Ymd",time()-(86400*$this->getHarvestDaysBack()));
+    $to_date          = date("Ymd");
+    $uniqueTicketIds  = array();
         
     $output->writeln(sprintf("Collecting Harvest entries between %s to %s",$from_date,$to_date));
     if($ignore_locked) $output->writeln("-- Ignoring entries already billed or otherwise closed.");
@@ -111,13 +112,19 @@ class TimeSync extends BugYieldCommand {
           try {
             // saveTimelogEntry() will handle whether to add or update
             $this->debug("/");
-            $this->bugtracker->saveTimelogEntry($id, $worklog);
+            $updated = $this->bugtracker->saveTimelogEntry($id, $worklog);
             $this->debug("\\");
 
+            if($updated) {
+              $output->writeln(sprintf('Updated #%d: %s in %s', $id, $worklog->notes, $this->bugtracker->getName()));
+            }
+
             // save entries for the error checking below.
-            // TODO: This runs every time a ticket has been referenced, it might be too heavy.
-            if(empty($uniqueTicketIds) || !array_key_exists($id,$uniqueTicketIds)) {
-              $uniqueTicketIds[$id] = $id;
+            // This only runs/checks if a ticket has been updated.
+            if($updated || $this->doExtendedTest()) {
+              if(empty($uniqueTicketIds) || !array_key_exists($id,$uniqueTicketIds)) {
+                $uniqueTicketIds[$id] = $id;
+              }
             }
           }
           catch (\Exception $e) {
@@ -142,6 +149,9 @@ class TimeSync extends BugYieldCommand {
     // This code will look for irregularities in the logged data, namely if the bugtracker is out-of-sync with Harvest
     // Currently this runs whenever a ticket in the bugtracker has been referenced in Harvest - then all the logged entries are checked.
 
+    if($this->doExtendedTest()) {
+      $output->writeln('EXTENDED TEST has been enabled, all referenced tickets will be checked even if they were not updated. Set extended_test = false to disable this.');
+    }
     $output->writeln(sprintf('Starting error checking: %d tickets will be checked...', sizeof($uniqueTicketIds)));
 
     $checkBugtrackerEntries = array();
@@ -150,6 +160,7 @@ class TimeSync extends BugYieldCommand {
     $bugtrackerName   = $this->bugtracker->getName();
 
     foreach($uniqueTicketIds as $id) {
+      $this->debug(".");
       $checkBugtrackerEntries[$id] = $this->bugtracker->getTimelogEntries($id);
     }
 

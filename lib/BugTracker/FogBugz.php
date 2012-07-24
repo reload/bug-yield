@@ -80,7 +80,7 @@ class FogBugzBugTracker implements BugTracker {
           $entries[$timelog->harvestId]->project   == $timelog->project   &&
           $entries[$timelog->harvestId]->taskName  == $timelog->taskName  &&
           $entries[$timelog->harvestId]->notes     == $timelog->notes) {
-        return;
+        return false;
       }
 
       // Adjust elapsed hours and mark as an update entry.
@@ -116,6 +116,8 @@ class FogBugzBugTracker implements BugTracker {
     $request = new \FogBugz_Request($this->api);
     $request->setParams($params);
     $response = $request->go();
+
+    return $update;
   }
 
   /**

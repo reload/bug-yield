@@ -102,6 +102,20 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   }
 
   /**
+   * Check value of config setting "extended_test".
+   * If true we will test all referenced tickets in the bugtracker for inconsistency with Harvest
+   */
+  protected function doExtendedTest() {
+
+    if(isset($this->bugtrackerConfig['extended_test'])) {
+      if($this->bugtrackerConfig['extended_test'] === true) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Returns a connection to the FogBugz API based on the configuration.
    * 
    * @return \FogBugz

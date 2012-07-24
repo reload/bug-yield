@@ -92,7 +92,7 @@ class JiraBugTracker implements BugTracker {
           $entry->project   == $timelog->project   &&
           $entry->taskName  == $timelog->taskName  &&
           $entry->notes     == $timelog->notes) {
-        return;
+        return false;
       }
     }
 
@@ -144,6 +144,8 @@ class JiraBugTracker implements BugTracker {
       $fields[] = array('id' => 'status', 'values' => array($issue->status));
       $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);
     }
+
+    return true;
   }
 
   /**

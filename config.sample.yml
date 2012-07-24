@@ -16,6 +16,8 @@ a-label:
   password: abcd
   projects: "alias,name,id"
   email_notify_on_error: "bugyield+errors@company.com"
+  # set to true to do extended error-testing. Takes a lot longer time, as it will check inconsitencies for all referenced tickets and not only the updated ones.
+  extended_test: false
 another-label:
   bugtracker: jira
   url: https://mycompany.atlassian.net
