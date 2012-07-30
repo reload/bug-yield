@@ -2,6 +2,9 @@
 
 namespace BugYield\Command;
 
+use BugYield\BugTracker\FogBugzBugTracker;
+use BugYield\BugTracker\JiraBugTracker;
+
 use Symfony\Component\Yaml\Yaml;
 
 use Symfony\Component\Console\Input\InputInterface;
@@ -131,11 +134,11 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       }
     switch ($bugtracker) {
     case 'jira':
-      $this->bugtracker = new \JiraBugTracker;
+      $this->bugtracker = new JiraBugTracker;
       break;
     case 'fogbugz':
     default:
-      $this->bugtracker = new \FogBugzBugTracker;
+      $this->bugtracker = new FogBugzBugTracker;
       break;
     }
 

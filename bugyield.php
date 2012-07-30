@@ -18,7 +18,6 @@ require_once 'vendor/fogbugz-php-library/src/fogbugz_init.php';
 
 //Load HaPi
 require_once 'vendor/hapi/HarvestAPI.php';
-require_once 'lib/BugTracker.php';
 
 spl_autoload_register( array('HarvestAPI', 'autoload') );
 

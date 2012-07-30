@@ -1,6 +1,8 @@
 <?php
 
-class JiraBugTracker implements BugTracker {
+namespace BugYield\BugTracker;
+
+class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
   private $api    = NULL;
   private $token  = NULL;
@@ -16,7 +18,7 @@ class JiraBugTracker implements BugTracker {
   }
 
   public function getApi($url, $username, $password) {
-    $this->api= new SoapClient($url . '/rpc/soap/jirasoapservice-v2?wsdl');
+    $this->api= new \SoapClient($url . '/rpc/soap/jirasoapservice-v2?wsdl');
     $this->token = $this->api->login($username, $password);
   }
 
