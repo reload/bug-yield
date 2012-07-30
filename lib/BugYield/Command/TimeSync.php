@@ -50,7 +50,8 @@ class TimeSync extends BugYieldCommand {
     $from_date        = date("Ymd",time()-(86400*$this->getHarvestDaysBack()));
     $to_date          = date("Ymd");
     $uniqueTicketIds  = array();
-        
+    $notifyOnError    = self::getEmailNotifyOnError(); // email to notify on error, typically a PM
+
     $output->writeln(sprintf("Collecting Harvest entries between %s to %s",$from_date,$to_date));
     if($ignore_locked) $output->writeln("-- Ignoring entries already billed or otherwise closed.");
 
@@ -106,6 +107,34 @@ class TimeSync extends BugYieldCommand {
         $worklog->project   = $harvestProjectName;
         $worklog->taskName  = $taskName;
         $worklog->notes     = $entry->get('notes');
+
+        // report an error if you have one single ticket entry with more than 8 hours straight. That's very odd.
+        if($hoursPerTicket > 8) {
+
+          $output->writeln(sprintf('WARNING: More than 8 hours registrered on %s: %s (%s hours). Email sent to user.',$worklog->harvestId, $worklog->notes, $worklog->hours));
+
+          $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
+          $subject = sprintf('BugYield warning: %s hours registered on %s. Really?', $worklog->hours, $worklog->notes);
+          $body = array();
+          $body[] = 'The following Harvest entry seems invalid due to more than 8 registered hours on one task:';
+          $body[] = '';
+          $body[] = print_r($worklog, TRUE);
+          $body[] = 'ACTION: Please review the time entry.';
+          $body[] = 'If it is actually valid, then you have to split it up in separate entries below 8 hours in order to avoid this message.';
+          $body[] = '';
+          $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
+          $body[] = 'in Harvest please ask your friendly BugYield administrator: ' . self::getBugyieldEmailFrom();
+          $headers = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
+          // add CC if defined in the config
+          if(!empty($notifyOnError)) {
+            $headers .= 'Cc: ' . $notifyOnError . "\r\n";
+          }
+
+          if(!mail($to, $subject, implode("\n",$body), $headers))
+          {
+            $output->writeln('  > ERROR: Could not send email to: '. $to);
+          }
+        }
         
         foreach($ticketIds as $id) {
           // entries.
@@ -132,15 +161,19 @@ class TimeSync extends BugYieldCommand {
             $subject = $id . ': time sync exception';
             $body = array();
             $body[] = 'Trying to sync Harvest entry:';
+            $body[] = '';
             $body[] = print_r($worklog, TRUE);
-            $body[] = 'Failed with exeception:';
+            $body[] = 'Failed with exception:';
             $body[] = $e->getMessage();
             $body[] = '';
             $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
             $body[] = 'in Harvest please ask your friendly BugYield administrator: ' . self::getBugyieldEmailFrom();
-            $headers = array();
-            $headers[] = 'From: "BugYield" <' . self::getBugyieldEmailFrom() . '>';
-            mail($to, $subject, implode("\n", $body), implode("\r\n", $headers));
+            $headers = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
+            // add CC if defined in the config
+            if(!empty($notifyOnError)) {
+              $headers .= 'Cc: ' . $notifyOnError . "\r\n";
+            }
+            mail($to, $subject, implode("\n", $body), $headers);
           }
         }
       }
@@ -183,7 +216,6 @@ class TimeSync extends BugYieldCommand {
           $errorData      = array();
           $hUserId        = false;
           $hUserEmail     = self::getBugyieldEmailFallback();
-          $notifyOnError  = self::getEmailNotifyOnError(); // email to notify on error, typically a PM
 
           $hEntryUser     = trim(html_entity_decode($worklog->user, ENT_COMPAT, "UTF-8"));
           $Harvest_User   = self::getHarvestUserByFullName($hEntryUser);
@@ -261,10 +293,10 @@ class TimeSync extends BugYieldCommand {
           $body     .= sprintf("\n\nCurrent data from Harvest entry:\n  %s", $errorData["entryNote"]);
           $body     .= sprintf("\n\nOutdated Harvest data logged in %s:\n  %s",$bugtrackerName, $errorData["bugNote"]);
           $body     .= sprintf("\n\nIMPORTANT: In order to fix this, you must manually edit the entries, e.g. by editing/removing the logdata from %s and subtract the time added.",$bugtrackerName);
-          $headers  = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion();
+          $headers  = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
           // add CC if defined in the config
           if(!empty($notifyOnError)) {
-            $headers  = 'Cc: ' . $notifyOnError . "\r\n";
+            $headers .= 'Cc: ' . $notifyOnError . "\r\n";
           }
 
           $output->writeln(sprintf("  > Sync error found in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
