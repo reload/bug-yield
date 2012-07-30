@@ -116,7 +116,7 @@ class TimeSync extends BugYieldCommand {
             $this->debug("\\");
 
             if($updated) {
-              $output->writeln(sprintf('Updated #%d: %s in %s', $id, $worklog->notes, $this->bugtracker->getName()));
+              $output->writeln(sprintf('Updated %s: %s in %s', $id, $worklog->notes, $this->bugtracker->getName()));
             }
 
             // save entries for the error checking below.
