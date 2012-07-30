@@ -1,5 +1,7 @@
 <?php
 
+namespace BugYield\BugTracker;
+
 interface BugTracker {
 
   // Name of the tracker for presentation purposes.
@@ -26,6 +28,3 @@ interface BugTracker {
 
   public function getUrlTicketPattern();
 }
-
-require_once __DIR__ . '/BugTracker/FogBugz.php';
-require_once __DIR__ . '/BugTracker/Jira.php';

@@ -1,6 +1,8 @@
 <?php
 
-class FogBugzBugTracker implements BugTracker {
+namespace BugYield\BugTracker;
+
+class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
 
   private $api = NULL;
   private $name = "FogBugz";
