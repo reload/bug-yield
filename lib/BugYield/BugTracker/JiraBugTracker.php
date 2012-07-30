@@ -68,7 +68,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // weed out newlines in notes
     $timelog->notes = preg_replace('/[\n\r]+/m' , ' ', $timelog->notes);
 
-    $worklog = new stdClass;
+    $worklog = new \stdClass;
 
     // Set the Jira worklog ID on the worklog object if this Harvest
     // entry is already tracked in Jira.
@@ -156,7 +156,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
    * Entry #71791646 Kode: "Fikser #4029[tester harvest med anton]" by Rasmus Luckow-Nielsen in "BugYield test"
    */
   private function parseComment($comment) {
-    $timelog = new stdClass;
+    $timelog = new \stdClass;
     $num_matches = preg_match('/^Entry\s#(\d+)\s\[([^]]*)\]:\s"(.*)"\sby\s(.*)\sin\s"(.*)"/m', $comment, $matches);
     if ($num_matches > 0) {
       $timelog->harvestId = $matches[1];

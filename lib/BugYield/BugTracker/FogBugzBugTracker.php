@@ -147,7 +147,7 @@ class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
 
           $text = (isset($event->_data['sHtml'])) ? $event->_data['sHtml'] : $event->_data['s'];
           if (is_string($text) && preg_match('/^Entry\s#([0-9]+)\s\[(.*?)\/(.*?)\]:\s(.*?)by\s(.*?)@\s([0-9-]+)\sin\s(.*?)(\s\(updated\))?$/', $text, $matches)) {
-            $timelog = new stdClass;
+            $timelog = new \stdClass;
             $timelog->harvestId = $matches[1];
             $timelog->hours     = $matches[2];
             $timelog->taskName  = self::convertAndCleanData($matches[3]);
