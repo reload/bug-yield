@@ -18,12 +18,6 @@ class TimeSync extends BugYieldCommand {
   }
 
   protected function execute(InputInterface $input, OutputInterface $output) {
-    $this->loadConfig($input);
-    $this->getBugTrackerApi($input);
-
-    //Setup Harvest API access
-    $harvest = $this->getHarvestApi();
-
     //store harvestentries and ticket id's for later comparison and double checking
     $checkHarvestEntries = array();
 

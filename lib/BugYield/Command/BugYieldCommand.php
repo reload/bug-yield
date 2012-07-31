@@ -31,6 +31,21 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   }
 
   /**
+   * Shared initialization for all commands.
+   * 
+   * @param  InputInterface  $input
+   * @param  OutputInterface $output
+   */
+  protected function initialize(InputInterface $input, OutputInterface $output) {
+    // Load the YAML configuration
+    $this->loadConfig($input);
+    $this->getBugTrackerApi($input);  
+
+    //Setup Harvest API access
+    $harvest = $this->getHarvestApi();
+  }
+
+  /**
    * Returns a connection to the Harvest API based on the configuration.
    * 
    * @return \HarvestAPI
