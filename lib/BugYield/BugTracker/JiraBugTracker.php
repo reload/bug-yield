@@ -2,35 +2,32 @@
 
 namespace BugYield\BugTracker;
 
-class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
+class JiraBugTracker extends \BugYield\BugTracker\BaseBugTracker {
 
-  private $config;
   private $api    = NULL;
   private $token  = NULL;
-  private $name   = "Jira";
-  private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
 
   public function __construct($config) {
-    $this->config = $config;
-    // Make sure we have the required configuration options
-    foreach (array('url', 'username', 'password') as $entry) {
-      if (!isset($this->config[$entry])) {
-        throw new \Exception('Missing configuration entry '. $entry);
-      }
-    }
+    parent::__construct($config);
+
     $this->api= new \SoapClient($this->config['url'] . '/rpc/soap/jirasoapservice-v2?wsdl');
     $this->token = $this->api->login($this->config['username'], $this->config['password']);
   }
 
   public function getName() {
-    return $this->name;
+    return 'Jira';
   }
 
-  public function getUrlTicketPattern() {
-    return $this->urlTicketPattern;
+  public function getTicketUrlPattern() {
+    return '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
   }
 
-  public function getTitle($ticketId) {
+  protected function getTicketIdPattern() {
+    return '/(#[A-Za-z]+-\d+)/';
+  }
+
+
+  public function getTicketTitle($ticketId) {
     $ticketId = ltrim($ticketId, '#');
 
     // the Jira throws an exception if the issue does not exists or are unreachable. We don't want that, hence the try/catch
@@ -47,14 +44,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     }
 
     return FALSE;
-  }
-
-  public function extractIds($string) {
-    $ids = array();
-    if (preg_match_all('/(#[A-Za-z]+-\d+)/', $string, $matches)) {
-      $ids = array_map('strtoupper', $matches[1]);
-    }
-    return array_unique($ids);
   }
 
   public function getTimelogEntries($ticketId) {

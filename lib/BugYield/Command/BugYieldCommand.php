@@ -56,33 +56,6 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     return intval($this->harvestConfig['daysback']);
   }     
 
-  /**
-   * Fetch url to the bugtracker
-   * @return String Url
-   */
-  protected function getBugtrackerURL() {
-    return $this->bugtrackerConfig['url'];
-  }
-
-  /**
-   * Create direct url to ticket
-   *
-   * @param String $ticketId ID of ticket, eg "4564" or "SCL-34"
-   * @param Integer $remoteId EventID of the exact worklog item/comment, eg "12344"
-   * @return String Url
-   */
-  protected function getBugtrackerTicketURL($ticketId, $remoteId = null) {
-
-    $urlTicketPattern = $this->bugtrackerConfig['url_ticket_pattern'];
-    if(is_null($urlTicketPattern) || empty($urlTicketPattern))
-    {
-      // fetch the default fallback url
-      $urlTicketPattern = $this->bugtracker->getUrlTicketPattern();
-    }
-
-    return sprintf($this->bugtrackerConfig['url'] . $urlTicketPattern, $ticketId, $remoteId);
-  }
-
   protected function getHarvestURL() {
     $http = "http://";
     if( $this->harvestConfig['ssl'] == true ) {
@@ -127,10 +100,10 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     // The bugtracker system is defined in the config. As a fallback
     // we use the config section label as bugtracker system
     // identifier.
-    if (isset($this->bugtrackerConfig['bugtracker'])) {
-      $bugtracker =  $this->bugtrackerConfig['bugtracker'];
-    } else {
-      $bugtracker = $input->getOption('bugtracker');
+    $bugtracker = $input->getOption('bugtracker');
+    if (empty($bugtracker) &&
+        !empty($this->bugtrackerConfig['bugtracker'])) {
+      $bugtracker = $this->bugtrackerConfig['bugtracker'];
     }
 
     switch ($bugtracker) {
@@ -323,7 +296,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @return array Array of ticket ids
    */
   protected function getTicketIds(\Harvest_DayEntry $entry) {
-    return $this->bugtracker->extractIds($entry->get('notes'));
+    return $this->bugtracker->extractTicketIds($entry->get('notes'));
   }
 
   /**

@@ -28,7 +28,7 @@ class TimeSync extends BugYieldCommand {
     $checkHarvestEntries = array();
 
     $output->writeln('TimeSync executed: ' . date('Ymd H:i:s'));
-    $output->writeln(sprintf('Bugtracker is %s (%s)', $this->bugtracker->getName(), $this->getBugtrackerURL()));
+    $output->writeln(sprintf('Bugtracker is %s (%s)', $this->bugtracker->getName(), $this->bugtracker->getUrl()));
     $output->writeln('Verifying projects in Harvest');
 
     $projects = $this->getProjects($this->getProjectIds($input));
@@ -288,7 +288,7 @@ class TimeSync extends BugYieldCommand {
           // build the mail to be sent
           $subject  = sprintf("BugYield Synchronisation error found in %s registered %s by %s", $errorData["bugID"], $errorData["date"], $errorData["name"]);
           $body     = sprintf("Hi %s,\nBugYield has found some inconsistencies between Harvest and data registrered on bug %s. Please review this error:\n\n%s\n", $errorData["name"],$errorData["bugID"],$errorData["reason"]);
-          $body     .= sprintf("\nLink to %s: %s", $bugtrackerName, self::getBugtrackerTicketURL($this->bugtracker->sanitizeTicketId($errorData["bugID"]),$errorData["remoteId"]));
+          $body     .= sprintf("\nLink to %s: %s", $bugtrackerName, $this->bugtracker->getTicketUrl($this->bugtracker->sanitizeTicketId($errorData["bugID"]),$errorData["remoteId"]));
           $body     .= sprintf("\nLink to Harvest: %s", $harvestEntryUrl);
           $body     .= sprintf("\n\nCurrent data from Harvest entry:\n  %s", $errorData["entryNote"]);
           $body     .= sprintf("\n\nOutdated Harvest data logged in %s:\n  %s",$bugtrackerName, $errorData["bugNote"]);

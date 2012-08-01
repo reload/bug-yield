@@ -26,14 +26,14 @@ interface BugTracker {
    * @param  string $ticketId The ticket id
    * @return string           The title of the title
    */
-  public function getTitle($ticketId);
+  public function getTicketTitle($ticketId);
 
   /**
    * Extract ticket ids matching the bugtrackers ticket pattern.
    * @param  string $string A string
    * @return array          An array of ticket ids contained within the string
    */
-  public function extractIds($string);
+  public function extractTicketIds($string);
 
   /**
    * Retrieve time logger entries registrered with the bugtracker ticket.
@@ -59,5 +59,17 @@ interface BugTracker {
 
   public function sanitizeTicketId($ticketId);
 
-  public function getUrlTicketPattern();
+  /**
+   * Return the URL for the bug tracker.
+   * @return string The bug tracker URL.
+   */
+  public function getUrl();
+
+  /**
+   * Return the URL for a ticket within the bug tracker.
+   * @param  string $ticketId    The ticket id.
+   * @param  string $subTicketId Id of the exact work log item/comment within the ticket.
+   * @return string              The URL for the ticket within the bug tracker.
+   */
+  public function getTicketUrl($ticketId, $subTicketId = NULL);
 }
