@@ -4,9 +4,22 @@ namespace BugYield\BugTracker;
 
 class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
 
+  private $config;
   private $api = NULL;
   private $name = "FogBugz";
   private $urlTicketPattern = '/default.asp?%1$s#BugEvent.%2$d';
+
+  public function __construct($config) {
+    $this->config = $config;
+    // Make sure we have the required configuration options
+    foreach (array('url', 'username', 'password') as $entry) {
+      if (!isset($this->config[$entry])) {
+        throw new \Exception('Missing configuration entry '. $entry);
+      }
+    }
+    $this->api = new \FogBugz($this->config['url'], $this->config['username'], $this->config['password']);
+    $this->api->logon();    
+  }
 
   public function getName() {
     return $this->name;
@@ -14,11 +27,6 @@ class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
 
   public function getUrlTicketPattern() {
     return $this->urlTicketPattern;
-  }
-
-  public function getApi($url, $username, $password) {
-    $this->api = new \FogBugz($url, $username, $password);
-    $this->api->logon();
   }
 
   public function getTitle($ticketId) {

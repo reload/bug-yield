@@ -4,10 +4,23 @@ namespace BugYield\BugTracker;
 
 class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
+  private $config;
   private $api    = NULL;
   private $token  = NULL;
   private $name   = "Jira";
   private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
+
+  public function __construct($config) {
+    $this->config = $config;
+    // Make sure we have the required configuration options
+    foreach (array('url', 'username', 'password') as $entry) {
+      if (!isset($this->config[$entry])) {
+        throw new \Exception('Missing configuration entry '. $entry);
+      }
+    }
+    $this->api= new \SoapClient($this->config['url'] . '/rpc/soap/jirasoapservice-v2?wsdl');
+    $this->token = $this->api->login($this->config['username'], $this->config['password']);
+  }
 
   public function getName() {
     return $this->name;
@@ -17,18 +30,13 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     return $this->urlTicketPattern;
   }
 
-  public function getApi($url, $username, $password) {
-    $this->api= new \SoapClient($url . '/rpc/soap/jirasoapservice-v2?wsdl');
-    $this->token = $this->api->login($username, $password);
-  }
-
   public function getTitle($ticketId) {
     $ticketId = ltrim($ticketId, '#');
 
     // the Jira throws an exception if the issue does not exists or are unreachable. We don't want that, hence the try/catch
     try {
       $response = $this->api->getIssue($this->token, $ticketId);
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
       //TODO: Valuable information will be returned from Jira here, we should log it somewhere. E.g.:
       // com.atlassian.jira.rpc.exception.RemotePermissionException: This issue does not exist or you don't have permission to view it.
       return FALSE;

@@ -128,21 +128,20 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     // we use the config section label as bugtracker system
     // identifier.
     if (isset($this->bugtrackerConfig['bugtracker'])) {
-        $bugtracker =  $this->bugtrackerConfig['bugtracker'];
-      } else {
-        $bugtracker = $input->getOption('bugtracker');
-      }
-    switch ($bugtracker) {
-    case 'jira':
-      $this->bugtracker = new JiraBugTracker;
-      break;
-    case 'fogbugz':
-    default:
-      $this->bugtracker = new FogBugzBugTracker;
-      break;
+      $bugtracker =  $this->bugtrackerConfig['bugtracker'];
+    } else {
+      $bugtracker = $input->getOption('bugtracker');
     }
 
-    $this->bugtracker->getApi($this->bugtrackerConfig['url'], $this->bugtrackerConfig['username'], $this->bugtrackerConfig['password']);
+    switch ($bugtracker) {
+      case 'jira':
+        $this->bugtracker = new JiraBugTracker($this->bugtrackerConfig);
+        break;
+      case 'fogbugz':
+      default:
+        $this->bugtracker = new FogBugzBugTracker($this->bugtrackerConfig);
+        break;
+    }
   }
 
   protected function getBugyieldEmailFrom() {
