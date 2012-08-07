@@ -4,6 +4,9 @@ harvest:
   password: 1234
   ssl: true
   daysback: 7
+  # Set a maximum number of hours per entry. If this limit is exceeded the 
+  # entry is considered potentially faulty.
+  # max_entry_hours: 8
 bugyield:
   email_from: bugyield@mycompany.com
   email_fallback: bugyield@mycompany.com

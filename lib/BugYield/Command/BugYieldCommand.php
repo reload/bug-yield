@@ -54,7 +54,26 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    */
   protected function getHarvestDaysBack() {
     return intval($this->harvestConfig['daysback']);
-  }     
+  }    
+
+  /**
+   * Max number of hours allowed on a single time entry. If this limit is
+   * exceeded the entry is considered potentially faulty.
+   * 
+   * @return int/float/null The number of hours or NULL if not defined.
+   */
+  protected function getMaxEntryHours() {
+    $maxHours = NULL;
+    if (isset($this->harvestConfig['max_entry_hours'])) {
+      $maxHours = $this->harvestConfig['max_entry_hours'];
+      // Do not allow non-numeric number of hours
+      if (!is_numeric($maxHours)) {
+        $this->debug(sprintf('Number of warnings %s is not a valid integer', $maxHours));
+        $maxHours = NULL;
+      }
+    }
+    return $maxHours;
+  } 
 
   /**
    * Fetch url to the bugtracker

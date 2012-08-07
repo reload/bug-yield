@@ -108,15 +108,16 @@ class TimeSync extends BugYieldCommand {
         $worklog->taskName  = $taskName;
         $worklog->notes     = $entry->get('notes');
 
-        // report an error if you have one single ticket entry with more than 8 hours straight. That's very odd.
-        if($hoursPerTicket > 8) {
-
-          $output->writeln(sprintf('WARNING: More than 8 hours registrered on %s: %s (%s hours). Email sent to user.',$worklog->harvestId, $worklog->notes, $worklog->hours));
+        // report an error if you have one single ticket entry with more than 
+        // a configurable number of hours straight. That's very odd.
+        if ($this->getMaxEntryHours() &&
+            $hoursPerTicket > $this->getMaxEntryHours()) {
+          $output->writeln(sprintf('WARNING: More than %s hours registrered on %s: %s (%s hours). Email sent to user.', $this->getMaxEntryHours(), $worklog->harvestId, $worklog->notes, $worklog->hours));
 
           $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
           $subject = sprintf('BugYield warning: %s hours registered on %s. Really?', $worklog->hours, $worklog->notes);
           $body = array();
-          $body[] = 'The following Harvest entry seems invalid due to more than 8 registered hours on one task:';
+          $body[] = sprintf('The following Harvest entry seems invalid due to more than %s registered hours on one task:', $this->getMaxEntryHours());
           $body[] = '';
           $body[] = print_r($worklog, TRUE);
           $body[] = 'ACTION: Please review the time entry.';
