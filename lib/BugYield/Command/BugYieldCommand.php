@@ -162,6 +162,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     }
 
     $this->bugtracker->getApi($this->bugtrackerConfig['url'], $this->bugtrackerConfig['username'], $this->bugtrackerConfig['password']);
+    $this->bugtracker->setOptions($this->bugtrackerConfig);
   }
 
   protected function getBugyieldEmailFrom() {

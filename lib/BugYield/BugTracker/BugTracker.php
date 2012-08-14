@@ -27,4 +27,6 @@ interface BugTracker {
   public function sanitizeTicketId($ticketId);
 
   public function getUrlTicketPattern();
+
+  public function setOptions($bugtrackerConfig);
 }

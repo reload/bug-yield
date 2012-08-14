@@ -8,6 +8,11 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   private $token  = NULL;
   private $name   = "Jira";
   private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
+  private $bugtrackerConfig = NULL;
+
+  public function setOptions($bugtrackerConfig) {
+    $this->bugtrackerConfig = $bugtrackerConfig;
+  }
 
   public function getName() {
     return $this->name;
@@ -20,6 +25,19 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   public function getApi($url, $username, $password) {
     $this->api= new \SoapClient($url . '/rpc/soap/jirasoapservice-v2?wsdl');
     $this->token = $this->api->login($username, $password);
+  }
+
+  /**
+   * Check value of config setting "closed_issue_editable".
+   * If true can update closed jira tickets with worklogs without reopening the tickets.
+   */
+  public function getClosedIssueEditable() {
+    if(isset($this->bugtrackerConfig['closed_issue_editable'])) {
+      if($this->bugtrackerConfig['closed_issue_editable'] === true) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public function getTitle($ticketId) {
@@ -110,8 +128,9 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // is in an editable state.
     $issue = $this->api->getIssue($this->token, $ticketId);
     
-    // Reopen issue if status is "Closed" (6) which is non-editable.
-    if ($issue->status == 6) {
+    // Reopen issue if status is "Closed" (6) which is non-editable by default
+    // UNLESS we can actually edit closed issues in jira (configurable via workflows).
+    if ($issue->status == 6 && $this->getClosedIssueEditable() !== true) {
       $fields[] = array();
       // Action ID 3 is "Reopen issue".
       $this->api->progressWorkflowAction($this->token, $issue->key, 3, $fields);
@@ -140,8 +159,8 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
     // If issue status was "Closed" (6) we need to close the issue
     // again (and set status and resolution back to original
-    // values).
-    if ($issue->status == 6) {
+    // values) UNLESS we can actually edit closed issues in jira (configurable via workflows).
+    if ($issue->status == 6 && $this->getClosedIssueEditable() !== true) {
       $fields[] = array('id' => 'resolution', 'values' => array($issue->resolution));
       $fields[] = array('id' => 'status', 'values' => array($issue->status));
       $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);

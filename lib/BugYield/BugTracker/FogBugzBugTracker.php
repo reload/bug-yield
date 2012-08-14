@@ -7,6 +7,11 @@ class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
   private $api = NULL;
   private $name = "FogBugz";
   private $urlTicketPattern = '/default.asp?%1$s#BugEvent.%2$d';
+  private $bugtrackerConfig = NULL;
+
+  public function setOptions($bugtrackerConfig) {
+    $this->bugtrackerConfig = $bugtrackerConfig;
+  }
 
   public function getName() {
     return $this->name;
