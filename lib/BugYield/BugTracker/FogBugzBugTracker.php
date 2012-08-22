@@ -2,31 +2,30 @@
 
 namespace BugYield\BugTracker;
 
-class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
+class FogBugzBugTracker extends \BugYield\BugTracker\BaseBugTracker {
 
   private $api = NULL;
-  private $name = "FogBugz";
-  private $urlTicketPattern = '/default.asp?%1$s#BugEvent.%2$d';
-  private $bugtrackerConfig = NULL;
 
-  public function setOptions($bugtrackerConfig) {
-    $this->bugtrackerConfig = $bugtrackerConfig;
+  public function __construct($config) {
+    parent::__construct($config);
+
+    $this->api = new \FogBugz($this->config['url'], $this->config['username'], $this->config['password']);
+    $this->api->logon();    
   }
 
   public function getName() {
-    return $this->name;
+    return 'FogBugz';
   }
 
-  public function getUrlTicketPattern() {
-    return $this->urlTicketPattern;
+  public function getTicketUrlPattern() {
+    return '/default.asp?%1$s#BugEvent.%2$d';
   }
 
-  public function getApi($url, $username, $password) {
-    $this->api = new \FogBugz($url, $username, $password);
-    $this->api->logon();
+  protected function getTicketIdPattern() {
+    return '/(#\d+)/';
   }
 
-  public function getTitle($ticketId) {
+  public function getTicketTitle($ticketId) {
     $ticketId = ltrim($ticketId, '#');
     $response = $this->api->search($ticketId, 'sTitle', 1);
 
@@ -35,14 +34,6 @@ class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
     }
 
     return FALSE;
-  }
-
-  public function extractIds($string) {
-    $ids = array();
-    if (preg_match_all('/(#\d+)/', $string, $matches)) {
-      $ids = $matches[1];
-    }
-    return array_unique($ids);
   }
 
   public function getTimelogEntries($ticketId) {

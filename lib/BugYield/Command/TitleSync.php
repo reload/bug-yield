@@ -19,7 +19,7 @@ class TitleSync extends BugYieldCommand {
 
   protected function execute(InputInterface $input, OutputInterface $output) {
     $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
-    $output->writeln(sprintf('Bugtracker is %s (%s)', $this->bugtracker->getName(), $this->getBugtrackerURL()));
+    $output->writeln(sprintf('Bugtracker is %s (%s)', $this->bugtracker->getName(), $this->bugtracker->getUrl()));
     $output->writeln('Verifying projects in Harvest');
 
     $projects = $this->getProjects($this->getProjectIds($input));

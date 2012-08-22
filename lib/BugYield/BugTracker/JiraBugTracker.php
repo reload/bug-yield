@@ -2,31 +2,31 @@
 
 namespace BugYield\BugTracker;
 
-class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
+class JiraBugTracker extends \BugYield\BugTracker\BaseBugTracker {
 
   private $api    = NULL;
   private $token  = NULL;
-  private $name   = "Jira";
-  private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
-  private $bugtrackerConfig = NULL;
 
-  public function setOptions($bugtrackerConfig) {
-    $this->bugtrackerConfig = $bugtrackerConfig;
+  public function __construct($config) {
+    parent::__construct($config);
+
+    $this->api= new \SoapClient($this->config['url'] . '/rpc/soap/jirasoapservice-v2?wsdl');
+    $this->token = $this->api->login($this->config['username'], $this->config['password']);
   }
 
   public function getName() {
-    return $this->name;
+    return 'Jira';
   }
 
-  public function getUrlTicketPattern() {
-    return $this->urlTicketPattern;
+  public function getTicketUrlPattern() {
+    return '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
   }
 
-  public function getApi($url, $username, $password) {
-    $this->api= new \SoapClient($url . '/rpc/soap/jirasoapservice-v2?wsdl');
-    $this->token = $this->api->login($username, $password);
+  protected function getTicketIdPattern() {
+    return '/(#[A-Za-z]+-\d+)/';
   }
 
+<<<<<<< HEAD
   /**
    * Check value of config setting "closed_issue_editable".
    * If true can update closed jira tickets with worklogs without reopening the tickets.
@@ -41,12 +41,16 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   public function getTitle($ticketId) {
+=======
+
+  public function getTicketTitle($ticketId) {
+>>>>>>> refs/heads/bugtracker-refactor
     $ticketId = ltrim($ticketId, '#');
 
     // the Jira throws an exception if the issue does not exists or are unreachable. We don't want that, hence the try/catch
     try {
       $response = $this->api->getIssue($this->token, $ticketId);
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
       //TODO: Valuable information will be returned from Jira here, we should log it somewhere. E.g.:
       // com.atlassian.jira.rpc.exception.RemotePermissionException: This issue does not exist or you don't have permission to view it.
       return FALSE;
@@ -57,14 +61,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     }
 
     return FALSE;
-  }
-
-  public function extractIds($string) {
-    $ids = array();
-    if (preg_match_all('/(#[A-Za-z]+-\d+)/', $string, $matches)) {
-      $ids = array_map('strtoupper', $matches[1]);
-    }
-    return array_unique($ids);
   }
 
   public function getTimelogEntries($ticketId) {
