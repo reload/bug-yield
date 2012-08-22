@@ -5,14 +5,15 @@ namespace BugYield\Command;
 use BugYield\BugTracker\FogBugzBugTracker;
 use BugYield\BugTracker\JiraBugTracker;
 
-use Symfony\Component\Yaml\Yaml;
-
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
-use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Output\OutputInterface;
 
-abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Command {
+use Symfony\Component\Yaml\Yaml;
+
+abstract class BugYieldCommand extends Command {
 
   private $harvestConfig;
   private $bugyieldConfig;
