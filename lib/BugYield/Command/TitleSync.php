@@ -18,12 +18,6 @@ class TitleSync extends BugYieldCommand {
   }
 
   protected function execute(InputInterface $input, OutputInterface $output) {
-    $this->loadConfig($input);
-    $this->getBugTrackerApi($input);
-
-    //Setup Harvest API access
-    $harvest = $this->getHarvestApi();
-
     $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
     $output->writeln(sprintf('Bugtracker is %s (%s)', $this->bugtracker->getName(), $this->getBugtrackerURL()));
     $output->writeln('Verifying projects in Harvest');
