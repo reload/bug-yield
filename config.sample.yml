@@ -1,4 +1,5 @@
 harvest:
+  timetracker: harvest
   account: my-company
   username: bugyield@mycompany.com
   password: 1234

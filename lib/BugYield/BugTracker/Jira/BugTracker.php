@@ -1,8 +1,8 @@
 <?php
 
-namespace BugYield\BugTracker;
+namespace BugYield\BugTracker\Jira;
 
-class JiraBugTracker extends \BugYield\BugTracker\BaseBugTracker {
+class BugTracker extends \BugYield\BugTracker\BaseBugTracker {
 
   private $api    = NULL;
   private $token  = NULL;
@@ -26,7 +26,6 @@ class JiraBugTracker extends \BugYield\BugTracker\BaseBugTracker {
     return '/(#[A-Za-z]+-\d+)/';
   }
 
-<<<<<<< HEAD
   /**
    * Check value of config setting "closed_issue_editable".
    * If true can update closed jira tickets with worklogs without reopening the tickets.
@@ -40,11 +39,7 @@ class JiraBugTracker extends \BugYield\BugTracker\BaseBugTracker {
     return false;
   }
 
-  public function getTitle($ticketId) {
-=======
-
-  public function getTicketTitle($ticketId) {
->>>>>>> refs/heads/bugtracker-refactor
+  public function getTicket($ticketId) {
     $ticketId = ltrim($ticketId, '#');
 
     // the Jira throws an exception if the issue does not exists or are unreachable. We don't want that, hence the try/catch
@@ -57,7 +52,7 @@ class JiraBugTracker extends \BugYield\BugTracker\BaseBugTracker {
     }
 
     if (is_object($response) && isset($response->summary)) {
-      return $response->summary;
+      return new Ticket($response);
     }
 
     return FALSE;

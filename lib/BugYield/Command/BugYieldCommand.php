@@ -2,30 +2,32 @@
 
 namespace BugYield\Command;
 
-use BugYield\BugTracker\FogBugzBugTracker;
-use BugYield\BugTracker\JiraBugTracker;
+use Symfony\Component\Yaml\Yaml;
 
 use Symfony\Component\Console\Command\Command;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
-use Symfony\Component\Yaml\Yaml;
-
 abstract class BugYieldCommand extends Command {
 
-  private $harvestConfig;
   private $bugyieldConfig;
-  private $bugtrackerConfig;
+
   protected $bugtracker;
+  private $bugtrackerConfig;
+  
+  protected $timetracker;
+  private $timetrackerConfig;
+  
   private $debug;
+  private $output;
 
   /* singletons for caching data */
   private $harvestUsers = null;
 
   protected function configure() {
-    $this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
+    $this->addOption('timetracker', NULL, InputOption::VALUE_OPTIONAL, 'Time tracker to yield', 'harvest');
+    $this->addOption('timetracker-projects', NULL, InputOption::VALUE_OPTIONAL, 'One or more time tracker projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
     $this->addOption('config', NULL, InputOption::VALUE_OPTIONAL, 'Path to the configuration file', 'config.yml');
     $this->addOption('bugtracker', NULL, InputOption::VALUE_OPTIONAL, 'Bug Tracker to yield', 'fogbugz');
   }
@@ -37,70 +39,172 @@ abstract class BugYieldCommand extends Command {
    * @param  OutputInterface $output
    */
   protected function initialize(InputInterface $input, OutputInterface $output) {
-    // Set debug mode based on verbose option
-    $this->debug = $input->getOption('verbose');
+    // Store the inooutput for future reference
+    $this->output = $output;
+    $this->input = $input;
 
     // Load the YAML configuration
     $this->loadConfig($input);
-    $this->getBugTrackerApi($input);  
 
-    //Setup Harvest API access
-    $harvest = $this->getHarvestApi();
+    // Setup systems
+    $this->setupBugTracker($input);  
+    $this->setupTimetracker($input);
+
+    // Validate status
+    $this->validate($output);
   }
 
   /**
-   * Returns a connection to the Harvest API based on the configuration.
+   * Loads the configuration from a yaml file
    * 
-   * @return \HarvestAPI
+   * @param InputInterface $input
+   * @throws Exception
    */
-  protected function getHarvestApi() {
-    $harvest = new \HarvestAPI();
-    $harvest->setAccount($this->harvestConfig['account']);
-    $harvest->setUser($this->harvestConfig['username']);
-    $harvest->setPassword($this->harvestConfig['password']);
-    $harvest->setSSL($this->harvestConfig['ssl']);
-    return $harvest;
+  protected function loadConfig(InputInterface $input) {
+    $configFile = $input->getOption('config');
+    if (file_exists($configFile)) {
+      $config = Yaml::load($configFile);
+      $this->bugyieldConfig = $config['bugyield'];
+
+      foreach (array('bugtracker', 'timetracker') as $system) {
+        if (isset($config[$input->getOption($system)])) {
+          $this->{$system . 'Config'}  = $config[$input->getOption($system)];
+        } else {
+          throw new \Exception(sprintf('Configuration file error: Uknown %s label "%s"', $system, $input->getOption($system)));
+        }        
+      }
+    } else {
+      throw new \Exception(sprintf('Missing configuration file %s', $configFile));
+    }
   }
 
-  protected function getHarvestProjects() {
-    return $this->bugtrackerConfig['projects'];
-  }
-        
   /**
-   * Number of days back compared to today to look for harvestentries
-   * @return Integer Number of days
+   * Setup a connection to the time tracker based on the configuration.
    */
-  protected function getHarvestDaysBack() {
-    return intval($this->harvestConfig['daysback']);
-  }    
+  protected function setupTimetracker(InputInterface $input) {
+    // The time tracker system is defined in the config. As a fallback
+    // we use the config section label as bugtracker system
+    // identifier.
+    if (isset($this->timetrackerConfig['timetracker'])) {
+      $timetracker = $this->timetrackerConfig['timetracker'];
+    } else {
+      $timetracker = $input->getOption('timetracker');
+    }
+
+    // First try to guess the classname using shorthands
+    // If that is not correct assume that the system name is the
+    // full class name
+    $timetrackerClass = "BugYield\TimeTracker\\" . ucfirst($timetracker) . "\\TimeTracker";
+    if (!class_exists($timetrackerClass)) {
+      $timetrackerClass = $timetracker;
+    }
+    $timetrackerClass = new \ReflectionClass($timetrackerClass);
+    $this->timetracker = $timetrackerClass->newInstance($this->timetrackerConfig);
+  }
 
   /**
-   * Max number of hours allowed on a single time entry. If this limit is
-   * exceeded the entry is considered potentially faulty.
+   * Returns a connection to the FogBugz API based on the configuration.
    * 
-   * @return int/float/null The number of hours or NULL if not defined.
+   * @return \FogBugz
    */
-  protected function getMaxEntryHours() {
-    $maxHours = NULL;
-    if (isset($this->harvestConfig['max_entry_hours'])) {
-      $maxHours = $this->harvestConfig['max_entry_hours'];
-      // Do not allow non-numeric number of hours
-      if (!is_numeric($maxHours)) {
-        $this->debug(sprintf('Number of warnings %s is not a valid integer', $maxHours));
-        $maxHours = NULL;
+  protected function setupBugTracker(InputInterface $input) {
+    // The bugtracker system is defined in the config. As a fallback
+    // we use the config section label as bugtracker system
+    // identifier.
+    if (isset($this->bugtrackerConfig['bugtracker'])) {
+      $bugtracker =  $this->bugtrackerConfig['bugtracker'];
+    } else {
+      $bugtracker = $input->getOption('bugtracker');
+    }
+
+    // First try to guess the classname for the bug tracker
+    // If that is not correct assume that the system name is the
+    // full class name
+    $bugtrackerClass = "BugYield\BugTracker\\" . ucfirst($bugtracker) . "\\BugTracker";
+    if (!class_exists($bugtrackerClass)) {
+      $bugtrackerClass = $bugtracker;
+    }
+    $bugtrackerClass = new \ReflectionClass($bugtrackerClass);
+    $this->bugtracker = $bugtrackerClass->newInstance($this->bugtrackerConfig);
+  }
+
+  protected function validate(OutputInterface $output) {
+    // Initial info
+    $this->log($this->getName() . ' executing: ' . date('Ymd H:i:s'));
+    $this->log(sprintf('Timetracker: %s (%s)', $this->timetracker->getName(), $this->timetracker->getUrl()));
+    $this->log(sprintf('Bugtracker: %s (%s)', $this->bugtracker->getName(), $this->bugtracker->getUrl()));
+
+    $this->log('Verifying projects in Harvest');
+    $projects = $this->timetracker->getProjects();
+    if (sizeof($projects) == 0) {
+      // We have no projects to work with so bail
+      // TODO: We need to bail harder here. Throw an exception perhaps?
+      $this->log(sprintf('Could not find any projects matching: %s', $input));
+      return;
+    }
+
+    foreach ($projects as $project) {
+      $archivedText = "";
+      if (!$project->isActive()) {
+        $archivedText = sprintf("ARCHIVED (Latest activity: %s)", $project->getLatestActivity());
+      }
+      $this->log(sprintf('Working with project: %s %s %s', self::mb_str_pad($project->getName(), 40, " "), self::mb_str_pad($project->getCode(), 18, " "), $archivedText));
+    }
+
+    $ignoreLocked   = TRUE;
+    $fromDate       = date("Ymd", time() - (86400 * $this->getTimetrackerDaysBack()));
+    $toDate         = date("Ymd");
+
+    $this->log(sprintf("Collecting Harvest entries between %s to %s",$fromDate,$toDate));
+    if ($ignoreLocked) {
+      $this->log("-- Ignoring entries already billed or otherwise closed.");
+    }    
+  }
+
+  // Common utility functions.
+
+  /**
+   * Return ticket entries from projects.
+   *
+   * @param int     $fromDate     Date in YYYYMMDD format
+   * @param int     $toDate       Date in YYYYMMDD format  
+   * @param boolean $ignoreLocked Should we filter the closed/billed entries? We cannot update them...
+   */
+  protected function getTicketEntries($fromDate = NULL, $toDate = NULL, $ignoreLocked = TRUE) {
+    $ticketEntries = array();
+
+    //Collect the ticket entries
+    $entries = $this->timetracker->getEntries($fromDate, $toDate, $ignoreLocked);
+    foreach ($entries as $entry) {
+      if (sizeof($this->bugtracker->extractTicketIds($entry->getText())) > 0) {
+        //If the entry has ticket ids it is a ticket entry
+        $ticketEntries[] = $entry;
       }
     }
-    return $maxHours;
-  } 
 
-  protected function getHarvestURL() {
-    $http = "http://";
-    if( $this->harvestConfig['ssl'] == true ) {
-      $http = "https://";
-    }
-
-    return $http . $this->harvestConfig['account'] . ".harvestapp.com/";
+    return $ticketEntries;
   }
+  
+  protected function log($string, $level = LOG_INFO, $line = TRUE) {
+    if ($level != LOG_DEBUG ||
+        $this->input->getOption('verbose') == true) {
+      if ($line) {
+        $this->output->writeln($string);
+      } else {
+        $this->output->write($string);
+      }
+    }
+  }
+
+  // Configuration retrieval functions. Should these be refactored.
+
+  protected function getBugyieldEmailFrom() {
+    return $this->bugyieldConfig["email_from"];
+  }
+
+  protected function getBugyieldEmailFallback() {
+    return $this->bugyieldConfig["email_fallback"];
+  } 
 
   /**
    * Fetch email of email to notify extra if errors occur
@@ -129,320 +233,31 @@ abstract class BugYieldCommand extends Command {
   }
 
   /**
-   * Returns a connection to the FogBugz API based on the configuration.
+   * Number of days back compared to today to look for harvestentries
+   * @return Integer Number of days
+   */
+  protected function getTimeTrackerDaysBack() {
+    return intval($this->timetrackerConfig['daysback']);
+  }    
+
+  /**
+   * Max number of hours allowed on a single time entry. If this limit is
+   * exceeded the entry is considered potentially faulty.
    * 
-   * @return \FogBugz
+   * @return int/float/null The number of hours or NULL if not defined.
    */
-  protected function getBugTrackerApi(InputInterface $input) {
-    // The bugtracker system is defined in the config. As a fallback
-    // we use the config section label as bugtracker system
-    // identifier.
-    $bugtracker = $input->getOption('bugtracker');
-    if (empty($bugtracker) &&
-        !empty($this->bugtrackerConfig['bugtracker'])) {
-      $bugtracker = $this->bugtrackerConfig['bugtracker'];
-    }
-
-    switch ($bugtracker) {
-      case 'jira':
-        $this->bugtracker = new JiraBugTracker($this->bugtrackerConfig);
-        break;
-      case 'fogbugz':
-      default:
-        $this->bugtracker = new FogBugzBugTracker($this->bugtrackerConfig);
-        break;
-    }
-  }
-
-  protected function getBugyieldEmailFrom() {
-    return $this->bugyieldConfig["email_from"];
-  }
-
-  protected function getBugyieldEmailFallback() {
-    return $this->bugyieldConfig["email_fallback"];
-  }
-
-  /**
-   * Loads the configuration from a yaml file
-   * 
-   * @param InputInterface $input
-   * @throws Exception
-   */
-  protected function loadConfig(InputInterface $input) {
-    $configFile = $input->getOption('config');
-    if (file_exists($configFile)) {
-      $config = Yaml::load($configFile);
-      $this->harvestConfig = $config['harvest'];
-      $this->bugyieldConfig = $config['bugyield'];
-
-      if(isset($config[$input->getOption('bugtracker')])) {
-        $this->bugtrackerConfig = $config[$input->getOption('bugtracker')];
-      }
-      else
-      {
-        throw new \Exception(sprintf('Configuration file error: Uknown bugtracker label "%s"', $input->getOption('bugtracker')));
-      }
-
-    } else {
-      throw new \Exception(sprintf('Missing configuration file %s', $configFile));
-    }
-  }
-
-  /**
-   * Returns the project ids for this command from command line options or configuration.
-   * 
-   * @param InputInterface $input
-   * @return array An array of project identifiers
-   */
-  protected function getProjectIds(InputInterface $input) {
-    $projectIds = ($project = $input->getOption('harvest-project')) ? $project : $this->getHarvestProjects();
-    if (!is_array($projectIds)) {
-      $projectIds = explode(',', $projectIds);
-      array_walk($projectIds, 'trim');
-    }
-    return $projectIds;
-  }
-
-  /**
-   * Collect projects from Harvest
-   *
-   * @param array $projectIds An array of project identifiers - ids, names or codes
-   */
-  protected function getProjects($projectIds) {
-    $projects = array();
-
-    //Setup Harvest API access
-    $harvest = $this->getHarvestApi();
-
-    //Prepare by getting all projects
-    $result = $harvest->getProjects();
-    $harvestProjects = ($result->isSuccess()) ? $result->get('data') : array();
-
-    //Collect all requested projects
-    $unknownProjectIds = array();
-    foreach ($projectIds as $projectId) {
-      if (is_numeric($projectId)) {
-        //If numeric id then try to get a specific project
-        $result = $harvest->getProject($projectId);
-        if ($result->isSuccess()) {
-          $projects[] = $result->get('data');
-        } else {
-          $unknownProjectIds[] = $projectId;
-        }
-      } else {
-        $identified = false;
-        foreach($harvestProjects as $project) {
-          if (is_string($projectId)) {
-            //If "all" then add all projects
-            if ($projectId == 'all') {
-              $projects[] = $project;
-              $identified = true;
-            }
-            //If string id then get project by name or shorthand (code)
-            elseif ($project->get('name') == $projectId || $project->get('code') == $projectId) {
-              $projects[] = $project;
-              $identified = true;
-            }
-          }
-        }
-        if (!$identified) {
-          $unknownProjectIds[] = $projectId;
-        }
+  protected function getMaxEntryHours() {
+    $maxHours = NULL;
+    if (isset($this->harvestConfig['max_entry_hours'])) {
+      $maxHours = $this->harvestConfig['max_entry_hours'];
+      // Do not allow non-numeric number of hours
+      if (!is_numeric($maxHours)) {
+        $this->log(sprintf('Number of warnings %s is not a valid integer', $maxHours), LOG_DEBUG);
+        $maxHours = NULL;
       }
     }
-    return $projects;
-  }
-
-  /**
-   * Collect users from Harvest
-   *
-   */
-  protected function getUsers() {
-
-    if(is_array($this->harvestUsers))
-      {
-        return $this->harvestUsers;
-      }  
-
-    //Setup Harvest API access
-    $harvest = $this->getHarvestApi();
-
-    //Prepare by getting all projects
-    $result = $harvest->getUsers();
-    $harvestUsers = ($result->isSuccess()) ? $result->get('data') : array();
-
-    $this->harvestUsers = $harvestUsers;
-
-    // Array of Harvest_User objects
-    return $harvestUsers;
-
-  }
-
-  /**
-   * Return ticket entries from projects.
-   *
-   * @param array $projects An array of projects
-   * @param boolean $ignore_locked Should we filter the closed/billed entries? We cannot update them...
-   * @param Integer $from_date Date in YYYYMMDD format
-   * @param Integer $to_date Date in YYYYMMDD format  
-   */
-  protected function getTicketEntries($projects, $ignore_locked = true, $from_date = null, $to_date = null) {
-    //Setup Harvest API access
-    $harvest = $this->getHarvestApi();
-                 
-    //Collect the ticket entries
-    $ticketEntries = array();
-    foreach($projects as $project) {
-                  
-      if(!is_numeric($from_date)) {
-        $from_date = "19000101";
-      }
-
-      if(!is_numeric($to_date)) {
-        $to_date = date('Ymd');
-      }
-
-      $range = new \Harvest_Range($from_date, $to_date);
-
-      $result = $harvest->getProjectEntries($project->get('id'), $range);
-      if ($result->isSuccess()) {
-        foreach ($result->get('data') as $entry) {
-
-          // check that the entry is actually writeable
-          if($ignore_locked == true && ($entry->get("is-closed") == "true" || $entry->get("is-billed") == "true")) {
-            continue;
-          }
-
-          if (sizeof($this->getTicketIds($entry)) > 0) {
-            //If the entry has ticket ids it is a ticket entry
-            $ticketEntries[] = $entry;
-          }
-        }
-      }
-    }
-
-    return $ticketEntries;
-  }
-
-  /**
-   * Extract ticket ids from entries if available
-   * @param \Harvest_DayEntry $entry
-   * @return array Array of ticket ids
-   */
-  protected function getTicketIds(\Harvest_DayEntry $entry) {
-    return $this->bugtracker->extractTicketIds($entry->get('notes'));
-  }
-
-  /**
-   * Look through the projects array and return a name
-   * @param Array $projects array of Harvest_Project objects
-   * @param Integer $projectId 
-   * @return String Name of the project
-   */  
-  protected static function getProjectNameById($projects,$projectId) {
-    $projectName = "Unknown";
-    foreach ($projects as $project) {
-      if($project->get("id") == $projectId) {
-        $projectName = $project->get("name");
-        break;
-      }
-    }
-    return $projectName;
-  }
-
-  /**
-   * Fetch the Harvest User by id
-   * @param Integer $harvest_user_id 
-   * @return String Full name
-   */
-  protected function getUserNameById($harvest_user_id) {
-    $username = "Unknown";
-    
-    $harvestUsers = $this->getUsers();
-    
-    if(isset($harvestUsers[$harvest_user_id])) {
-      $Harvest_User = $harvestUsers[$harvest_user_id];
-      $username = $Harvest_User->get("first-name") . " " . $Harvest_User->get("last-name");
-    }
-
-    return $username;    
-  }  
-  
-
-  /**
-   * Fetch the Harvest User Email by id
-   * @param Integer $harvest_user_id 
-   * @return String Full name
-   */
-  protected function getUserEmailById($harvest_user_id) {
-    $email = self::getBugyieldEmailFallback();
-    
-    $harvestUsers = $this->getUsers();
-    
-    if(isset($harvestUsers[$harvest_user_id])) {
-      $Harvest_User = $harvestUsers[$harvest_user_id];
-      $email = $Harvest_User->get("email");
-    }
-
-    return $email;    
-  }  
-  
-
-  /**
-   * Fetch the Harvest Entry by id
-   * @param Integer $harvestEntryId
-   * @param Integer $harvest_user_id      
-   * @return Harvest_Entry Entry object
-   */
-  protected function getEntryById($harvestEntryId, $user_id = false) {
-    $harvest = $this->getHarvestApi();
-    $entry = false;
-    
-    $result = $harvest->getEntry($harvestEntryId, $user_id);
-    
-    if ($result->isSuccess()) {
-      $entry = $result->get('data');
-    }
-    
-    return $entry;
-    
-  }
-
-  /**
-   * Fetch the Harvest user by searching for the full name
-   * This will of course make odd results if you have two or more active users with exactly the same name...
-   *
-   * @param String $fullname 
-   * @return Harvest_User User object
-   */  
-  protected function getHarvestUserByFullName($fullname) {
-    $user = false;
-    $fullname = trim($fullname);
-    
-    foreach($this->getUsers() as $Harvest_User) {
-      // only search for active users.
-      // prey that you do not have two users with identical names. TODO this is a possible bug in spe
-      if($Harvest_User->get("is-active") == "false") {
-        continue;
-      }
-
-      $tmpFullName = trim($Harvest_User->get("first-name") . " " . $Harvest_User->get("last-name"));
-      if($fullname == $tmpFullName) {
-        // yay, we have a winner! :-)
-        $user = $Harvest_User;
-        break;
-      } 
-    }
-
-    return $user;
-  }
-
-  // if debug is enabled by --verbose/-v in cmd, then print the statements
-  protected function debug($data) {
-    if($this->debug == true) {
-      print $data;
-    }
-  }
+    return $maxHours;
+  } 
 
   // little helper function for multibyte string padding
   protected function mb_str_pad ($input, $pad_length, $pad_string, $pad_style = STR_PAD_RIGHT, $encoding="UTF-8") {

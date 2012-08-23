@@ -1,8 +1,8 @@
 <?php
 
-namespace BugYield\BugTracker;
+namespace BugYield\BugTracker\FogBugz;
 
-class FogBugzBugTracker extends \BugYield\BugTracker\BaseBugTracker {
+class BugTracker extends \BugYield\BugTracker\BaseBugTracker {
 
   private $api = NULL;
 
@@ -25,12 +25,12 @@ class FogBugzBugTracker extends \BugYield\BugTracker\BaseBugTracker {
     return '/(#\d+)/';
   }
 
-  public function getTicketTitle($ticketId) {
+  public function getTicket($ticketId) {
     $ticketId = ltrim($ticketId, '#');
     $response = $this->api->search($ticketId, 'sTitle', 1);
 
     if ($case = array_shift($response->_data)) {
-      return $case->_data['sTitle'];
+      return new Ticket($case);
     }
 
     return FALSE;
