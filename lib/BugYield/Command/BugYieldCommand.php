@@ -41,6 +41,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     $harvest->setUser($this->harvestConfig['username']);
     $harvest->setPassword($this->harvestConfig['password']);
     $harvest->setSSL($this->harvestConfig['ssl']);
+    $harvest->setRetryMode(\HarvestAPI::RETRY);
     return $harvest;
   }
 
