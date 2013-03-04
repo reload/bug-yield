@@ -87,10 +87,8 @@ class TimeSync extends BugYieldCommand {
           $checkHarvestEntries[$entry->get('id')] = $ticketIds;
         }
 
-        //Determine task
-        $response = $harvest->getTask($entry->get('task-id'));
-        $taskName = ($response->isSuccess()) ? $response->get('data')->get('name') : 'Unknown';
-                                
+        //Determine base info
+        $taskName             = $this->getTaskNameById($entry->get('task-id'));
         $harvestUserName      = $this->getUserNameById($entry->get("user-id"));
         $harvestProjectName   = self::getProjectNameById($projects,$entry->get("project-id"));
         $harvestTimestamp     = $entry->get("spent-at");

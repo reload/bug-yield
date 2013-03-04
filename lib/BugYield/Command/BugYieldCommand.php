@@ -22,6 +22,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /* singletons for caching data */
   private $harvestUsers = null;
+  private $harvestTasks = null;
 
   protected function configure() {
     $this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
@@ -289,9 +290,9 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   protected function getUsers() {
 
     if(is_array($this->harvestUsers))
-      {
-        return $this->harvestUsers;
-      }  
+    {
+      return $this->harvestUsers;
+    }
 
     //Setup Harvest API access
     $harvest = $this->getHarvestApi();
@@ -304,7 +305,36 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
     // Array of Harvest_User objects
     return $harvestUsers;
+  }
 
+  /**
+   * Fetch the Harvest Task by id
+   * @param Integer $harvest_task_id
+   * @return String Task name
+   */
+  protected function getTaskNameById($harvest_task_id) {
+
+    $taskname = "Unknown";
+
+    if(!is_array($this->harvestTasks) && !isset($this->harvestTasks[$harvest_task_id]))
+    {
+      //Setup Harvest API access
+      $harvest = $this->getHarvestApi();
+
+      //Prepare by getting all projects
+      $result = $harvest->getTasks();
+      $harvestTasks = ($result->isSuccess()) ? $result->get('data') : array();
+
+      $this->harvestTasks = $harvestTasks;
+    }
+
+    if(isset($this->harvestTasks[$harvest_task_id]))
+    {
+      $Harvest_Task = $this->harvestTasks[$harvest_task_id];
+      $taskname = $Harvest_Task->get("name");
+    }
+
+    return $taskname;
   }
 
   /**
@@ -394,9 +424,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       $username = $Harvest_User->get("first-name") . " " . $Harvest_User->get("last-name");
     }
 
-    return $username;    
-  }  
-  
+    return $username;
+  }
 
   /**
    * Fetch the Harvest User Email by id
