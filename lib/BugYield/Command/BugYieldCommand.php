@@ -138,6 +138,20 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   }
 
   /**
+   * Check value of config setting "fix_missing_references".
+   * If true we remove any errornous references from the BugTracker to Harvest, thus "fixing" Error 2
+   */
+  protected function fixMissingReferences() {
+
+    if(isset($this->bugtrackerConfig['fix_missing_references'])) {
+      if($this->bugtrackerConfig['fix_missing_references'] === true) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Returns a connection to the FogBugz API based on the configuration.
    * 
    * @return \FogBugz
@@ -454,7 +468,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   // if debug is enabled by --debug=true in cmd, then print the statements
   protected function debug($data) {
     if($this->debug == true) {
-      print $data;
+      print_r($data);
     }
   }
 

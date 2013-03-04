@@ -127,6 +127,11 @@ class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
     return $update;
   }
 
+  public function deleteWorkLogEntry($worklogId) {
+    // NOT IMPLEMENTED IN FB
+    return false;
+  }
+
   /**
    * Fetch the Harvest data from the FogBugz updates. 
    *

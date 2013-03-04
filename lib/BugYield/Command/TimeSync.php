@@ -257,9 +257,24 @@ class TimeSync extends BugYieldCommand {
                 $output->writeln(sprintf('WARNING: We have an errornous reference from BugID %s to timeentry %s where the users do not match: %s', $fbId, $entry->get("id"), var_export($hEntryData,true)));
               }
 
-              // Add error 1 reason
+              // Add error 1 reason for later use
               $errorData["entryNote"] = $entry->get("notes");
               $errorData["reason"]  = sprintf("Error 1: The time entry (%s) still exist in Harvest, but there is no reference to ticket %s from the entry. This could mean that you have changed or removed the ticketId in this particular Harvest time entry.",$errorData["entryid"],$fbId);
+
+
+              $this->debug($errorData);
+
+              if($this->fixMissingReferences())
+              {
+                $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... (set fix_missing_references to false to disable this)");
+                if($this->bugtracker->deleteWorkLogEntry($errorData["remoteId"])) {
+                  $output->writeln(sprintf("  > AUTO-FIXED an potential %s. WORKLOG HAS BEEN AUTO REMOVED BY BUGYIELD!",$errorData["reason"]));
+                  continue;
+                }
+                $output->writeln(sprintf("  > AUTO FIX FAILED in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
+              }
+
+              // Add error 1 to the RealErrors
               $realErrors[] = $errorData;
             }
             else {
@@ -268,10 +283,25 @@ class TimeSync extends BugYieldCommand {
           }
           else {
             // error found! No entry found in Harvest, the Bugtracker is referring to a timeentry that does not exist anylonger.
-            // add error 2 reason
+
+            // Add Error 2 reason for later use
             $errorData["entryNote"] = "ENTRY DELETED";
             $errorData["reason"]  = sprintf("Error 2: No entry found in Harvest, %s ticket %s is referring to a timeentry (%s) that does not exist anylonger.",$bugtrackerName,$fbId,$errorData["entryid"]);		        
-            $realErrors[] = $errorData;
+
+            $this->debug($errorData);
+
+            if($this->fixMissingReferences())
+            {
+              $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... (set fix_missing_references to false to disable this)");
+              if($this->bugtracker->deleteWorkLogEntry($errorData["remoteId"])) {
+                $output->writeln(sprintf("  > AUTO-FIXED an potential %s. REFERENCE HAS BEEN AUTO REMOVED BY BUGYIELD!",$errorData["reason"]));
+                continue;
+              }
+              $output->writeln(sprintf("  > AUTO FIX FAILED in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
+            }
+
+           // Add error 2 to the RealErrors
+           $realErrors[] = $errorData;
           }
         }
       }
