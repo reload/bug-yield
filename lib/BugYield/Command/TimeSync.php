@@ -145,7 +145,8 @@ class TimeSync extends BugYieldCommand {
             $this->debug("\\");
 
             if($updated) {
-              $output->writeln(sprintf('Updated %s: %s in %s', $id, $worklog->notes, $this->bugtracker->getName()));
+              $output->writeln(sprintf('Added work to %s: %s in %s', $id, $worklog->notes, $this->bugtracker->getName()));
+              $this->debug($worklog);
             }
 
             // save entries for the error checking below.
@@ -228,7 +229,8 @@ class TimeSync extends BugYieldCommand {
           }
           else {
             $output->writeln(sprintf('WARNING: Could not find email for this user: "%s"', $hEntryUser));
-            $output->writeln('-------- As the user cannot be found, the following checks will fail as well, so this entry will be skipped. Check user names for spelling errors, check ticket name for wierd characters breaking the regex etc.');
+            $output->writeln('-------- As the user cannot be found, the following checks will fail as well, so this entry will be skipped. Check user names for spelling errors, check ticket name for weird characters breaking the regex etc.');
+            $output->writeln(sprintf('-------- Worklog Data [BUGID %s]: %s', $fbId, "\n" . var_export($worklog,true)));
             continue;
           }
 
@@ -269,7 +271,7 @@ class TimeSync extends BugYieldCommand {
                   $output->writeln(sprintf("  > AUTO-FIXED an potential %s. WORKLOG HAS BEEN AUTO REMOVED BY BUGYIELD!",$errorData["reason"]));
                   continue;
                 }
-                $output->writeln(sprintf("  > AUTO FIX FAILED in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
+                $output->writeln(sprintf("  > AUTO-FIX FAILED in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
               }
 
               // Add error 1 to the RealErrors
@@ -295,7 +297,7 @@ class TimeSync extends BugYieldCommand {
                 $output->writeln(sprintf("  > AUTO-FIXED an potential %s. REFERENCE HAS BEEN AUTO REMOVED BY BUGYIELD!",$errorData["reason"]));
                 continue;
               }
-              $output->writeln(sprintf("  > AUTO FIX FAILED in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
+              $output->writeln(sprintf("  > AUTO-FIX FAILED in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
             }
 
            // Add error 2 to the RealErrors
