@@ -46,9 +46,10 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // the Jira throws an exception if the issue does not exists or are unreachable. We don't want that, hence the try/catch
     try {
       $response = $this->api->getIssue($this->token, $ticketId);
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
       //TODO: Valuable information will be returned from Jira here, we should log it somewhere. E.g.:
       // com.atlassian.jira.rpc.exception.RemotePermissionException: This issue does not exist or you don't have permission to view it.
+      error_log(date("d-m-Y H:i:s") . " | ".__CLASS__." FAILED: " . $ticketId . " >> " . $e->getMessage(). "\n", 3, "error.log");
       return FALSE;
     }
 

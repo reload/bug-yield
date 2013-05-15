@@ -111,6 +111,10 @@ class TitleSync extends BugYieldCommand {
               $update = true;
             }
           }
+          else
+          {
+            $output->writeln(sprintf('WARNING: Title for TicketID %s could not be found. Probably wrong ID', $ticketId));
+          }          
         }
 
         if ($update) {
@@ -134,7 +138,7 @@ class TitleSync extends BugYieldCommand {
             }
         }
       }
-    } catch (Exception $e) {
+    } catch (\Exception $e) {
       $output->writeln('Error communicating with bug tracker: '. $e->getMessage());
     }
 
