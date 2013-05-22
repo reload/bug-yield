@@ -22,7 +22,7 @@ interface BugTracker {
    *   notes
    *   remoteId - for internal use
    */
-  public function saveTimelogEntry($ticketId, $timelogEntry, $rate = 0);
+  public function saveTimelogEntry($ticketId, $timelogEntry);
 
   public function deleteWorkLogEntry($worklogId);
 

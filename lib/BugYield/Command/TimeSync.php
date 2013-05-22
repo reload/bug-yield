@@ -96,8 +96,6 @@ class TimeSync extends BugYieldCommand {
         //Determine charge rate
         $rate = $this->getRateByEntry($entry);
 
-        $entryText = sprintf('Entry #%d [%s/%s]: "%s" %sby %s @ %s in "%s"', $entry->get('id'), $entry->get('hours'), $taskName, $entry->get('notes'), "\r\n", $harvestUserName, $harvestTimestamp, $harvestProjectName);
-
         //In case there are several ids in an entry then distribute the the time spent evenly
         $hoursPerTicket = round(floatval($entry->get('hours')) / sizeof($ticketIds), 2);
 
@@ -109,6 +107,7 @@ class TimeSync extends BugYieldCommand {
         $worklog->project   = $harvestProjectName;
         $worklog->taskName  = $taskName;
         $worklog->notes     = $entry->get('notes');
+        $worklog->rate      = $rate;
 
         // report an error if you have one single ticket entry with more than 
         // a configurable number of hours straight. That's very odd.
@@ -144,7 +143,7 @@ class TimeSync extends BugYieldCommand {
           try {
             // saveTimelogEntry() will handle whether to add or update
             $this->debug("/");
-            $updated = $this->bugtracker->saveTimelogEntry($id, $worklog, $rate);
+            $updated = $this->bugtracker->saveTimelogEntry($id, $worklog);
             $this->debug("\\");
 
             if($updated) {

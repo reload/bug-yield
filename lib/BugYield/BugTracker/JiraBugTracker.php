@@ -121,7 +121,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     return $timelogs;
   }
 
-  public function saveTimelogEntry($ticketId, $timelog, $rate = 0) {
+  public function saveTimelogEntry($ticketId, $timelog) {
     $ticketId = ltrim($ticketId, '#');
     // weed out newlines in notes
     $timelog->notes = preg_replace('/[\n\r]+/m' , ' ', $timelog->notes);
@@ -131,11 +131,18 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // Set the Jira worklog ID on the worklog object if this Harvest
     // entry is already tracked in Jira.
     $entries = $this->getTimelogEntries($ticketId);
+    $delta_hours = $timelog->hours;
+
     foreach ($entries as $entry) {
+      // Keep track of how much the total amount of hours logged has changed
       if (isset($entry->harvestId) && ($entry->harvestId == $timelog->harvestId)) {
         // if we are about to update an existing Harvest entry set the
         // Jira id on the worklog entry
         $worklog->id = $entry->remoteId;
+        
+        // Entry already logged in Jira. Don't re-use existing hours in price
+        // calculation.
+        $delta_hours -= $entry->hours;
       }
       else {
         // if this is an existing Harvest entry - but it doesn't match
@@ -209,9 +216,9 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // Update price for a ticket
     // @todo Re-use $issue instead of new request or cache getIssue?
     // @todo Update fields through progressWorkflowAction() above when possible?
-    if ($rate) {
+    if (!empty($timelog->rate) && $delta_hours) {
       $price = $this->getPrice($ticketId);
-      $new_price = $price + $rate * ($timelog->hours - $entry->hours);
+      $new_price = $price + $timelog->rate * $delta_hours;
       $this->updatePrice($ticketId, $new_price);
     }    
               
@@ -247,13 +254,16 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   private function formatComment($timelog) {
-    return vsprintf('Entry #%d [%s]: "%s" by %s in "%s"',
+    return vsprintf('Entry #%d [%s]: "%s" by %s in "%s"' . "\n\rCharge %.02f * %sh = %.02f",
                     array(
                           $timelog->harvestId,
                           $timelog->taskName,
                           preg_replace('/[\n\r]+/m', ' ', $timelog->notes),
                           $timelog->user,
                           $timelog->project,
+                          $timelog->rate,
+                          $timelog->hours,
+                          $timelog->rate * $timelog->hours,
                           ));
   }
 

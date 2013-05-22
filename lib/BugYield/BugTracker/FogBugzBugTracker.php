@@ -62,7 +62,7 @@ class FogBugzBugTracker implements \BugYield\BugTracker\BugTracker {
    *   notes
    *   remoteId - for internal use
    */
-  public function saveTimelogEntry($ticketId, $timelog, $rate = 0) {
+  public function saveTimelogEntry($ticketId, $timelog) {
     // Sanitize input.
     $ticketId = ltrim($ticketId, '#');
     $timelog->notes = preg_replace('/[\r\n]+/', ' ', $timelog->notes);
