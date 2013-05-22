@@ -77,8 +77,8 @@ class TimeSync extends BugYieldCommand {
             $this->debug("\n");
             $output->writeln(sprintf('SKIPPED (active timer) entry #%d: %s', $entry->get('id'), $entry->get('notes')));
             continue;
-          }                       
-                          
+          }
+
         //One entry may - but shouldn't - contain multiple ticket ids
         $ticketIds = $this->getTicketIds($entry);
 
@@ -92,6 +92,9 @@ class TimeSync extends BugYieldCommand {
         $harvestUserName      = $this->getUserNameById($entry->get("user-id"));
         $harvestProjectName   = self::getProjectNameById($projects,$entry->get("project-id"));
         $harvestTimestamp     = $entry->get("spent-at");
+
+        //Determine charge rate
+        $rate = $this->getRateByEntry($entry);
 
         $entryText = sprintf('Entry #%d [%s/%s]: "%s" %sby %s @ %s in "%s"', $entry->get('id'), $entry->get('hours'), $taskName, $entry->get('notes'), "\r\n", $harvestUserName, $harvestTimestamp, $harvestProjectName);
 
@@ -141,7 +144,7 @@ class TimeSync extends BugYieldCommand {
           try {
             // saveTimelogEntry() will handle whether to add or update
             $this->debug("/");
-            $updated = $this->bugtracker->saveTimelogEntry($id, $worklog);
+            $updated = $this->bugtracker->saveTimelogEntry($id, $worklog, $rate);
             $this->debug("\\");
 
             if($updated) {

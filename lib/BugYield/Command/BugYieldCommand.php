@@ -21,6 +21,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   private $debug;
 
   /* singletons for caching data */
+  private $harvestProjectsResult = null;
   private $harvestUsers = null;
   private $harvestTasks = null;
 
@@ -233,6 +234,10 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     return $projectIds;
   }
 
+  protected function getProjectById($projectId) {
+    return reset($this->getProjects(array($projectId)));
+  }
+
   /**
    * Collect projects from Harvest
    *
@@ -245,44 +250,49 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     $harvest = $this->getHarvestApi();
 
     //Prepare by getting all projects
-    $result = $harvest->getProjects();
+    if (!isset($this->harvestProjectsResult)) {
+      $this->harvestProjectsResult = $harvest->getProjects();
+    }
+    $result = $this->harvestProjectsResult;
+
     $harvestProjects = ($result->isSuccess()) ? $result->get('data') : array();
 
     //Collect all requested projects
     $unknownProjectIds = array();
     foreach ($projectIds as $projectId) {
-      if (is_numeric($projectId)) {
-        //If numeric id then try to get a specific project
-        $result = $harvest->getProject($projectId);
-        if ($result->isSuccess()) {
-          $projects[] = $result->get('data');
-        } else {
-          $unknownProjectIds[] = $projectId;
-        }
-      } else {
-        $identified = false;
-        foreach($harvestProjects as $project) {
-          if (is_string($projectId)) {
-            //If "all" then add all projects
-            if ($projectId == 'all') {
-              $projects[] = $project;
-              $identified = true;
-            }
-            //If string id then get project by name or shorthand (code)
-            elseif ($project->get('name') == $projectId || $project->get('code') == $projectId) {
-              $projects[] = $project;
-              $identified = true;
-            }
+      $identified = false;
+      foreach($harvestProjects as $project) {
+        if (is_numeric($projectId)) {
+          //If string id then get project by name or shorthand (code)
+          if ($project->get('id') == $projectId) {
+            $projects[] = $project;
+            $identified = true;
           }
         }
-        if (!$identified) {
-          $unknownProjectIds[] = $projectId;
+        elseif (is_string($projectId)) {
+          //If "all" then add all projects
+          if ($projectId == 'all') {
+            $projects[] = $project;
+            $identified = true;
+          }
+          //If string id then get project by name or shorthand (code)
+          elseif ($project->get('name') == $projectId || $project->get('code') == $projectId) {
+            $projects[] = $project;
+            $identified = true;
+          }
         }
+      }
+      if (!$identified) {
+        $unknownProjectIds[] = $projectId;
       }
     }
     return $projects;
   }
 
+  protected function getUserById($userId) {
+    $users = $this->getUsers();
+    return isset($users[$userId]) ? $users[$userId] : FALSE;
+  }
   /**
    * Collect users from Harvest
    *
@@ -310,11 +320,10 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   /**
    * Fetch the Harvest Task by id
    * @param Integer $harvest_task_id
-   * @return String Task name
+   * @return mixed Task
+   *   FALSE if not found
    */
-  protected function getTaskNameById($harvest_task_id) {
-
-    $taskname = "Unknown";
+  protected function getTaskById($harvest_task_id) {
 
     if(!is_array($this->harvestTasks) && !isset($this->harvestTasks[$harvest_task_id]))
     {
@@ -328,9 +337,22 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       $this->harvestTasks = $harvestTasks;
     }
 
-    if(isset($this->harvestTasks[$harvest_task_id]))
+    return isset($this->harvestTasks[$harvest_task_id]) ? $this->harvestTasks[$harvest_task_id] : FALSE;
+  }
+
+  /**
+   * Fetch the Harvest Task name by id
+   * @param Integer $harvest_task_id
+   * @return String Task name
+   */
+  protected function getTaskNameById($harvest_task_id) {
+
+    $taskname = "Unknown";
+
+    $Harvest_Task = $this->getTaskById($harvest_task_id);
+
+    if($Harvest_Task)
     {
-      $Harvest_Task = $this->harvestTasks[$harvest_task_id];
       $taskname = $Harvest_Task->get("name");
     }
 
@@ -493,6 +515,38 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     }
 
     return $user;
+  }
+
+  /**
+   * Get the hourly rate for an entry.
+   *
+   * @param Harvest_DayEntry $entry
+   * @return int
+   */
+  protected function getRateByEntry($entry) {
+    if ($project = $this->getProjectById($entry->get('project-id'))) {
+      if ($project->get('billable')) {
+        switch ($project->get('bill-by')) {
+          case 'Project':
+            return $user->get('hourly-rate');
+
+          case 'People':
+            if ($user = $this->getUserById($entry->get('user-id'))) {
+              return $user->get('default-hourly-rate');
+            }
+            break;
+
+          case 'Tasks':
+            if ($task = $this->getTaskById($entry->get('task-id'))) {
+              return $task->get('default-hourly-rate');
+            }
+            break;
+        }
+      }
+    }
+
+    // No rate found
+    return 0;
   }
 
   // if debug is enabled by --debug=true in cmd, then print the statements

@@ -40,6 +40,28 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     return false;
   }
 
+  public function getPrice($ticketId) {
+    $ticketId = ltrim($ticketId, '#');
+    $issue = $this->api->getIssue($this->token, $ticketId);
+    foreach ($issue->customFieldValues as $customField) {
+      if ($customField->customfieldId == 'customfield_11400') {
+        return $customField->values[0];
+      }
+    }
+    return NULL;
+  }
+
+  public function updatePrice($ticketId, $price) {
+    $ticketId = ltrim($ticketId, '#');
+    $data = array(
+      'fields' => array(
+        'id' => 'customfield_11400',
+        'values' => array($price),
+      )
+    );
+    return $this->api->updateIssue($this->token, $ticketId, $data);
+  }
+  
   public function getTitle($ticketId) {
     $ticketId = ltrim($ticketId, '#');
 
@@ -82,7 +104,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     return $timelogs;
   }
 
-  public function saveTimelogEntry($ticketId, $timelog) {
+  public function saveTimelogEntry($ticketId, $timelog, $rate = 0) {
     $ticketId = ltrim($ticketId, '#');
     // weed out newlines in notes
     $timelog->notes = preg_replace('/[\n\r]+/m' , ' ', $timelog->notes);
@@ -167,6 +189,15 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
       $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);
     }
 
+    // Update price for a ticket
+    // @todo Re-use $issue instead of new request or cache getIssue?
+    // @todo Update fields through progressWorkflowAction() above when possible?
+    if ($rate) {
+      $price = $this->getPrice($ticketId);
+      $new_price = $price + $rate * ($timelog->hours - $entry->hours);
+      $this->updatePrice($ticketId, $new_price);
+    }    
+              
     return true;
   }
 
