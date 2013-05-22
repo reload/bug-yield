@@ -22,6 +22,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /* singletons for caching data */
   private $harvestProjectsResult = null;
+  private $harvestProjectUserAssignments = null;
+  private $harvestProjectTaskAssignments = null;
   private $harvestUsers = null;
   private $harvestTasks = null;
 
@@ -320,8 +322,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   /**
    * Fetch the Harvest Task by id
    * @param Integer $harvest_task_id
-   * @return mixed Task
-   *   FALSE if not found
+   * @return Harvest_Task object or FALSE
    */
   protected function getTaskById($harvest_task_id) {
 
@@ -518,35 +519,130 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   }
 
   /**
+   * Get user assignments for a project
+   *
+   * @param string $projectId
+   * @return array of Harvest_UserAssignment objects
+   */
+  protected function getProjectUserAssignments($projectId) {
+
+    if(is_array($this->harvestProjectUserAssignments[$projectId]))
+    {
+      return $this->harvestProjectUserAssignments[$projectId];
+    }
+
+    //Setup Harvest API access
+    $harvest = $this->getHarvestApi();
+
+    //Prepare by getting all user assignments for the project
+    $result = $harvest->getProjectUserAssignments($projectId);
+    $harvestProjectUserAssignments = ($result->isSuccess()) ? $result->get('data') : array();
+
+    $this->harvestProjectUserAssignments[$projectId] = $harvestProjectUserAssignments;
+
+    // Harvest_UserAssignment object
+    return $harvestProjectUserAssignments;    
+  }
+  
+  /**
+   * Get a single user assignment for a project
+   *
+   * @param string $projectId
+   * @param string $userId
+   * @return Harvest_UserAssignment object
+   */
+  protected function getProjectUserAssignment($projectId, $userId) {
+    $userAssignments = $this->getProjectUserAssignments($projectId);
+    foreach ($userAssignments as $userAssignment) {
+      if ($userAssignment->get('user-id') == $userId) {
+        return $userAssignment;
+      }
+    }
+    return FALSE;
+  }
+
+  /**
+   * Get task assignments for a project
+   *
+   * @param string $projectId
+   * @return array of Harvest_TaskAssignment objects
+   */
+  protected function getProjectTaskAssignments($projectId) {
+
+    if(is_array($this->harvestProjectTaskAssignments[$projectId]))
+    {
+      return $this->harvestProjectTaskAssignments[$projectId];
+    }
+
+    //Setup Harvest API access
+    $harvest = $this->getHarvestApi();
+
+    //Prepare by getting all task assignments for the project
+    $result = $harvest->getProjectTaskAssignments($projectId);
+    $harvestProjectTaskAssignments = ($result->isSuccess()) ? $result->get('data') : array();
+
+    $this->harvestProjectTaskAssignments[$projectId] = $harvestProjectTaskAssignments;
+
+    // Harvest_TaskAssignment object
+    return $harvestProjectTaskAssignments;
+  }
+
+  /**
+   * Get a single task assignment for a project
+   *
+   * @param string $projectId
+   * @param string $taskId
+   * @return Harvest_TaskAssignment object
+   */
+  protected function getProjectTaskAssignment($projectId, $taskId) {
+    $taskAssignments = $this->getProjectTaskAssignments($projectId);
+    foreach ($taskAssignments as $taskAssignment) {
+      if ($taskAssignment->get('task-id') == $taskId) {
+        return $taskAssignment;
+      }
+    }
+    return FALSE;
+  }
+  
+  /**
    * Get the hourly rate for an entry.
    *
    * @param Harvest_DayEntry $entry
    * @return int
    */
   protected function getRateByEntry($entry) {
-    if ($project = $this->getProjectById($entry->get('project-id'))) {
-      if ($project->get('billable')) {
-        switch ($project->get('bill-by')) {
-          case 'Project':
-            return $user->get('hourly-rate');
-
-          case 'People':
-            if ($user = $this->getUserById($entry->get('user-id'))) {
-              return $user->get('default-hourly-rate');
-            }
-            break;
-
-          case 'Tasks':
-            if ($task = $this->getTaskById($entry->get('task-id'))) {
-              return $task->get('default-hourly-rate');
-            }
-            break;
-        }
-      }
+    $project = $this->getProjectById($entry->get('project-id'));
+    
+    // No charge for non-billable projects
+    if (!$project || $project->get('billable') === 'false') {
+      return 0;
     }
 
-    // No rate found
-    return 0;
+    // No charge for non-billable tasks
+    $taskAssignment = $this->getProjectTaskAssignment($project->get('id'), $entry->get('task-id'));
+    if (!$taskAssignment || $taskAssignment->get('billable') === 'false') {
+      return 0;
+    }
+
+    switch ($project->get('bill-by')) {
+      case 'Project':
+        return $project->get('hourly-rate');
+
+      case 'People':
+        if ($userAssignment = $this->getProjectUserAssignment($project->get('id'), $entry->get('user-id'))) {
+          return $userAssignment->get('hourly-rate');
+        }
+        break;
+
+      case 'Tasks':
+        return $taskAssignment->get('hourly-rate');
+
+      case 'none':
+      default:
+        // Default no-charge (if for some obscure reason "bill-by" is unknown
+        // or "none" even if project is not billable
+        return 0;
+    }
   }
 
   // if debug is enabled by --debug=true in cmd, then print the statements

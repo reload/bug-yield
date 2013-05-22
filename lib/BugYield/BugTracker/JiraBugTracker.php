@@ -40,10 +40,19 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     return false;
   }
 
+  /**
+   * Get the current price of a ticket id
+   * This is currently hard-coded to custom field "customfield_11400".
+   *
+   * @param type $ticketId
+   * @return string
+   *   price of ticket
+   */
   public function getPrice($ticketId) {
     $ticketId = ltrim($ticketId, '#');
     $issue = $this->api->getIssue($this->token, $ticketId);
     foreach ($issue->customFieldValues as $customField) {
+      // @todo Make custom field containing price configurable.
       if ($customField->customfieldId == 'customfield_11400') {
         return $customField->values[0];
       }
@@ -51,8 +60,16 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     return NULL;
   }
 
+  /**
+   * 
+   * @param string $ticketId
+   * @param float $price
+   * @return mixed
+   *   result of api call
+   */
   public function updatePrice($ticketId, $price) {
     $ticketId = ltrim($ticketId, '#');
+    // @todo Make custom field containing price configurable.
     $data = array(
       'fields' => array(
         'id' => 'customfield_11400',
