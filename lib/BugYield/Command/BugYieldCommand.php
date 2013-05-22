@@ -526,7 +526,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    */
   protected function getProjectUserAssignments($projectId) {
 
-    if(is_array($this->harvestProjectUserAssignments[$projectId]))
+    if(isset($this->harvestProjectUserAssignments[$projectId]) && is_array($this->harvestProjectUserAssignments[$projectId]))
     {
       return $this->harvestProjectUserAssignments[$projectId];
     }
@@ -569,7 +569,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    */
   protected function getProjectTaskAssignments($projectId) {
 
-    if(is_array($this->harvestProjectTaskAssignments[$projectId]))
+    if(isset($this->harvestProjectTaskAssignments[$projectId]) && is_array($this->harvestProjectTaskAssignments[$projectId]))
     {
       return $this->harvestProjectTaskAssignments[$projectId];
     }

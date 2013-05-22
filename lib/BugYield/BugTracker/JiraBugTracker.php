@@ -42,7 +42,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
   /**
    * Get the current price of a ticket id
-   * This is currently hard-coded to custom field "customfield_11400".
    *
    * @param type $ticketId
    * @return string
@@ -53,7 +52,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     $issue = $this->api->getIssue($this->token, $ticketId);
     foreach ($issue->customFieldValues as $customField) {
       // @todo Make custom field containing price configurable.
-      if ($customField->customfieldId == 'customfield_11400') {
+      if ($customField->customfieldId == $this->bugtrackerConfig['price_custom_field_id']) {
         return $customField->values[0];
       }
     }
@@ -72,7 +71,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // @todo Make custom field containing price configurable.
     $data = array(
       'fields' => array(
-        'id' => 'customfield_11400',
+        'id' => $this->bugtrackerConfig['price_custom_field_id'],
         'values' => array($price),
       )
     );
@@ -131,7 +130,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // Set the Jira worklog ID on the worklog object if this Harvest
     // entry is already tracked in Jira.
     $entries = $this->getTimelogEntries($ticketId);
-    $delta_hours = $timelog->hours;
 
     foreach ($entries as $entry) {
       // Keep track of how much the total amount of hours logged has changed
@@ -139,10 +137,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
         // if we are about to update an existing Harvest entry set the
         // Jira id on the worklog entry
         $worklog->id = $entry->remoteId;
-        
-        // Entry already logged in Jira. Don't re-use existing hours in price
-        // calculation.
-        $delta_hours -= $entry->hours;
       }
       else {
         // if this is an existing Harvest entry - but it doesn't match
@@ -158,6 +152,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
           $entry->spentAt   == $timelog->spentAt   &&
           $entry->project   == $timelog->project   &&
           $entry->taskName  == $timelog->taskName  &&
+          $entry->rate      == $timelog->rate      &&
           $entry->notes     == $timelog->notes) {
         return false;
       }
@@ -213,15 +208,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
       $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);
     }
 
-    // Update price for a ticket
-    // @todo Re-use $issue instead of new request or cache getIssue?
-    // @todo Update fields through progressWorkflowAction() above when possible?
-    if (!empty($timelog->rate) && $delta_hours) {
-      $price = $this->getPrice($ticketId);
-      $new_price = $price + $timelog->rate * $delta_hours;
-      $this->updatePrice($ticketId, $new_price);
-    }    
-              
     return true;
   }
 
@@ -238,23 +224,24 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   /**
    * A comment entry will be formatted like this:
    *
-   * Entry #71791646 Kode: "Fikser #4029[tester harvest med anton]" by Rasmus Luckow-Nielsen in "BugYield test"
+   * Entry #71791646 Kode: "Fikser #4029[tester harvest med anton]" by Rasmus Luckow-Nielsen in "BugYield test" at "900.00"
    */
   private function parseComment($comment) {
     $timelog = new \stdClass;
-    $num_matches = preg_match('/^Entry\s#(\d+)\s\[([^]]*)\]:\s"(.*)"\sby\s(.*)\sin\s"(.*)"/m', $comment, $matches);
+    $num_matches = preg_match('/^Entry\s#(\d+)\s\[([^]]*)\]:\s"(.*)"\sby\s(.*?)\sin\s"(.*?)"(\sat\s"(.*?)")?/m', $comment, $matches);
     if ($num_matches > 0) {
       $timelog->harvestId = $matches[1];
       $timelog->taskName  = $matches[2];
       $timelog->notes     = $matches[3];
       $timelog->user      = $matches[4];
       $timelog->project   = $matches[5];
+      $timelog->rate      = isset($matches[7]) ? $matches[7] : NULL;
     }
     return $timelog;
   }
 
   private function formatComment($timelog) {
-    return vsprintf('Entry #%d [%s]: "%s" by %s in "%s"' . "\n\rCharge %.02f * %sh = %.02f",
+    return vsprintf('Entry #%d [%s]: "%s" by %s in "%s" at "%.02f"',
                     array(
                           $timelog->harvestId,
                           $timelog->taskName,
@@ -262,8 +249,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
                           $timelog->user,
                           $timelog->project,
                           $timelog->rate,
-                          $timelog->hours,
-                          $timelog->rate * $timelog->hours,
                           ));
   }
 

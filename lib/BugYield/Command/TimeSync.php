@@ -199,12 +199,18 @@ class TimeSync extends BugYieldCommand {
       $this->debug(".");
       $checkBugtrackerEntries[$id] = $this->bugtracker->getTimelogEntries($id);
     }
-
+    
     foreach($checkBugtrackerEntries as $fbId => $harvestEntriesData) {
+      $price = 0;
       foreach($harvestEntriesData as $worklog) {
+        $price += $worklog->rate * $worklog->hours;
         if(!isset($checkBugtrackerEntries[$worklog->harvestId]) || !in_array($fbId,$checkHarvestEntries[$worklog->harvestId])) {
           $possibleErrors[] = array($fbId => $worklog);
         }
+      }
+      
+      if (is_callable(array($this->bugtracker, 'updatePrice'))) {
+        $this->bugtracker->updatePrice($fbId, $price);
       }
     }
 
