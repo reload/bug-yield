@@ -144,6 +144,9 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
         // to the next entry
         continue;
       }
+      if ($timelog->is_billed) {
+        $timelog->rate = $entry->rate;
+      }
 
       // Bail out if we don't need to actually update anything.
       if ($entry->harvestId == $timelog->harvestId &&
@@ -152,6 +155,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
           $entry->spentAt   == $timelog->spentAt   &&
           $entry->project   == $timelog->project   &&
           $entry->taskName  == $timelog->taskName  &&
+          $entry->is_billed == $timelog->is_billed &&
           $entry->rate      == $timelog->rate      &&
           $entry->notes     == $timelog->notes) {
         return false;
@@ -228,26 +232,28 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
    */
   private function parseComment($comment) {
     $timelog = new \stdClass;
-    $num_matches = preg_match('/^Entry\s#(\d+)\s\[([^]]*)\]:\s"(.*)"\sby\s(.*?)\sin\s"(.*?)"(\sat\s"(.*?)")?/m', $comment, $matches);
+    $num_matches = preg_match('/^Entry\s#(\d+)\s\[([^]]*)\]:\s"(.*)"\sby\s(.*?)\sin\s"(.*?)"(\s(at|billed)\s"(.*?)")?/m', $comment, $matches);
     if ($num_matches > 0) {
       $timelog->harvestId = $matches[1];
       $timelog->taskName  = $matches[2];
       $timelog->notes     = $matches[3];
       $timelog->user      = $matches[4];
       $timelog->project   = $matches[5];
-      $timelog->rate      = isset($matches[7]) ? $matches[7] : NULL;
+      $timelog->is_billed = isset($matches[7]) && $matches[7] == 'billed' ? TRUE : FALSE;
+      $timelog->rate      = isset($matches[8]) ? $matches[8] : NULL;
     }
     return $timelog;
   }
 
   private function formatComment($timelog) {
-    return vsprintf('Entry #%d [%s]: "%s" by %s in "%s" at "%.02f"',
+    return vsprintf('Entry #%d [%s]: "%s" by %s in "%s" %s "%.02f"',
                     array(
                           $timelog->harvestId,
                           $timelog->taskName,
                           preg_replace('/[\n\r]+/m', ' ', $timelog->notes),
                           $timelog->user,
                           $timelog->project,
+                          $timelog->is_billed ? 'billed' : 'at',
                           $timelog->rate,
                           ));
   }

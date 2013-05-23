@@ -108,6 +108,7 @@ class TimeSync extends BugYieldCommand {
         $worklog->taskName  = $taskName;
         $worklog->notes     = $entry->get('notes');
         $worklog->rate      = $rate;
+        $worklog->is_billed = $entry->get('is-billed') == 'true';
 
         // report an error if you have one single ticket entry with more than 
         // a configurable number of hours straight. That's very odd.
