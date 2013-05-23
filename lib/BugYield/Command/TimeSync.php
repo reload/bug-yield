@@ -200,7 +200,7 @@ class TimeSync extends BugYieldCommand {
       $this->debug(".");
       $checkBugtrackerEntries[$id] = $this->bugtracker->getTimelogEntries($id);
     }
-    
+
     foreach($checkBugtrackerEntries as $fbId => $harvestEntriesData) {
       $price = 0;
       foreach($harvestEntriesData as $worklog) {
@@ -209,7 +209,8 @@ class TimeSync extends BugYieldCommand {
           $possibleErrors[] = array($fbId => $worklog);
         }
       }
-      
+
+      // Update accumulated price if applicable
       if (is_callable(array($this->bugtracker, 'updatePrice'))) {
         $this->bugtracker->updatePrice($fbId, $price);
       }

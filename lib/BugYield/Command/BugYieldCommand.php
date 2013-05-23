@@ -640,7 +640,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       case 'none':
       default:
         // Default no-charge (if for some obscure reason "bill-by" is unknown
-        // or "none" even if project is not billable
+        // or "none" even if project is not billable)
         return 0;
     }
   }

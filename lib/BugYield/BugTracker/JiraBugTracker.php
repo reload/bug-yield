@@ -51,7 +51,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     $ticketId = ltrim($ticketId, '#');
     $issue = $this->api->getIssue($this->token, $ticketId);
     foreach ($issue->customFieldValues as $customField) {
-      // @todo Make custom field containing price configurable.
       if ($customField->customfieldId == $this->bugtrackerConfig['price_custom_field_id']) {
         return $customField->values[0];
       }
@@ -67,8 +66,12 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
    *   result of api call
    */
   public function updatePrice($ticketId, $price) {
+    // Don't attempt update, if field is not configured
+    if (empty($this->bugtrackerConfig['price_custom_field_id'])) {
+      return;
+    }
+
     $ticketId = ltrim($ticketId, '#');
-    // @todo Make custom field containing price configurable.
     $data = array(
       'fields' => array(
         'id' => $this->bugtrackerConfig['price_custom_field_id'],
@@ -130,9 +133,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // Set the Jira worklog ID on the worklog object if this Harvest
     // entry is already tracked in Jira.
     $entries = $this->getTimelogEntries($ticketId);
-
     foreach ($entries as $entry) {
-      // Keep track of how much the total amount of hours logged has changed
       if (isset($entry->harvestId) && ($entry->harvestId == $timelog->harvestId)) {
         // if we are about to update an existing Harvest entry set the
         // Jira id on the worklog entry
