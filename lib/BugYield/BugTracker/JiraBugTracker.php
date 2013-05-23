@@ -144,6 +144,8 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
         // to the next entry
         continue;
       }
+
+      // If the entry has already been billed, do not update the rate.
       if ($timelog->is_billed) {
         $timelog->rate = $entry->rate;
       }
