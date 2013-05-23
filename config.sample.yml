@@ -55,3 +55,5 @@ yet-another-label:
   extended_test: false  
   # Try to fix synching errors automatically? (only in Jira). Great when people delete or dramatically change Harvest entries.
   fix_missing_references: false
+  # Jira-only parameter for specifying which custom field contains the price of a ticket
+  price_custom_field_id: customfield_11400
