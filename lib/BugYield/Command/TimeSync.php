@@ -64,6 +64,9 @@ class TimeSync extends BugYieldCommand {
       return;
     }
 
+    // Sort tickets by user
+    usort($ticketEntries, array($this, 'compareByUserId'));
+
     //Update bug tracker with time registrations
     try {
       foreach ($ticketEntries as $entry) {
@@ -101,6 +104,7 @@ class TimeSync extends BugYieldCommand {
         $worklog = new \stdClass;
         $worklog->harvestId = $entry->get('id');
         $worklog->user      = $harvestUserName;
+        $worklog->userEmail = $this->getUserEmailById($entry->get('user-id'));
         $worklog->hours     = $hoursPerTicket;
         $worklog->spentAt   = $harvestTimestamp;
         $worklog->project   = $harvestProjectName;
@@ -352,5 +356,13 @@ class TimeSync extends BugYieldCommand {
     }
 
     $output->writeln("TimeSync completed");
+  }
+
+  // Compare harvest entries by user ID.
+  public function compareByUserId($a, $b) {
+    if ($a->{'user-id'} == $b->{'user-id'}) {
+      return 0;
+    }
+    return $a->{'user-id'} < $b->{'user-id'} ? 1 : -1;
   }
 }

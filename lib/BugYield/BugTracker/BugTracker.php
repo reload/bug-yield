@@ -2,6 +2,8 @@
 
 namespace BugYield\BugTracker;
 
+use Symfony\Component\Yaml\Exception;
+
 interface BugTracker {
 
   // Name of the tracker for presentation purposes.

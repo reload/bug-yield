@@ -2,10 +2,13 @@
 
 namespace BugYield\BugTracker;
 
+use Symfony\Component\Yaml\Exception;
+
 class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
   private $api    = NULL;
   private $token  = NULL;
+  public $currentUsername = NULL;
   private $name   = "Jira";
   private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
   private $bugtrackerConfig = NULL;
@@ -22,7 +25,9 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     return $this->urlTicketPattern;
   }
 
+  // This shoudn't be called "get", since it's a setter-method.
   public function getApi($url, $username, $password) {
+    $this->currentUsername = $username;
     $this->api= new \SoapClient($url . '/rpc/soap/jirasoapservice-v2?wsdl');
     $this->token = $this->api->login($username, $password);
   }
@@ -125,6 +130,34 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // value is ignored so we just set it to NULL.
     $worklog->timeSpentInSeconds = NULL;
     
+    // Check if individual logging is enabled.
+    if (!empty($this->bugtrackerConfig['worklog_individual_logins'])) {
+      if (!empty($this->bugtrackerConfig['users'][$timelog->userEmail])) {
+        // Get user credentials configuration.
+        $username = $this->bugtrackerConfig['users'][$timelog->userEmail]['username'];
+        $password = $this->bugtrackerConfig['users'][$timelog->userEmail]['password'];
+
+        // Initialize API for the specific user.
+        if ($this->currentUsername != $username) {
+          print "SWITCHING USER\n";
+          $url = $this->bugtrackerConfig['url'];
+          $this->getApi($url, $username, $password);
+        }
+      }
+      else {
+        print "ERROR, USER CREDENTIALS NOT FOUND for $timelog->userEmail \n";
+        if (!empty($this->bugtrackerConfig['worklog_allow_admin'])) {
+          // Switch to admin user if already logged in as specific user.
+          if ($this->currentUsername != $this->bugtrackerConfig['username']) {
+            $this->getApi($this->bugtrackerConfig['url'], $this->bugtrackerConfig['username'], $this->bugtrackerConfig['password']);
+          }
+        }
+        else {
+          throw new Exception('JIRA credentials required but not found for the user ' . $timelog->userEmail/*, 'CredentialsNotFound'*/);
+        }
+      }
+    }
+
     // Load issue so we can check its status and decided whether it
     // is in an editable state.
     $issue = $this->api->getIssue($this->token, $ticketId);
