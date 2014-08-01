@@ -210,7 +210,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       }
       else
       {
-        throw new \Exception(sprintf('Configuration file error: Uknown bugtracker label "%s"', $input->getOption('bugtracker')));
+        throw new \Exception(sprintf('Configuration file error: Unknown bugtracker label "%s"', $input->getOption('bugtracker')));
       }
 
     } else {
@@ -493,6 +493,14 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     }
 
     return $user;
+  }
+
+  // mail wrapper - prepared for enabling debug info
+  protected function mail($to, $subject, $body, $headers) {
+    $this->debug($subject);
+    $this->debug($body);
+    $this->debug("\n --- EOM ---\n");
+    return mail($to, $subject, $body, $headers);
   }
 
   // if debug is enabled by --debug=true in cmd, then print the statements
