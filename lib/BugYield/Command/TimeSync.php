@@ -204,6 +204,7 @@ class TimeSync extends BugYieldCommand {
 
     foreach($checkBugtrackerEntries as $fbId => $harvestEntriesData) {
       foreach($harvestEntriesData as $worklog) {
+        if(!isset($worklog->harvestId)) continue; // probably not a Harvest linked worklog entry
         if(!isset($checkBugtrackerEntries[$worklog->harvestId]) || !in_array($fbId,$checkHarvestEntries[$worklog->harvestId])) {
           $possibleErrors[] = array($fbId => $worklog);
         }
