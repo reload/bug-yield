@@ -51,6 +51,10 @@ If a Harvest entry contains multiple ticket ids the time spent is distributed ev
 
 If BugYield detects serious inconsistencies, then it will email the offending user and optionally a separately defined email address (e.g. to the Project Manager).
 
+h4. PRO TIP for JIRA
+
+Make sure that the Closed state is editable in your Jira workflows (while setting closed_issue_editable: true in the config.yml), thus enabling bugyield to update worklogs on closed issues - see "Jira documentation":https://confluence.atlassian.com/display/JIRA/Allow+editing+of+Closed+Issues
+
 h3. Title synchronization
 
 BugYield can update entries in Harvest with ticket titles from FogBugz and Jira. This makes it easier register time on specific tickets without typing other than the ticket-number (prefixed with a <code>#</code>).
@@ -66,8 +70,8 @@ If a FogBugz/Jira ticket title is changed at a later point in time, subsequent e
 
 h2. To do
 
-* Support for more ticket management ("Lighthouse":http://lighthouseapp.com) and time tracking systems.
-* Performance-updates
+* Disable support for FogBugz - we don't use it anylonger and haven't testet it for a long while.
+
 
 h2. Known errors and problems
 
