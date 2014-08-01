@@ -32,6 +32,7 @@ class TitleSync extends BugYieldCommand {
     $projects = $this->getProjects($this->getProjectIds($input));
     if (sizeof($projects) == 0) {
       //We have no projects to work with so bail
+      if(!isset($input) || !is_string($input)) { $input = "ARGUMENT IS NULL"; }
       $output->writeln(sprintf('Could not find any projects matching: %s', $input));
       return;
     }
