@@ -61,22 +61,16 @@ yet-another-label:
   worklog_allow_admin: false
   # List of JIRA users and passwords keyed by email address.
   users:
-    admin1@reload.dk:
-      username: olavfronth
-      password: *****
     admin@reload.dk:
-      username: admin2
-      password: admin2
-    esbven@reload.dk:
-      username: esben
-      password: '********'
+      username: username
+      password: *****
     employee1@reload.dk:
       username: employee1
-      password: '********'
+      password: "********"
     employee2@reload.dk:
       username: employee2
-      password: '********'
+      password: "********"
     employee3@reload.dk:
       username: employee3
-      password: '********'
+      password: "********"
 
