@@ -28,7 +28,24 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     $this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
     $this->addOption('config', NULL, InputOption::VALUE_OPTIONAL, 'Path to the configuration file', 'config.yml');
     $this->addOption('bugtracker', NULL, InputOption::VALUE_OPTIONAL, 'Bug Tracker to yield', 'fogbugz');
-    $this->addOption('debug', NULL, InputOption::VALUE_OPTIONAL, 'Show debug info', false);
+  }
+
+  /**
+   * Shared initialization for all commands.
+   * 
+   * @param  InputInterface  $input
+   * @param  OutputInterface $output
+   */
+  protected function initialize(InputInterface $input, OutputInterface $output) {
+    // Set debug mode based on verbose option
+    $this->debug = $input->getOption('verbose');
+
+    // Load the YAML configuration
+    $this->loadConfig($input);
+    $this->getBugTrackerApi($input);  
+
+    //Setup Harvest API access
+    $harvest = $this->getHarvestApi();
   }
 
   /**
@@ -196,9 +213,6 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @throws Exception
    */
   protected function loadConfig(InputInterface $input) {
-    // enable debug?
-    $this->debug = $input->getOption('debug');
-
     $configFile = $input->getOption('config');
     if (file_exists($configFile)) {
       $config = Yaml::load($configFile);
@@ -495,7 +509,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     return $user;
   }
 
-  // if debug is enabled by --debug=true in cmd, then print the statements
+  // if debug is enabled by --verbose/-v in cmd, then print the statements
   protected function debug($data) {
     if($this->debug == true) {
       print_r($data);
