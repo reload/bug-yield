@@ -134,7 +134,7 @@ class TimeSync extends BugYieldCommand {
             $headers .= 'Cc: ' . $notifyOnError . "\r\n";
           }
 
-          if(!mail($to, $subject, implode("\n",$body), $headers))
+          if(!$this->mail($to, $subject, implode("\n",$body), $headers))
           {
             $output->writeln('  > ERROR: Could not send email to: '. $to);
           }
@@ -178,7 +178,7 @@ class TimeSync extends BugYieldCommand {
             if(!empty($notifyOnError)) {
               $headers .= 'Cc: ' . $notifyOnError . "\r\n";
             }
-            mail($to, $subject, implode("\n", $body), $headers);
+            $this->mail($to, $subject, implode("\n", $body), $headers);
           }
         }
       }
@@ -338,11 +338,11 @@ class TimeSync extends BugYieldCommand {
 
           $output->writeln(sprintf("  > Sync error found in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
 
-          if(!mail($errorData["email"], $subject, $body, $headers))
+          if(!$this->mail($errorData["email"], $subject, $body, $headers))
           {
             $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"]));
             // send to admin instead
-            mail(self::getBugyieldEmailFallback(), "FALLBACK: " . $subject, $body, $headers);
+            $this->mail(self::getBugyieldEmailFallback(), "FALLBACK: " . $subject, $body, $headers);
           }
           else
           {
