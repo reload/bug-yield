@@ -52,7 +52,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     try {
       $response = $this->api->getIssue($this->token, $ticketId);
     } catch (\Exception $e) {
-      //TODO: Valuable information will be returned from Jira here, we should log it somewhere. E.g.:
+      // Valuable information will be returned from Jira here, e.g.:
       // com.atlassian.jira.rpc.exception.RemotePermissionException: This issue does not exist or you don't have permission to view it.
       error_log(date("d-m-Y H:i:s") . " | ".__CLASS__." FAILED: " . $ticketId . " >> " . $e->getMessage(). "\n", 3, "error.log");
       return FALSE;
@@ -76,6 +76,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   public function getTimelogEntries($ticketId) {
     $ticketId = ltrim($ticketId, '#');
     $entries = $this->api->getWorklogs($this->token, $ticketId);
+
     $timelogs = array();
     foreach ($entries as $entry) {
       $timelog = $this->parseComment($entry->comment);
@@ -97,6 +98,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // Set the Jira worklog ID on the worklog object if this Harvest
     // entry is already tracked in Jira.
     $entries = $this->getTimelogEntries($ticketId);
+
     foreach ($entries as $entry) {
       if (isset($entry->harvestId) && ($entry->harvestId == $timelog->harvestId)) {
         // if we are about to update an existing Harvest entry set the
@@ -139,7 +141,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
         // Initialize API for the specific user.
         if ($this->currentUsername != $username) {
-          print "SWITCHING USER\n";
+          print "SWITCHING USER: ".$timelog->userEmail."\n";
           $url = $this->bugtrackerConfig['url'];
           $this->getApi($url, $username, $password);
         }
@@ -147,19 +149,22 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
       else {
         print "ERROR, USER CREDENTIALS NOT FOUND for $timelog->userEmail \n";
         if (!empty($this->bugtrackerConfig['worklog_allow_admin'])) {
+          print "SWITCHING TO ADMIN USER FOR FALLBACK LOGGING ENABLED... \n";
           // Switch to admin user if already logged in as specific user.
           if ($this->currentUsername != $this->bugtrackerConfig['username']) {
             $this->getApi($this->bugtrackerConfig['url'], $this->bugtrackerConfig['username'], $this->bugtrackerConfig['password']);
           }
         }
         else {
-          throw new Exception('JIRA credentials required but not found for the user ' . $timelog->userEmail/*, 'CredentialsNotFound'*/);
+          throw new \Exception('JIRA credentials required but not found for the user ' . $timelog->userEmail/*, 'CredentialsNotFound'*/);
         }
       }
     }
 
-    // Load issue so we can check its status and decided whether it
-    // is in an editable state.
+    // Load issue so we can check its status and decide whether it is in an editable status
+    // TODO: WARNING this is some shaky code - lots of hardcoded IDs that probably only works on JIRAs built-in worksflows
+    // Instead you should make sure that the Closed state is editable in the workflow - see https://confluence.atlassian.com/display/JIRA/Allow+editing+of+Closed+Issues
+    // while setting closed_issue_editable: true in the config.yml
     $issue = $this->api->getIssue($this->token, $ticketId);
     
     // Reopen issue if status is "Closed" (6) which is non-editable by default
@@ -197,7 +202,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     if ($issue->status == 6 && $this->getClosedIssueEditable() !== true) {
       $fields[] = array('id' => 'resolution', 'values' => array($issue->resolution));
       $fields[] = array('id' => 'status', 'values' => array($issue->status));
-      $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);
+      $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);  // TODO: Hardcoded IDs here --> 2?
     }
 
     return true;
