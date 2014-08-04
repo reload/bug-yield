@@ -64,6 +64,9 @@ class TimeSync extends BugYieldCommand {
       return;
     }
 
+    // Sort tickets by user
+    usort($ticketEntries, array($this, 'compareByUserId'));
+
     //Update bug tracker with time registrations
     try {
       foreach ($ticketEntries as $entry) {
@@ -101,6 +104,7 @@ class TimeSync extends BugYieldCommand {
         $worklog = new \stdClass;
         $worklog->harvestId = $entry->get('id');
         $worklog->user      = $harvestUserName;
+        $worklog->userEmail = $this->getUserEmailById($entry->get('user-id'));
         $worklog->hours     = $hoursPerTicket;
         $worklog->spentAt   = $harvestTimestamp;
         $worklog->project   = $harvestProjectName;
@@ -130,7 +134,7 @@ class TimeSync extends BugYieldCommand {
             $headers .= 'Cc: ' . $notifyOnError . "\r\n";
           }
 
-          if(!mail($to, $subject, implode("\n",$body), $headers))
+          if(!$this->mail($to, $subject, implode("\n",$body), $headers))
           {
             $output->writeln('  > ERROR: Could not send email to: '. $to);
           }
@@ -174,7 +178,7 @@ class TimeSync extends BugYieldCommand {
             if(!empty($notifyOnError)) {
               $headers .= 'Cc: ' . $notifyOnError . "\r\n";
             }
-            mail($to, $subject, implode("\n", $body), $headers);
+            $this->mail($to, $subject, implode("\n", $body), $headers);
           }
         }
       }
@@ -200,6 +204,7 @@ class TimeSync extends BugYieldCommand {
 
     foreach($checkBugtrackerEntries as $fbId => $harvestEntriesData) {
       foreach($harvestEntriesData as $worklog) {
+        if(!isset($worklog->harvestId)) continue; // probably not a Harvest linked worklog entry
         if(!isset($checkBugtrackerEntries[$worklog->harvestId]) || !in_array($fbId,$checkHarvestEntries[$worklog->harvestId])) {
           $possibleErrors[] = array($fbId => $worklog);
         }
@@ -333,11 +338,11 @@ class TimeSync extends BugYieldCommand {
 
           $output->writeln(sprintf("  > Sync error found in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
 
-          if(!mail($errorData["email"], $subject, $body, $headers))
+          if(!$this->mail($errorData["email"], $subject, $body, $headers))
           {
             $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"]));
             // send to admin instead
-            mail(self::getBugyieldEmailFallback(), "FALLBACK: " . $subject, $body, $headers);
+            $this->mail(self::getBugyieldEmailFallback(), "FALLBACK: " . $subject, $body, $headers);
           }
           else
           {
@@ -352,5 +357,13 @@ class TimeSync extends BugYieldCommand {
     }
 
     $output->writeln("TimeSync completed");
+  }
+
+  // Compare harvest entries by user ID.
+  public function compareByUserId($a, $b) {
+    if ($a->{'user-id'} == $b->{'user-id'}) {
+      return 0;
+    }
+    return $a->{'user-id'} < $b->{'user-id'} ? 1 : -1;
   }
 }
