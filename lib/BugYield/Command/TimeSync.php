@@ -187,6 +187,8 @@ class TimeSync extends BugYieldCommand {
     // This code will look for irregularities in the logged data, namely if the bugtracker is out-of-sync with Harvest
     // Currently this runs whenever a ticket in the bugtracker has been referenced in Harvest - then all the logged entries are checked.
 
+    // TODO! THIS WILL FAIL (probably, depending on permission) IF YOU HAVE JIRA MULTIUSER ENABLED as it does not log in as the correct user. 
+
     if($this->doExtendedTest()) {
       $output->writeln('EXTENDED TEST has been enabled, all referenced tickets will be checked even if they were not updated. Set extended_test = false to disable this.');
     }
