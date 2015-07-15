@@ -6,21 +6,15 @@ use Symfony\Component\ClassLoader\UniversalClassLoader;
 require 'vendor/autoload.php';
 
 // Setup Symfony classloader and components (PSR-0).
-require_once __DIR__.'/vendor/Symfony/Component/ClassLoader/UniversalClassLoader.php';
+// @TODO UniversalClassLoader is deprecated. Replace this.
 $loader = new UniversalClassLoader();
 $loader->registerNamespaces(array(
-  'Symfony' => __DIR__.'/vendor',
   'BugYield' => __DIR__.'/lib',
 ));
 $loader->register();
 
 //Load FogBugz API library
-require_once 'vendor/fogbugz-php-library/src/fogbugz_init.php';
-
-//Load HaPi
-require_once 'vendor/hapi/HarvestAPI.php';
-
-spl_autoload_register( array('HarvestAPI', 'autoload') );
+require_once 'vendor/kasperg/fogbugz-php-library/src/fogbugz_init.php';
 
 $app = new BugYield\BugYield();
 $app->run();
