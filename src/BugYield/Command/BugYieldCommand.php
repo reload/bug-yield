@@ -5,8 +5,8 @@ namespace BugYield\Command;
 use BugYield\BugTracker\FogBugzBugTracker;
 use BugYield\BugTracker\JiraBugTracker;
 use BugYield\BugTracker\JiraRestBugTracker;
+use BugYield\HarvestAdapter\HarvestAdapterApi as HarvestApi;
 
-use Harvest\HarvestApi;
 use Harvest\Model\Range;
 use Harvest\Model\DayEntry;
 
@@ -384,7 +384,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /**
    * Extract ticket ids from entries if available
-   * @param \Harvest_DayEntry $entry
+   * @param \Harvest\Model\DayEntry $entry
    * @return array Array of ticket ids
    */
   protected function getTicketIds(\Harvest\Model\DayEntry $entry) {
