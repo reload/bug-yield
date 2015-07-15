@@ -41,11 +41,11 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @return \Harvest\HarvestAPI
    */
   protected function getHarvestApi() {
-    $harvest = new \Harvest\HarvestAPI();
+    $harvest = new HarvestApi();
     $harvest->setAccount($this->harvestConfig['account']);
     $harvest->setUser($this->harvestConfig['username']);
     $harvest->setPassword($this->harvestConfig['password']);
-    $harvest->setRetryMode(\Harvest\HarvestAPI::RETRY);
+    $harvest->setRetryMode(HarvestApi::RETRY);
     return $harvest;
   }
 
