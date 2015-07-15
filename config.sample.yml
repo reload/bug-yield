@@ -2,7 +2,6 @@ harvest:
   account: my-company
   username: bugyield@mycompany.com
   password: 1234
-  ssl: true
   daysback: 7
   # Set a maximum number of hours per entry. If this limit is exceeded the 
   # entry is considered potentially faulty.

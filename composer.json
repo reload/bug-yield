@@ -2,5 +2,26 @@
   "name": "reload/bugyield",
   "description": "A script to sync between Harvest and Jira.",
   "license": "MIT",
-  "require": {}
+  "repositories": [
+    {
+      "type": "package",
+      "package": {
+        "name": "kasperg/fogbugz-php-library",
+        "version": "dev-master",
+        "source": {
+          "url": "https://github.com/kasperg/Fogbugz-PHP-Library.git",
+          "type": "git",
+          "reference": "master"
+        }
+      }
+    }
+  ],
+  "require": {
+    "php": ">=5.5.9",
+    "kasperg/fogbugz-php-library": "dev-master",
+    "gridonic/hapi": "dev-master",
+    "symfony/class-loader": "2.7.2",
+    "symfony/console": "2.7.2",
+    "symfony/yaml": "2.7.2"
+  }
 }
