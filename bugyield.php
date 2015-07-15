@@ -1,15 +1,15 @@
 <?php
 
-use Symfony\Component\ClassLoader\UniversalClassLoader;
+use Symfony\Component\ClassLoader\ClassLoader;
 
 // Composer autoloader (PSR-4).
 require 'vendor/autoload.php';
 
 // Setup Symfony classloader and components (PSR-0).
-// @TODO UniversalClassLoader is deprecated. Replace this.
-$loader = new UniversalClassLoader();
-$loader->registerNamespaces(array(
-  'BugYield' => __DIR__.'/lib',
+$loader = new ClassLoader();
+$loader->setUseIncludePath(true);
+$loader->addPrefixes(array(
+  'BugYield' => __DIR__.'/lib/',
 ));
 $loader->register();
 
