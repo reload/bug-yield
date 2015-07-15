@@ -2,7 +2,6 @@
 
 namespace BugYield\Command;
 
-use BugYield\BugTracker\FogBugzBugTracker;
 use BugYield\BugTracker\JiraBugTracker;
 use BugYield\BugTracker\JiraRestBugTracker;
 use BugYield\HarvestAdapter\HarvestAdapterApi as HarvestApi;
@@ -31,7 +30,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   protected function configure() {
     $this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
     $this->addOption('config', NULL, InputOption::VALUE_OPTIONAL, 'Path to the configuration file', 'config.yml');
-    $this->addOption('bugtracker', NULL, InputOption::VALUE_OPTIONAL, 'Bug Tracker to yield', 'fogbugz');
+    $this->addOption('bugtracker', NULL, InputOption::VALUE_OPTIONAL, 'Bug Tracker to yield', 'jira');
     $this->addOption('debug', NULL, InputOption::VALUE_OPTIONAL, 'Show debug info', false);
   }
 
@@ -167,11 +166,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
       $this->bugtracker = new JiraBugTracker;
       break;
     case 'jiraRest':
-      $this->bugtracker = new JiraRestBugTracker;
-      break;
-    case 'fogbugz':
     default:
-      $this->bugtracker = new FogBugzBugTracker;
+      $this->bugtracker = new JiraRestBugTracker;
       break;
     }
 

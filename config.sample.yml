@@ -10,9 +10,9 @@ bugyield:
   email_from: bugyield@mycompany.com
   email_fallback: bugyield@mycompany.com
 a-label:
-  bugtracker: fogbugz
+  bugtracker: jira
   url: https://mycompany.fogbugz.com
-  # FogBugz specific path to ticket via ID and EventID, will be prefixed with "url". OPTIONAL, leave empty for default. Escape intentional % with %.
+  # JIRA specific path to ticket via ID and WorklogID, will be prefixed with "url". OPTIONAL, leave empty for default. Escape intentional % with %.
   url_ticket_pattern: '/default.asp?%1$s#BugEvent.%2$d'
   username: bugyield@mycompany.com
   password: abcd
