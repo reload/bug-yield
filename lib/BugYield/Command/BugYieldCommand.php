@@ -155,9 +155,10 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   }
 
   /**
-   * Returns a connection to the FogBugz API based on the configuration.
-   * 
-   * @return \FogBugz
+   * Returns a connection to the BugTracker API based on the configuration.
+   *
+   * @param InputInterface $input
+   * @return Object
    */
   protected function getBugTrackerApi(InputInterface $input) {
     // The bugtracker system is defined in the config. As a fallback
@@ -195,9 +196,9 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /**
    * Loads the configuration from a yaml file
-   * 
+   *
    * @param InputInterface $input
-   * @throws Exception
+   * @throws \Exception
    */
   protected function loadConfig(InputInterface $input) {
     // enable debug?
@@ -241,6 +242,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * Collect projects from Harvest
    *
    * @param array $projectIds An array of project identifiers - ids, names or codes
+   * @return array $projects
    */
   protected function getProjects($projectIds) {
     $projects = array();
@@ -289,7 +291,6 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /**
    * Collect users from Harvest
-   *
    */
   protected function getUsers() {
 
@@ -347,7 +348,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @param array $projects An array of projects
    * @param boolean $ignore_locked Should we filter the closed/billed entries? We cannot update them...
    * @param Integer $from_date Date in YYYYMMDD format
-   * @param Integer $to_date Date in YYYYMMDD format  
+   * @param Integer $to_date Date in YYYYMMDD format
+   * @return array
    */
   protected function getTicketEntries($projects, $ignore_locked = true, $from_date = null, $to_date = null) {
     //Setup Harvest API access
