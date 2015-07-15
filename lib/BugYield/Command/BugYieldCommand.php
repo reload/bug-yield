@@ -6,8 +6,11 @@ use BugYield\BugTracker\FogBugzBugTracker;
 use BugYield\BugTracker\JiraBugTracker;
 use BugYield\BugTracker\JiraRestBugTracker;
 
-use Symfony\Component\Yaml\Yaml;
+use Harvest\HarvestApi;
+use Harvest\Model\Range;
+use Harvest\Model\DayEntry;
 
+use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Input\InputArgument;
@@ -35,15 +38,14 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   /**
    * Returns a connection to the Harvest API based on the configuration.
    * 
-   * @return \HarvestAPI
+   * @return \Harvest\HarvestAPI
    */
   protected function getHarvestApi() {
-    $harvest = new \HarvestAPI();
+    $harvest = new \Harvest\HarvestAPI();
     $harvest->setAccount($this->harvestConfig['account']);
     $harvest->setUser($this->harvestConfig['username']);
     $harvest->setPassword($this->harvestConfig['password']);
-    $harvest->setSSL($this->harvestConfig['ssl']);
-    $harvest->setRetryMode(\HarvestAPI::RETRY);
+    $harvest->setRetryMode(\Harvest\HarvestAPI::RETRY);
     return $harvest;
   }
 
@@ -103,15 +105,6 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     }
 
     return sprintf($this->bugtrackerConfig['url'] . $urlTicketPattern, $ticketId, $remoteId);
-  }
-
-  protected function getHarvestURL() {
-    $http = "http://";
-    if( $this->harvestConfig['ssl'] == true ) {
-      $http = "https://";
-    }
-
-    return $http . $this->harvestConfig['account'] . ".harvestapp.com/";
   }
 
   /**
@@ -206,7 +199,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
     $configFile = $input->getOption('config');
     if (file_exists($configFile)) {
-      $config = Yaml::load($configFile);
+      $config = \Symfony\Component\Yaml\Yaml::parse($configFile);
       $this->harvestConfig = $config['harvest'];
       $this->bugyieldConfig = $config['bugyield'];
 
@@ -367,7 +360,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
         $to_date = date('Ymd');
       }
 
-      $range = new \Harvest_Range($from_date, $to_date);
+      $range = new \Harvest\Model\Range($from_date, $to_date);
 
       $result = $harvest->getProjectEntries($project->get('id'), $range);
       if ($result->isSuccess()) {
@@ -394,7 +387,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @param \Harvest_DayEntry $entry
    * @return array Array of ticket ids
    */
-  protected function getTicketIds(\Harvest_DayEntry $entry) {
+  protected function getTicketIds(\Harvest\Model\DayEntry $entry) {
     return $this->bugtracker->extractIds($entry->get('notes'));
   }
 
@@ -477,7 +470,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * This will of course make odd results if you have two or more active users with exactly the same name...
    *
    * @param String $fullname 
-   * @return Harvest_User User object
+   * @return \Harvest\Model\User User object
    */  
   protected function getHarvestUserByFullName($fullname) {
     $user = false;
