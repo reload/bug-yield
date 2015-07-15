@@ -2,7 +2,10 @@
 
 use Symfony\Component\ClassLoader\UniversalClassLoader;
 
-//Setup Symfony classloader and components
+// Composer autoloader (PSR-4).
+require 'vendor/autoload.php';
+
+// Setup Symfony classloader and components (PSR-0).
 require_once __DIR__.'/vendor/Symfony/Component/ClassLoader/UniversalClassLoader.php';
 $loader = new UniversalClassLoader();
 $loader->registerNamespaces(array(

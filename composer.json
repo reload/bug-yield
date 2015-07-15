@@ -1,0 +1,6 @@
+{
+  "name": "reload/bugyield",
+  "description": "A script to sync between Harvest and Jira.",
+  "license": "MIT",
+  "require": {}
+}
