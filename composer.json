@@ -2,6 +2,11 @@
   "name": "reload/bugyield",
   "description": "A script to sync between Harvest and Jira.",
   "license": "MIT",
+  "autoload" : {
+    "psr-4": {
+      "": "src/"
+    }
+  },
   "repositories": [
     {
       "type": "package",
@@ -20,7 +25,6 @@
     "php": ">=5.5.9",
     "kasperg/fogbugz-php-library": "dev-master",
     "gridonic/hapi": "dev-master",
-    "symfony/class-loader": "2.7.2",
     "symfony/console": "2.7.2",
     "symfony/yaml": "2.7.2"
   }
