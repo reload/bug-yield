@@ -45,12 +45,21 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
     return false;
   }
 
-  public function getTitle($ticketId) {
+  /**
+   * Get issue based on ticketId.
+   *
+   * @param $ticketId
+   * @return Issue
+   */
+  public function getIssue($ticketId) {
     $ticketId = ltrim($ticketId, '#');
+    return new Issue($this->api->getIssue($ticketId)->getResult());
+  }
 
+  public function getTitle($ticketId) {
     // the Jira throws an exception if the issue does not exists or are unreachable. We don't want that, hence the try/catch
     try {
-      $response = new Issue($this->api->getIssue($ticketId)->getResult());
+      $response = $this->getIssue($ticketId);
     } catch (\Exception $e) {
       //TODO: Valuable information will be returned from Jira here, we should log it somewhere. E.g.:
       // com.atlassian.jira.rpc.exception.RemotePermissionException: This issue does not exist or you don't have permission to view it.
@@ -74,8 +83,7 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   public function getTimelogEntries($ticketId) {
-    $ticketId = ltrim($ticketId, '#');
-    $response = new Issue($this->api->getIssue($ticketId)->getResult());
+    $response = $this->getIssue($ticketId);
     $entries = $response->get('worklog')['worklogs'];
 
     $timelogs = array();
