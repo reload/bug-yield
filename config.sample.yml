@@ -31,10 +31,6 @@ another-label:
   email_notify_on_error: "bugyield+errors@company.com"
   # set to true to do extended error-testing. Takes a lot longer time, as it will check inconsistencies for all referenced tickets and not only the updated ones.
   extended_test: false  
-  # Only relevant for Jira. By default you cannot edit closed issues in jira, thus updating the ticket with worklogs.
-  # By default BugYield will work around this by reopening, updating (with work logs) and closing the ticket, but in the progress a lot of events will be fired in Jira.
-  # You can configure in Jira's Workflow designer that a closed issue is editable, thus making this workaround unnecessary. In that case, set this variable to true.
-  closed_issue_editable: false
   # Try to fix synching errors automatically? (only in Jira). Great when people delete or dramatically change Harvest entries.
   fix_missing_references: false
 yet-another-label:

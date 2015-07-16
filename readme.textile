@@ -53,7 +53,7 @@ If BugYield detects serious inconsistencies, then it will email the offending us
 
 h4. PRO TIP for JIRA
 
-Make sure that the Closed state is editable in your Jira workflows (while setting closed_issue_editable: true in the config.yml), thus enabling bugyield to update worklogs on closed issues - see "Jira documentation":https://confluence.atlassian.com/display/JIRA/Allow+editing+of+Closed+Issues
+Make sure that the Closed state is editable in your Jira workflows, thus enabling bugyield to update worklogs on closed issues - see "Jira documentation":https://confluence.atlassian.com/display/JIRA/Allow+editing+of+Closed+Issues
 
 h3. Title synchronization
 

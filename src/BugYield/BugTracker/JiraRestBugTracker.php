@@ -33,19 +33,6 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   /**
-   * Check value of config setting "closed_issue_editable".
-   * If true can update closed jira tickets with worklogs without reopening the tickets.
-   */
-  public function getClosedIssueEditable() {
-    if(isset($this->bugtrackerConfig['closed_issue_editable'])) {
-      if($this->bugtrackerConfig['closed_issue_editable'] === true) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /**
    * Get issue based on ticketId.
    *
    * @param $ticketId
@@ -140,18 +127,6 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
     // value is ignored so we just set it to NULL.
     $worklog->timeSpentInSeconds = NULL;
     
-    // Load issue so we can check its status and decided whether it
-    // is in an editable state.
-    $issue = $this->api->getIssue($this->token, $ticketId);
-    
-    // Reopen issue if status is "Closed" (6) which is non-editable by default
-    // UNLESS we can actually edit closed issues in jira (configurable via workflows).
-    if ($issue->status == 6 && $this->getClosedIssueEditable() !== true) {
-      $fields[] = array();
-      // Action ID 3 is "Reopen issue".
-      $this->api->progressWorkflowAction($this->token, $issue->key, 3, $fields);
-    }
-
     // If this is an existing entry update it - otherwise add it.
     if (isset($worklog->id)) {
       // Update the Registered time. Jira can't log worklog entries
@@ -171,15 +146,6 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
       else {
         // intentionally left blank
       }
-    }
-
-    // If issue status was "Closed" (6) we need to close the issue
-    // again (and set status and resolution back to original
-    // values) UNLESS we can actually edit closed issues in jira (configurable via workflows).
-    if ($issue->status == 6 && $this->getClosedIssueEditable() !== true) {
-      $fields[] = array('id' => 'resolution', 'values' => array($issue->resolution));
-      $fields[] = array('id' => 'status', 'values' => array($issue->status));
-      $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);
     }
 
     return true;
