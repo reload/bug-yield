@@ -206,14 +206,15 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   private function formatComment($timelog) {
-    return vsprintf('Entry #%d [%s]: "%s" by %s in "%s"',
-                    array(
-                          $timelog->harvestId,
-                          $timelog->taskName,
-                          preg_replace('/[\n\r]+/m', ' ', $timelog->notes),
-                          $timelog->user,
-                          $timelog->project,
-                          ));
+    return vsprintf(
+      'Entry #%d [%s]: "%s" by %s in "%s"',
+      array(
+        $timelog->harvestId,
+        $timelog->taskName,
+        preg_replace('/[\n\r]+/m', ' ', $timelog->notes),
+        $timelog->user,
+        $timelog->project,
+    ));
   }
 
   /**
