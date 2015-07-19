@@ -127,7 +127,7 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
         $this->deleteWorkLogEntry($ticketId, $worklog->id);
       }
       else {
-        $this->api->updateWorklogAndAutoAdjustRemainingEstimate($this->token, $worklog);
+        $this->api->updateWorklog($ticketId, $worklog->id, (array) $worklog);
       }
     }
     else {
