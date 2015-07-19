@@ -50,8 +50,8 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
       return FALSE;
     }
 
-    if (is_object($response)) {
-      return $response->get('summary');
+    if (is_array($response)) {
+      return $response['fields']['summary'];
     }
 
     return FALSE;
