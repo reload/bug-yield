@@ -32,11 +32,11 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
    * Get issue based on ticketId.
    *
    * @param $ticketId
-   * @return Issue
+   * @return array
    */
   public function getIssue($ticketId) {
     $ticketId = ltrim($ticketId, '#');
-    return new Issue($this->api->getIssue($ticketId)->getResult());
+    return $this->api->get($ticketId)->json();
   }
 
   public function getTitle($ticketId) {
