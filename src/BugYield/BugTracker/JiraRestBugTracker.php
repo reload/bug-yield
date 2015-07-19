@@ -128,7 +128,7 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
       // Update the Registered time. Jira can't log worklog entries
       // with hours == 0 so delete the worklog entry in that case.
       if ($timelog->hours == 0) {
-        $this->api->deleteWorklogAndAutoAdjustRemainingEstimate($this->token, $worklog->id);
+        $this->deleteWorkLogEntry($ticketId, $worklog->id);
       }
       else {
         $this->api->updateWorklogAndAutoAdjustRemainingEstimate($this->token, $worklog);
