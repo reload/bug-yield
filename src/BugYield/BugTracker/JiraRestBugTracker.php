@@ -133,7 +133,7 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
     else {
       // Jira can't log entries with hours == 0
       if ($timelog->hours != 0) {
-        $this->api->addWorklogAndAutoAdjustRemainingEstimate($this->token, $ticketId, $worklog);
+        $this->api->createWorklog($ticketId, (array) $worklog);
       }
       else {
         // intentionally left blank
