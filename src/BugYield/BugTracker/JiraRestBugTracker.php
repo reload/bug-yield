@@ -67,12 +67,12 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
 
   public function getTimelogEntries($ticketId) {
     $response = $this->getIssue($ticketId);
-    $entries = $response->get('worklog')['worklogs'];
 
     $timelogs = array();
-    foreach ($entries as $entry) {
+    foreach ($response['fields']['worklog']['worklogs'] as $entry) {
       $timelog = $this->parseComment($entry['comment']);
       $timelog->hours = (string) round($entry['timeSpentSeconds'] / 3600, 2);
+      $timelog->started = $entry['started'];
       $timelog->spentAt = date('Y-m-d', strtotime($entry['started']));
       $timelog->remoteId = $entry['id'];
       $timelogs[] = $timelog;
