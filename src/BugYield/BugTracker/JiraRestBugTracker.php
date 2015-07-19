@@ -116,13 +116,9 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
     }
 
     $worklog->comment = $this->formatComment($timelog);
-    $worklog->startDate = date('c', strtotime($timelog->spentAt));
+    $worklog->started = date('c', strtotime($timelog->spentAt));
     $worklog->timeSpent = $timelog->hours . 'h';
 
-    // Caveat in the Jira API - the parameter below must be set but the
-    // value is ignored so we just set it to NULL.
-    $worklog->timeSpentInSeconds = NULL;
-    
     // If this is an existing entry update it - otherwise add it.
     if (isset($worklog->id)) {
       // Update the Registered time. Jira can't log worklog entries
