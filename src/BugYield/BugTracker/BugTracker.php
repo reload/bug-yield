@@ -26,7 +26,7 @@ interface BugTracker {
    */
   public function saveTimelogEntry($ticketId, $timelogEntry);
 
-  public function deleteWorkLogEntry($worklogId);
+  public function deleteWorkLogEntry($worklogId, $issue);
 
   public function sanitizeTicketId($ticketId);
 

@@ -152,8 +152,9 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
    *
    * (when auto-adjusting the removed time will be added to the remaining work)
    */
-  public function deleteWorkLogEntry($worklogId) {
-    $this->api->deleteWorklogAndRetainRemainingEstimate($this->token, $worklogId); // this should return true on success but doesn't(?)
+  public function deleteWorkLogEntry($worklogId, $issueId) {
+    $issueId = ltrim($issueId, '#');
+    $this->api->deleteWorklog($issueId, $worklogId);
     return true;
   }
 
