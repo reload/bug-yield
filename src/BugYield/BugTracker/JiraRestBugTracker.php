@@ -2,9 +2,7 @@
 
 namespace BugYield\BugTracker;
 
-use chobie\Jira\Api as JiraApi,
-    chobie\Jira\Api\Authentication\Basic as BasicAuth,
-    chobie\Jira\Issue;
+use JiraApi\Clients\IssueClient as JiraApi;
 
 class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
 
@@ -27,9 +25,7 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   public function getApi($url, $username, $password) {
-    $this->api = new JiraApi($url,
-      new BasicAuth($username, $password)
-    );
+    $this->api = new JiraApi(rtrim($url, '/') . '/rest/api/2/', $username, $password);
   }
 
   /**
