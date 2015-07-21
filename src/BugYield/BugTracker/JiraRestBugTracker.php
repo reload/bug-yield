@@ -116,7 +116,6 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
     }
 
     $worklog->comment = $this->formatComment($timelog);
-    $worklog->started = date('c', strtotime($timelog->spentAt));
     $worklog->timeSpent = $timelog->hours . 'h';
 
     // If this is an existing entry update it - otherwise add it.
