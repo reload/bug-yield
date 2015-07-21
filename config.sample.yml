@@ -11,9 +11,9 @@ bugyield:
   email_fallback: bugyield@mycompany.com
 a-label:
   bugtracker: jira
-  url: https://mycompany.fogbugz.com
+  url: https://mycompany.atlassian.net
   # JIRA specific path to ticket via ID and WorklogID, will be prefixed with "url". OPTIONAL, leave empty for default. Escape intentional % with %.
-  url_ticket_pattern: '/default.asp?%1$s#BugEvent.%2$d'
+  url_ticket_pattern: '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d'
   username: bugyield@mycompany.com
   password: abcd
   projects: "alias,name,id"
