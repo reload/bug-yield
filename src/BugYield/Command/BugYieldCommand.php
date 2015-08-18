@@ -165,9 +165,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     case 'jira':
       $this->bugtracker = new JiraBugTracker;
       break;
-    case 'jiraRest':
     default:
-      $this->bugtracker = new JiraRestBugTracker;
+      $this->bugtracker = new JiraBugTracker;
       break;
     }
 

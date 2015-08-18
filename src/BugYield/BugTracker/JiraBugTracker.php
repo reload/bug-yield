@@ -4,7 +4,7 @@ namespace BugYield\BugTracker;
 
 use JiraApi\Clients\IssueClient as JiraApi;
 
-class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
+class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
   private $api    = NULL;
   private $token  = NULL;
