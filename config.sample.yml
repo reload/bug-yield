@@ -10,7 +10,7 @@ bugyield:
   email_from: bugyield@mycompany.com
   email_fallback: bugyield@mycompany.com
 a-label:
-  bugtracker: jiraRest
+  bugtracker: jira
   url: https://mycompany.atlassian.net
   # JIRA specific path to ticket via ID and WorklogID, will be prefixed with "url". OPTIONAL, leave empty for default. Escape intentional % with %.
   url_ticket_pattern: '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d'
@@ -21,7 +21,7 @@ a-label:
   # set to true to do extended error-testing. Takes a lot longer time, as it will check inconsistencies for all referenced tickets and not only the updated ones.
   extended_test: false
 another-label:
-  bugtracker: jiraRest
+  bugtracker: jira
   url: https://mycompany.atlassian.net
   # JIRA specific path to ticket via ID and WorklogID, will be prefixed with "url". OPTIONAL, leave empty for default. Escape intentional % with %.
   url_ticket_pattern: '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d'
@@ -34,7 +34,7 @@ another-label:
   # Try to fix synching errors automatically? (only in Jira). Great when people delete or dramatically change Harvest entries.
   fix_missing_references: false
 yet-another-label:
-  bugtracker: jiraRest
+  bugtracker: jira
   url: https://othercompany.atlassian.net
   # JIRA specific path to ticket via ID and WorklogID, will be prefixed with "url". OPTIONAL, leave empty for default. Escape intentional % with %.
   url_ticket_pattern: '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d'

@@ -9,7 +9,7 @@ class JiraRestBugTracker implements \BugYield\BugTracker\BugTracker {
   private $api    = NULL;
   private $token  = NULL;
   public $currentUsername = NULL;
-  private $name   = "JiraRest";
+  private $name   = "Jira";
   private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
   private $bugtrackerConfig = NULL;
 
