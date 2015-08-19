@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "8585ab9dfed441209753436d5550ac99",
+    "hash": "6d54896afb49107fd41ef0722eeee69c",
     "packages": [
         {
             "name": "alexkovalevych/jira-api",
@@ -67,12 +67,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/gridonic/hapi.git",
-                "reference": "efbd69b9ff174f86315d42874bc370adaa8a22cb"
+                "reference": "4dc507af76c1982bcec069f89be90aed3c19de8e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gridonic/hapi/zipball/efbd69b9ff174f86315d42874bc370adaa8a22cb",
-                "reference": "efbd69b9ff174f86315d42874bc370adaa8a22cb",
+                "url": "https://api.github.com/repos/gridonic/hapi/zipball/4dc507af76c1982bcec069f89be90aed3c19de8e",
+                "reference": "4dc507af76c1982bcec069f89be90aed3c19de8e",
                 "shasum": ""
             },
             "require": {
@@ -97,7 +97,7 @@
                 "Harvest",
                 "api"
             ],
-            "time": "2015-05-27 06:17:05"
+            "time": "2015-08-05 15:40:41"
         },
         {
             "name": "guzzlehttp/guzzle",
@@ -219,16 +219,16 @@
         },
         {
             "name": "symfony/console",
-            "version": "v2.7.2",
+            "version": "v2.7.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Console.git",
-                "reference": "8cf484449130cabfd98dcb4694ca9945802a21ed"
+                "reference": "d6cf02fe73634c96677e428f840704bfbcaec29e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Console/zipball/8cf484449130cabfd98dcb4694ca9945802a21ed",
-                "reference": "8cf484449130cabfd98dcb4694ca9945802a21ed",
+                "url": "https://api.github.com/repos/symfony/Console/zipball/d6cf02fe73634c96677e428f840704bfbcaec29e",
+                "reference": "d6cf02fe73634c96677e428f840704bfbcaec29e",
                 "shasum": ""
             },
             "require": {
@@ -272,20 +272,20 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "https://symfony.com",
-            "time": "2015-07-09 16:07:40"
+            "time": "2015-07-28 15:18:12"
         },
         {
             "name": "symfony/yaml",
-            "version": "v2.7.2",
+            "version": "v2.7.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/Yaml.git",
-                "reference": "4bfbe0ed3909bfddd75b70c094391ec1f142f860"
+                "reference": "71340e996171474a53f3d29111d046be4ad8a0ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/Yaml/zipball/4bfbe0ed3909bfddd75b70c094391ec1f142f860",
-                "reference": "4bfbe0ed3909bfddd75b70c094391ec1f142f860",
+                "url": "https://api.github.com/repos/symfony/Yaml/zipball/71340e996171474a53f3d29111d046be4ad8a0ff",
+                "reference": "71340e996171474a53f3d29111d046be4ad8a0ff",
                 "shasum": ""
             },
             "require": {
@@ -321,7 +321,7 @@
             ],
             "description": "Symfony Yaml Component",
             "homepage": "https://symfony.com",
-            "time": "2015-07-01 11:25:50"
+            "time": "2015-07-28 14:07:07"
         }
     ],
     "packages-dev": [],
