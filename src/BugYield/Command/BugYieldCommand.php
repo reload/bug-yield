@@ -3,19 +3,19 @@
 namespace BugYield\Command;
 
 use BugYield\BugTracker\JiraBugTracker;
-use BugYield\BugTracker\JiraRestBugTracker;
 use BugYield\HarvestAdapter\HarvestAdapterApi as HarvestApi;
 
-use Harvest\Model\Range;
 use Harvest\Model\DayEntry;
+use Harvest\Model\Result;
+use Harvest\Model\Range;
+use Harvest\Model\User;
 
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Command\Command;
 
-abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Command {
+abstract class BugYieldCommand extends Command {
 
   private $harvestConfig;
   private $bugyieldConfig;
@@ -37,7 +37,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   /**
    * Returns a connection to the Harvest API based on the configuration.
    * 
-   * @return \Harvest\HarvestAPI
+   * @return HarvestAPI
    */
   protected function getHarvestApi() {
     $harvest = new HarvestApi();
@@ -194,7 +194,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
     $configFile = $input->getOption('config');
     if (file_exists($configFile)) {
-      $config = \Symfony\Component\Yaml\Yaml::parse($configFile);
+      $config = Yaml::parse($configFile);
       $this->harvestConfig = $config['harvest'];
       $this->bugyieldConfig = $config['bugyield'];
 
@@ -355,7 +355,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
         $to_date = date('Ymd');
       }
 
-      $range = new \Harvest\Model\Range($from_date, $to_date);
+      $range = new Range($from_date, $to_date);
 
       $result = $harvest->getProjectEntries($project->get('id'), $range);
       if ($result->isSuccess()) {
@@ -379,10 +379,10 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /**
    * Extract ticket ids from entries if available
-   * @param \Harvest\Model\DayEntry $entry
+   * @param DayEntry $entry
    * @return array Array of ticket ids
    */
-  protected function getTicketIds(\Harvest\Model\DayEntry $entry) {
+  protected function getTicketIds(DayEntry $entry) {
     return $this->bugtracker->extractIds($entry->get('notes'));
   }
 
@@ -443,8 +443,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   /**
    * Fetch the Harvest Entry by id
    * @param Integer $harvestEntryId
-   * @param Integer $harvest_user_id      
-   * @return Harvest_Entry Entry object
+   * @param Integer|bool $user_id
+   * @return Result object
    */
   protected function getEntryById($harvestEntryId, $user_id = false) {
     $harvest = $this->getHarvestApi();
@@ -465,7 +465,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * This will of course make odd results if you have two or more active users with exactly the same name...
    *
    * @param String $fullname 
-   * @return \Harvest\Model\User User object
+   * @return User object
    */  
   protected function getHarvestUserByFullName($fullname) {
     $user = false;
