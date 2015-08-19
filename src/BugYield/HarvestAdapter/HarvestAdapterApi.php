@@ -14,20 +14,11 @@ class HarvestAdapterApi extends HarvestApi {
    * Exists in adapter because: we want to have "multiple users"
    * support (?of_user=).
    *
-   * <code>
-   * $entry_id = 12345;
-   *
-   * $api = new HarvestApi();
-   *
-   * $result = $api->getEntry($entry_id);
-   * if ($result->isSuccess()) {
-   *     $entry = $result->data;
-   * }
-   * </code>
-   *
    * @param int $entry_id Entry Identifier
    * @param int|bool $user_id
    * @return Result
+   *
+   * @see \Harvest\HarvestApi::getEntry
    */
   public function getEntry($entry_id, $user_id = false)
   {
@@ -48,26 +39,11 @@ class HarvestAdapterApi extends HarvestApi {
    * Exists in adapter because: we want to have "multiple users"
    * support (?of_user=).
    *
-   * <code>
-   * $entry = new DayEntry();
-   * $entry->set("id" 11111);
-   * $entry->set("notes", "Test Support");
-   * $entry->set("hours", 3);
-   * $entry->set("project_id", 3);
-   * $entry->set("task_id", 14);
-   * $entry->set("spent_at", "Tue, 17 Oct 2006");
-   *
-   * $api = new HarvestApi();
-   *
-   * $result = $api->updateEntry($entry);
-   * if ($result->isSuccess()) {
-   *     // success logic
-   * }
-   * </code>
-   *
    * @param DayEntry $entry
    * @param bool $by_another_user
    * @return Result
+   *
+   * @see \Harvest\HarvestApi::updateEntry
    */
   public function updateEntry(DayEntry $entry, $by_another_user = true)
   {
@@ -92,6 +68,8 @@ class HarvestAdapterApi extends HarvestApi {
    * @param string $data data to be sent
    * @param string $multi
    * @return Result
+   *
+   * @see \Harvest\HarvestApi::performPost
    */
   protected function performPost($url, $data, $multi = "id")
   {
