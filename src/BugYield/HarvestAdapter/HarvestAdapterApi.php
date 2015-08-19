@@ -4,6 +4,7 @@ namespace BugYield\HarvestAdapter;
 
 use Harvest\HarvestApi;
 use Harvest\Model\DayEntry;
+use Harvest\Model\Result;
 
 class HarvestAdapterApi extends HarvestApi {
 
@@ -25,8 +26,8 @@ class HarvestAdapterApi extends HarvestApi {
    * </code>
    *
    * @param int $entry_id Entry Identifier
-   * @param bool $user_id
-   * @return \Harvest\Model\Result
+   * @param int|bool $user_id
+   * @return Result
    */
   public function getEntry($entry_id, $user_id = false)
   {
@@ -64,9 +65,9 @@ class HarvestAdapterApi extends HarvestApi {
    * }
    * </code>
    *
-   * @param \Harvest\Model\DayEntry $entry Day Entry
+   * @param DayEntry $entry
    * @param bool $by_another_user
-   * @return \Harvest\Model\Result
+   * @return Result
    */
   public function updateEntry(DayEntry $entry, $by_another_user = true)
   {
@@ -87,10 +88,10 @@ class HarvestAdapterApi extends HarvestApi {
    * Exists in adapter because: We want to check if _headers["Location"]
    * exist because it gave us PHP notices about non-existing index.
    *
-   * @param  string $url url of server to process request
-   * @param  string $data data to be sent
+   * @param string $url url of server to process request
+   * @param string $data data to be sent
    * @param string $multi
-   * @return \Harvest\Model\Result
+   * @return Result
    */
   protected function performPost($url, $data, $multi = "id")
   {
@@ -120,6 +121,6 @@ class HarvestAdapterApi extends HarvestApi {
       }
     }
 
-    return new \Harvest\Model\Result($code, $rData, $this->_headers);
+    return new Result($code, $rData, $this->_headers);
   }
 }
