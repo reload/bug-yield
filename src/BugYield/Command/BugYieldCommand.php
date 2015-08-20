@@ -3,8 +3,8 @@
 namespace BugYield\Command;
 
 use BugYield\BugTracker\JiraBugTracker;
-use BugYield\HarvestAdapter\HarvestAdapterApi as HarvestApi;
 
+use Harvest\HarvestApi;
 use Harvest\Model\DayEntry;
 use Harvest\Model\Result;
 use Harvest\Model\Range;
