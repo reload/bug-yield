@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "6d54896afb49107fd41ef0722eeee69c",
+    "hash": "33dcd5bc693c33e4bc8b2e65367d639f",
     "packages": [
         {
             "name": "alexkovalevych/jira-api",
@@ -66,13 +66,13 @@
             "version": "dev-master",
             "source": {
                 "type": "git",
-                "url": "https://github.com/gridonic/hapi.git",
-                "reference": "4dc507af76c1982bcec069f89be90aed3c19de8e"
+                "url": "https://github.com/kallehauge/hapi.git",
+                "reference": "3c83c41d275eb765d69654920ca7f0aa627c51af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/gridonic/hapi/zipball/4dc507af76c1982bcec069f89be90aed3c19de8e",
-                "reference": "4dc507af76c1982bcec069f89be90aed3c19de8e",
+                "url": "https://api.github.com/repos/kallehauge/hapi/zipball/3c83c41d275eb765d69654920ca7f0aa627c51af",
+                "reference": "3c83c41d275eb765d69654920ca7f0aa627c51af",
                 "shasum": ""
             },
             "require": {
@@ -87,17 +87,19 @@
                     "Harvest": "src/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "GPL-3.0"
             ],
             "description": "PHP Wrapper Library for the Harvest API",
             "homepage": "http://github.com/gridonic/hapi",
             "keywords": [
-                "Harvest",
-                "api"
+                "api",
+                "harvest"
             ],
-            "time": "2015-08-05 15:40:41"
+            "support": {
+                "source": "https://github.com/kallehauge/hapi/tree/master"
+            },
+            "time": "2015-08-20 08:41:04"
         },
         {
             "name": "guzzlehttp/guzzle",

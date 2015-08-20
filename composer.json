@@ -7,6 +7,12 @@
       "": "src/"
     }
   },
+  "repositories": [
+    {
+      "type": "vcs",
+      "url": "https://github.com/kallehauge/hapi"
+    }
+  ],
   "require": {
     "php": ">=5.4.0",
     "gridonic/hapi": "dev-master",
