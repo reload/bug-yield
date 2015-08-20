@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "33dcd5bc693c33e4bc8b2e65367d639f",
+    "hash": "a324639b6191869f69b65371e59b2b91",
     "packages": [
         {
             "name": "alexkovalevych/jira-api",
