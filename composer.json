@@ -4,7 +4,7 @@
   "license": "MIT",
   "autoload" : {
     "psr-4": {
-      "BugYield\\": "src/BugYield"
+      "BugYield\\": "src/"
     }
   },
   "repositories": [
