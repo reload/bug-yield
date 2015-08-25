@@ -2,8 +2,6 @@
 
 namespace BugYield\Command;
 
-use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -274,7 +272,7 @@ class TimeSync extends BugYieldCommand {
               if($this->fixMissingReferences())
               {
                 $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... (set fix_missing_references to false to disable this)");
-                if($this->bugtracker->deleteWorkLogEntry($errorData["remoteId"])) {
+                if($this->bugtracker->deleteWorkLogEntry($errorData["remoteId"], $errorData["bugID"])) {
                   $output->writeln(sprintf("  > AUTO-FIXED an potential %s. WORKLOG HAS BEEN AUTO REMOVED BY BUGYIELD!",$errorData["reason"]));
                   continue;
                 }
@@ -300,7 +298,7 @@ class TimeSync extends BugYieldCommand {
             if($this->fixMissingReferences())
             {
               $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... (set fix_missing_references to false to disable this)");
-              if($this->bugtracker->deleteWorkLogEntry($errorData["remoteId"])) {
+              if($this->bugtracker->deleteWorkLogEntry($errorData["remoteId"], $errorData["bugID"])) {
                 $output->writeln(sprintf("  > AUTO-FIXED an potential %s. REFERENCE HAS BEEN AUTO REMOVED BY BUGYIELD!",$errorData["reason"]));
                 continue;
               }

@@ -2,17 +2,20 @@
 
 namespace BugYield\Command;
 
-use BugYield\BugTracker\FogBugzBugTracker;
 use BugYield\BugTracker\JiraBugTracker;
 
-use Symfony\Component\Yaml\Yaml;
+use Harvest\HarvestApi;
+use Harvest\Model\DayEntry;
+use Harvest\Model\Result;
+use Harvest\Model\Range;
+use Harvest\Model\User;
 
+use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Command\Command;
 
-abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Command {
+abstract class BugYieldCommand extends Command {
 
   private $harvestConfig;
   private $bugyieldConfig;
@@ -27,22 +30,21 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   protected function configure() {
     $this->addOption('harvest-project', 'p', InputOption::VALUE_OPTIONAL, 'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.', NULL);
     $this->addOption('config', NULL, InputOption::VALUE_OPTIONAL, 'Path to the configuration file', 'config.yml');
-    $this->addOption('bugtracker', NULL, InputOption::VALUE_OPTIONAL, 'Bug Tracker to yield', 'fogbugz');
+    $this->addOption('bugtracker', NULL, InputOption::VALUE_OPTIONAL, 'Bug Tracker to yield', 'jira');
     $this->addOption('debug', NULL, InputOption::VALUE_OPTIONAL, 'Show debug info', false);
   }
 
   /**
    * Returns a connection to the Harvest API based on the configuration.
    * 
-   * @return \HarvestAPI
+   * @return HarvestAPI
    */
   protected function getHarvestApi() {
-    $harvest = new \HarvestAPI();
+    $harvest = new HarvestApi();
     $harvest->setAccount($this->harvestConfig['account']);
     $harvest->setUser($this->harvestConfig['username']);
     $harvest->setPassword($this->harvestConfig['password']);
-    $harvest->setSSL($this->harvestConfig['ssl']);
-    $harvest->setRetryMode(\HarvestAPI::RETRY);
+    $harvest->setRetryMode(HarvestApi::RETRY);
     return $harvest;
   }
 
@@ -104,15 +106,6 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     return sprintf($this->bugtrackerConfig['url'] . $urlTicketPattern, $ticketId, $remoteId);
   }
 
-  protected function getHarvestURL() {
-    $http = "http://";
-    if( $this->harvestConfig['ssl'] == true ) {
-      $http = "https://";
-    }
-
-    return $http . $this->harvestConfig['account'] . ".harvestapp.com/";
-  }
-
   /**
    * Fetch email of email to notify extra if errors occur
    * @return String Url
@@ -154,9 +147,10 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   }
 
   /**
-   * Returns a connection to the FogBugz API based on the configuration.
-   * 
-   * @return \FogBugz
+   * Returns a connection to the BugTracker API based on the configuration.
+   *
+   * @param InputInterface $input
+   * @return Object
    */
   protected function getBugTrackerApi(InputInterface $input) {
     // The bugtracker system is defined in the config. As a fallback
@@ -171,9 +165,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
     case 'jira':
       $this->bugtracker = new JiraBugTracker;
       break;
-    case 'fogbugz':
     default:
-      $this->bugtracker = new FogBugzBugTracker;
+      $this->bugtracker = new JiraBugTracker;
       break;
     }
 
@@ -191,9 +184,9 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /**
    * Loads the configuration from a yaml file
-   * 
+   *
    * @param InputInterface $input
-   * @throws Exception
+   * @throws \Exception
    */
   protected function loadConfig(InputInterface $input) {
     // enable debug?
@@ -201,7 +194,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
     $configFile = $input->getOption('config');
     if (file_exists($configFile)) {
-      $config = Yaml::load($configFile);
+      $config = Yaml::parse($configFile);
       $this->harvestConfig = $config['harvest'];
       $this->bugyieldConfig = $config['bugyield'];
 
@@ -237,6 +230,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * Collect projects from Harvest
    *
    * @param array $projectIds An array of project identifiers - ids, names or codes
+   * @return array $projects
    */
   protected function getProjects($projectIds) {
     $projects = array();
@@ -285,7 +279,6 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /**
    * Collect users from Harvest
-   *
    */
   protected function getUsers() {
 
@@ -343,7 +336,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * @param array $projects An array of projects
    * @param boolean $ignore_locked Should we filter the closed/billed entries? We cannot update them...
    * @param Integer $from_date Date in YYYYMMDD format
-   * @param Integer $to_date Date in YYYYMMDD format  
+   * @param Integer $to_date Date in YYYYMMDD format
+   * @return array
    */
   protected function getTicketEntries($projects, $ignore_locked = true, $from_date = null, $to_date = null) {
     //Setup Harvest API access
@@ -361,7 +355,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
         $to_date = date('Ymd');
       }
 
-      $range = new \Harvest_Range($from_date, $to_date);
+      $range = new Range($from_date, $to_date);
 
       $result = $harvest->getProjectEntries($project->get('id'), $range);
       if ($result->isSuccess()) {
@@ -385,10 +379,10 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
 
   /**
    * Extract ticket ids from entries if available
-   * @param \Harvest_DayEntry $entry
+   * @param DayEntry $entry
    * @return array Array of ticket ids
    */
-  protected function getTicketIds(\Harvest_DayEntry $entry) {
+  protected function getTicketIds(DayEntry $entry) {
     return $this->bugtracker->extractIds($entry->get('notes'));
   }
 
@@ -449,8 +443,8 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
   /**
    * Fetch the Harvest Entry by id
    * @param Integer $harvestEntryId
-   * @param Integer $harvest_user_id      
-   * @return Harvest_Entry Entry object
+   * @param Integer|bool $user_id
+   * @return Result object
    */
   protected function getEntryById($harvestEntryId, $user_id = false) {
     $harvest = $this->getHarvestApi();
@@ -471,7 +465,7 @@ abstract class BugYieldCommand extends \Symfony\Component\Console\Command\Comman
    * This will of course make odd results if you have two or more active users with exactly the same name...
    *
    * @param String $fullname 
-   * @return Harvest_User User object
+   * @return User object
    */  
   protected function getHarvestUserByFullName($fullname) {
     $user = false;

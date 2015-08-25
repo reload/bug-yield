@@ -2,9 +2,6 @@
 
 namespace BugYield\Command;
 
-use Symfony\Component\Console\Input\InputOption;
-
-use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -121,7 +118,7 @@ class TitleSync extends BugYieldCommand {
         if ($update) {
 
           // adding CDATA tags around the notes - or Harvest will fail on chars as < > & -- Harvest removes < and > in the website editor btw
-          $entry->set('notes', '<![CDATA['.$entry->get('notes') . ']]>');
+          $entry->set('notes', $entry->get('notes'));
 
           //Update the entry in Harvest
           $result = $harvest->updateEntry($entry);

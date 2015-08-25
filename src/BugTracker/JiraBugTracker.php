@@ -2,7 +2,7 @@
 
 namespace BugYield\BugTracker;
 
-use Symfony\Component\Yaml\Exception;
+use JiraApi\Clients\IssueClient as JiraApi;
 
 class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
@@ -25,32 +25,26 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     return $this->urlTicketPattern;
   }
 
-  // This shoudn't be called "get", since it's a setter-method.
   public function getApi($url, $username, $password) {
     $this->currentUsername = $username;
-    $this->api= new \SoapClient($url . '/rpc/soap/jirasoapservice-v2?wsdl');
-    $this->token = $this->api->login($username, $password);
+    $this->api = new JiraApi(rtrim($url, '/') . '/rest/api/2/', $username, $password);
   }
 
   /**
-   * Check value of config setting "closed_issue_editable".
-   * If true can update closed jira tickets with worklogs without reopening the tickets.
+   * Get issue based on ticketId.
+   *
+   * @param $ticketId
+   * @return array
    */
-  public function getClosedIssueEditable() {
-    if(isset($this->bugtrackerConfig['closed_issue_editable'])) {
-      if($this->bugtrackerConfig['closed_issue_editable'] === true) {
-        return true;
-      }
-    }
-    return false;
+  public function getIssue($ticketId) {
+    $ticketId = ltrim($ticketId, '#');
+    return $this->api->get($ticketId)->json();
   }
 
   public function getTitle($ticketId) {
-    $ticketId = ltrim($ticketId, '#');
-
     // the Jira throws an exception if the issue does not exists or are unreachable. We don't want that, hence the try/catch
     try {
-      $response = $this->api->getIssue($this->token, $ticketId);
+      $response = $this->getIssue($ticketId);
     } catch (\Exception $e) {
       // Valuable information will be returned from Jira here, e.g.:
       // com.atlassian.jira.rpc.exception.RemotePermissionException: This issue does not exist or you don't have permission to view it.
@@ -58,8 +52,8 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
       return FALSE;
     }
 
-    if (is_object($response) && isset($response->summary)) {
-      return $response->summary;
+    if (is_array($response)) {
+      return $response['fields']['summary'];
     }
 
     return FALSE;
@@ -74,15 +68,15 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   public function getTimelogEntries($ticketId) {
-    $ticketId = ltrim($ticketId, '#');
-    $entries = $this->api->getWorklogs($this->token, $ticketId);
+    $response = $this->getIssue($ticketId);
 
     $timelogs = array();
-    foreach ($entries as $entry) {
-      $timelog = $this->parseComment($entry->comment);
-      $timelog->hours = (string) round($entry->timeSpentInSeconds / 3600, 2);
-      $timelog->spentAt = date('Y-m-d', strtotime($entry->startDate));
-      $timelog->remoteId = $entry->id;
+    foreach ($response['fields']['worklog']['worklogs'] as $entry) {
+      $timelog = $this->parseComment($entry['comment']);
+      $timelog->hours = (string) round($entry['timeSpentSeconds'] / 3600, 2);
+      $timelog->started = $entry['started'];
+      $timelog->spentAt = date('Y-m-d', strtotime($entry['started']));
+      $timelog->remoteId = $entry['id'];
       $timelogs[] = $timelog;
     }
     return $timelogs;
@@ -98,7 +92,6 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     // Set the Jira worklog ID on the worklog object if this Harvest
     // entry is already tracked in Jira.
     $entries = $this->getTimelogEntries($ticketId);
-
     foreach ($entries as $entry) {
       if (isset($entry->harvestId) && ($entry->harvestId == $timelog->harvestId)) {
         // if we are about to update an existing Harvest entry set the
@@ -125,13 +118,8 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
     }
 
     $worklog->comment = $this->formatComment($timelog);
-    $worklog->startDate = date('c', strtotime($timelog->spentAt));
     $worklog->timeSpent = $timelog->hours . 'h';
 
-    // Caveat in the Jira API - the parameter below must be set but the
-    // value is ignored so we just set it to NULL.
-    $worklog->timeSpentInSeconds = NULL;
-    
     // Check if individual logging is enabled.
     if (!empty($this->bugtrackerConfig['worklog_individual_logins'])) {
       if (!empty($this->bugtrackerConfig['users'][$timelog->userEmail])) {
@@ -141,7 +129,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
 
         // Initialize API for the specific user.
         if ($this->currentUsername != $username) {
-          print "SWITCHING USER: ".$timelog->userEmail."\n";
+          print 'SWITCHING USER: ' . $timelog->userEmail."\n";
           $url = $this->bugtrackerConfig['url'];
           $this->getApi($url, $username, $password);
         }
@@ -161,48 +149,25 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
       }
     }
 
-    // Load issue so we can check its status and decide whether it is in an editable status
-    // TODO: WARNING this is some shaky code - lots of hardcoded IDs that probably only works on JIRAs built-in worksflows
-    // Instead you should make sure that the Closed state is editable in the workflow - see https://confluence.atlassian.com/display/JIRA/Allow+editing+of+Closed+Issues
-    // while setting closed_issue_editable: true in the config.yml
-    $issue = $this->api->getIssue($this->token, $ticketId);
-    
-    // Reopen issue if status is "Closed" (6) which is non-editable by default
-    // UNLESS we can actually edit closed issues in jira (configurable via workflows).
-    if ($issue->status == 6 && $this->getClosedIssueEditable() !== true) {
-      $fields[] = array();
-      // Action ID 3 is "Reopen issue".
-      $this->api->progressWorkflowAction($this->token, $issue->key, 3, $fields);
-    }
-
     // If this is an existing entry update it - otherwise add it.
     if (isset($worklog->id)) {
       // Update the Registered time. Jira can't log worklog entries
       // with hours == 0 so delete the worklog entry in that case.
       if ($timelog->hours == 0) {
-        $this->api->deleteWorklogAndAutoAdjustRemainingEstimate($this->token, $worklog->id);
+        $this->deleteWorkLogEntry($worklog->id, $ticketId);
       }
       else {
-        $this->api->updateWorklogAndAutoAdjustRemainingEstimate($this->token, $worklog);
+        $this->api->updateWorklog($ticketId, $worklog->id, (array) $worklog);
       }
     }
     else {
       // Jira can't log entries with hours == 0
       if ($timelog->hours != 0) {
-        $this->api->addWorklogAndAutoAdjustRemainingEstimate($this->token, $ticketId, $worklog);
+        $this->api->createWorklog($ticketId, (array) $worklog);
       }
       else {
         // intentionally left blank
       }
-    }
-
-    // If issue status was "Closed" (6) we need to close the issue
-    // again (and set status and resolution back to original
-    // values) UNLESS we can actually edit closed issues in jira (configurable via workflows).
-    if ($issue->status == 6 && $this->getClosedIssueEditable() !== true) {
-      $fields[] = array('id' => 'resolution', 'values' => array($issue->resolution));
-      $fields[] = array('id' => 'status', 'values' => array($issue->status));
-      $this->api->progressWorkflowAction($this->token, $issue->key, 2, $fields);  // TODO: Hardcoded IDs here --> 2?
     }
 
     return true;
@@ -213,8 +178,9 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
    *
    * (when auto-adjusting the removed time will be added to the remaining work)
    */
-  public function deleteWorkLogEntry($worklogId) {
-    $this->api->deleteWorklogAndRetainRemainingEstimate($this->token, $worklogId); // this should return true on success but doesn't(?)
+  public function deleteWorkLogEntry($worklogId, $issueId) {
+    $issueId = ltrim($issueId, '#');
+    $this->api->deleteWorklog($issueId, $worklogId);
     return true;
   }
 
@@ -237,14 +203,15 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   private function formatComment($timelog) {
-    return vsprintf('Entry #%d [%s]: "%s" by %s in "%s"',
-                    array(
-                          $timelog->harvestId,
-                          $timelog->taskName,
-                          preg_replace('/[\n\r]+/m', ' ', $timelog->notes),
-                          $timelog->user,
-                          $timelog->project,
-                          ));
+    return vsprintf(
+      'Entry #%d [%s]: "%s" by %s in "%s"',
+      array(
+        $timelog->harvestId,
+        $timelog->taskName,
+        preg_replace('/[\n\r]+/m', ' ', $timelog->notes),
+        $timelog->user,
+        $timelog->project,
+    ));
   }
 
   /**
