@@ -5,6 +5,8 @@ Which means that the developers only need to track time in Harvest, and then tic
 
 BugYield currently supports two ticket management systems "FogBugz":http://fogbugz.com and "Jira":http://www.atlassian.com/software/jira and time tracking system "Harvest":http://harvestapp.com.
 
+Important note: We haven't been using FogBugz for years, and cannot confirm it still works.
+
 h2. Installation
 
 Clone the repository and remember to initialize submodules ("git submodule init" and "git submodule update"). Downloads are currently not functional as GitHub does not include submodules.
