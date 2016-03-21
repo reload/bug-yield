@@ -68,10 +68,11 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker {
   }
 
   public function getTimelogEntries($ticketId) {
-    $response = $this->getIssue($ticketId);
+    $ticketId = ltrim($ticketId, '#');
+    $response = $this->api->getFullWorklog($ticketId)->json();
 
     $timelogs = array();
-    foreach ($response['fields']['worklog']['worklogs'] as $entry) {
+    foreach ($response['worklogs'] as $entry) {
       $timelog = $this->parseComment($entry['comment']);
       $timelog->hours = (string) round($entry['timeSpentSeconds'] / 3600, 2);
       $timelog->started = $entry['started'];
