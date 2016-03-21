@@ -36,6 +36,19 @@ Run <code>./bugyield</code> from the command line to show all available commands
 
 Just change the <code>--bugtracker=XXXX</code> with another label to run another bugtracker. We have current one FogBugz instance and two Jira bugtrackers configured in the same config.yml
 
+h3. Running in docker
+
+When running in docker, you should mount in the config file:
+
+<code>
+docker run -v /path/to/config.yml:/bug-yield/config.yml reload/bug-yield
+</code>
+
+In development, you can mount in the full source and run a command immediately:
+
+<code>
+docker run -v /path/to/config.yml:/bug-yield/config.yml reload/bug-yield /bug-yield/bugyield --bugtracker=sometracker tim
+</code>
 
 h3. Time synchronization
 
