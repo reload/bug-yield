@@ -411,7 +411,7 @@ abstract class BugYieldCommand extends Command
                     }
 
                     $ids = $this->getTicketIds($entry);
-                    if (sizeof($ids) > 0 && in_array('#SS-1502', $ids)) {
+                    if (sizeof($ids) > 0) {
                         //If the entry has ticket ids it is a ticket entry
                         $ticketEntries[] = $entry;
                     }
