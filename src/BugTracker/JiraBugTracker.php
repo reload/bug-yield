@@ -72,7 +72,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker
     public function extractIds($string)
     {
         $ids = array();
-        if (preg_match_all('/(#[A-Za-z]+-\d+)/', $string, $matches)) {
+        if (preg_match_all('/(#[A-Za-z0-9]+-\d+)/', $string, $matches)) {
             $ids = array_map('strtoupper', $matches[1]);
         }
         return array_unique($ids);
