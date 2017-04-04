@@ -3,5 +3,5 @@
 */30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=reloadjira titlesync | logger -t bug-yield-cron
 
 # BugYield: JIRA DR
-10 23 * * * /bug-yield/bugyield 2>&1 --config=/data/bugyield-config/config.yml --bugtracker=drjira tim | logger -t bug-yield-cron
-*/30 * * * * /bug-yield/bugyield 2>&1 --config=/data/bugyield-config/config.yml --bugtracker=drjira titlesync | logger -t bug-yield-cron
+10 23 * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=drjira tim | logger -t bug-yield-cron
+*/30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=drjira titlesync | logger -t bug-yield-cron
