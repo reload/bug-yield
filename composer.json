@@ -10,7 +10,7 @@
   "repositories": [
     {
       "type": "vcs",
-      "url": "https://github.com/kallehauge/hapi"
+      "url": "https://github.com/reload/hapi"
     }
   ],
   "require": {
