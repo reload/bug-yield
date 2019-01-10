@@ -52,8 +52,8 @@ class TimeSync extends BugYieldCommand
             }
             $output->writeln(sprintf(
                 'Working with project: %s %s %s',
-                self::mb_str_pad($Harvest_Project->get("name"), 40, " "),
-                self::mb_str_pad($Harvest_Project->get("code"), 18, " "),
+                self::mbStrPad($Harvest_Project->get("name"), 40, " "),
+                self::mbStrPad($Harvest_Project->get("code"), 18, " "),
                 $archivedText
             ));
         }
