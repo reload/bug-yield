@@ -132,16 +132,34 @@ class TitleSync extends BugYieldCommand
                                     // just insert the ticket title, as we
                                     // cannot differentiate what's title and
                                     // whats comment.
-                                    $entry->set('notes', $ticketId.'['.$title.'] (BugYield removed comments due to [brackets] in the ticket title)');
+                                    $entry->set(
+                                        'notes',
+                                        $ticketId . '[' . $title .
+                                        '] (BugYield removed comments due to [brackets] in the ticket title)'
+                                    );
                                 } else {
-                                    $entry->set('notes', preg_replace('/'.$ticketId.'(\[.*?\])/i', $ticketId.'['.$title.']', $entry->get('notes')));
+                                    $entry->set(
+                                        'notes',
+                                        preg_replace(
+                                            '/' . $ticketId . '(\[.*?\])/i',
+                                            $ticketId . '[' . $title . ']',
+                                            $entry->get('notes')
+                                        )
+                                    );
                                 }
 
                                 $update = true;
                             }
                         } else {
                             //Entry note does not include ticket title so add it
-                            $entry->set('notes', preg_replace('/'.$ticketId.'/i', strtoupper($ticketId).'['.$title.']', $entry->get('notes')));
+                            $entry->set(
+                                'notes',
+                                preg_replace(
+                                    '/' . $ticketId . '/i',
+                                    strtoupper($ticketId) . '[' . $title . ']',
+                                    $entry->get('notes')
+                                )
+                            );
 
                             $update = true;
                         }
