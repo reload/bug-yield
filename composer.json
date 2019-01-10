@@ -12,6 +12,6 @@
     "gridonic/hapi": "dev-master",
     "symfony/console": "~2.7",
     "symfony/yaml": "~2.7",
-    "alexkovalevych/jira-api": "1.0.5"
+    "alexkovalevych/jira-api": "^1.0.6"
   }
 }
