@@ -48,17 +48,23 @@ config.yml
 
 ###  Running in docker
 
+To build an image to run in docker, you must first build an image:
+
+``` shell
+docker build . -t reload/bug-yield:local
+```
+
 When running in docker, you should mount in the config file:
 
 ``` shell
-docker run -v /path/to/config.yml:/bug-yield/config.yml reload/bug-yield
+docker run -v /path/to/config.yml:/bug-yield/config.yml reload/bug-yield:local
 ```
 
 In development, you can mount in the full source and run a command
 immediately:
 
 ``` shell
-docker run -v /path/to/config.yml:/bug-yield/config.yml reload/bug-yield /bug-yield/bugyield --bugtracker=sometracker tim
+docker run -v $PWD:/bug-yield/ reload/bug-yield:local /bug-yield/bugyield --bugtracker=sometracker tim
 ```
 
 ### Time synchronization
