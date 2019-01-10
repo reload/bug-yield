@@ -248,7 +248,6 @@ abstract class BugYieldCommand extends Command
                     $input->getOption('bugtracker')
                 ));
             }
-
         } else {
             throw new \Exception(sprintf('Missing configuration file %s', $configFile));
         }
@@ -507,7 +506,6 @@ abstract class BugYieldCommand extends Command
         }
 
         return $entry;
-
     }
 
     /**
