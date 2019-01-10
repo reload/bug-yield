@@ -12,7 +12,9 @@ synchronized in Jira.
 ## Installation
 
 Clone the repository and run composer install to install dependencies.
-CURL and PHP 5.4 must be installed
+The PHP extensions curl, xml and mbstring are required, and BugYield
+has currently been tested with PHP 7.2, though 7.0 should probably
+work.
 
 ## Configuration
 

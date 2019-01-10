@@ -1,16 +1,8 @@
-FROM phusion/baseimage:0.9.17
+FROM phusion/baseimage:0.11
 
 COPY ./ /bug-yield/
 
-RUN \
-        apt-get update && \
-        DEBIAN_FRONTEND=noninteractive \
-        apt-get -y install \
-        php5-cli \
-        php5-curl \
-        git \
-        && \
-        apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+RUN install_clean php-cli php-curl php-xml php-mbstring git unzip
 
 
 # Link output into /var/www/html.
