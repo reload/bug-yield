@@ -90,6 +90,9 @@ abstract class BugYieldCommand
     }
     /**
      * Fetch url to the bugtracker
+     *
+     * @todo move to BugTracker.
+     *
      * @return String Url
      */
     protected function getBugtrackerURL()
@@ -99,6 +102,8 @@ abstract class BugYieldCommand
 
     /**
      * Create direct url to ticket
+     *
+     * @todo move to BugTracker.
      *
      * @param String $ticketId ID of ticket, eg "4564" or "SCL-34"
      * @param Integer $remoteId EventID of the exact worklog item/comment, eg "12344"
@@ -118,6 +123,11 @@ abstract class BugYieldCommand
 
     /**
      * Fetch email of email to notify extra if errors occur
+     *
+     * @todo move to BugTracker. Not really a bugtracker specific setting as
+     *   such, but as timetracker and bugyield settings are global, it's here
+     *   for the moment being.
+     *
      * @return String Url
      */
     protected function getEmailNotifyOnError()
@@ -132,6 +142,8 @@ abstract class BugYieldCommand
     /**
      * Check value of config setting "extended_test".
      * If true we will test all referenced tickets in the bugtracker for inconsistency with Harvest
+     *
+     * @todo move to BugTracker.
      */
     protected function doExtendedTest()
     {
@@ -145,6 +157,8 @@ abstract class BugYieldCommand
     /**
      * Check value of config setting "fix_missing_references".
      * If true we remove any errornous references from the BugTracker to Harvest, thus "fixing" Error 2
+     *
+     * @todo move to BugTracker.
      */
     protected function fixMissingReferences()
     {
@@ -155,11 +169,17 @@ abstract class BugYieldCommand
         return false;
     }
 
+    /**
+     * @deprecated available from Config.
+     */
     protected function getBugyieldEmailFrom()
     {
         return $this->config->bugyield("email_from");
     }
 
+    /**
+     * @deprecated available from Config.
+     */
     protected function getBugyieldEmailFallback()
     {
         return $this->config->bugyield("email_fallback");
@@ -167,6 +187,8 @@ abstract class BugYieldCommand
 
     /**
      * Set debug mode depending on argument.
+     *
+     * @todo Config might take this.
      *
      * @param InputInterface $input
      */
@@ -177,6 +199,9 @@ abstract class BugYieldCommand
 
     /**
      * Returns the project ids for this command from command line options or configuration.
+     *
+     * @todo Should create a TimeTracker to dependency inject just like
+     * BugTracker, and move this there.
      *
      * @param InputInterface $input
      * @return array An array of project identifiers
@@ -193,6 +218,8 @@ abstract class BugYieldCommand
 
     /**
      * Collect projects from Harvest
+     *
+     * @todo Move to TimeTracker.
      *
      * @param array $projectIds An array of project identifiers - ids, names or codes
      * @return array $projects
@@ -245,6 +272,9 @@ abstract class BugYieldCommand
 
     /**
      * Collect users from Harvest
+     *
+     * @todo Move to TimeTracker.
+     *
      */
     protected function getUsers()
     {
@@ -267,6 +297,9 @@ abstract class BugYieldCommand
 
     /**
      * Fetch the Harvest Task by id
+     *
+     * @todo Move to TimeTracker.
+     *
      * @param Integer $harvest_task_id
      * @return String Task name
      */
@@ -296,6 +329,8 @@ abstract class BugYieldCommand
 
     /**
      * Return ticket entries from projects.
+     *
+     * @todo Move to TimeTracker.
      *
      * @param array $projects An array of projects
      * @param boolean $ignore_locked Should we filter the closed/billed entries? We cannot update them...
@@ -345,6 +380,10 @@ abstract class BugYieldCommand
 
     /**
      * Extract ticket ids from entries if available
+     *
+     * @todo Move to BugTracker or let commands make BugTracker and
+     *   TimeTracker talk together.
+     *
      * @param DayEntry $entry
      * @return array Array of ticket ids
      */
@@ -355,6 +394,9 @@ abstract class BugYieldCommand
 
     /**
      * Look through the projects array and return a name
+     *
+     * @todo Move to TimeTracker.
+     *
      * @param Array $projects array of Harvest_Project objects
      * @param Integer $projectId
      * @return String Name of the project
@@ -373,6 +415,9 @@ abstract class BugYieldCommand
 
     /**
      * Fetch the Harvest User by id
+     *
+     * @todo Move to TimeTracker.
+     *
      * @param Integer $harvest_user_id
      * @return String Full name
      */
@@ -392,6 +437,9 @@ abstract class BugYieldCommand
 
     /**
      * Fetch the Harvest User Email by id
+     *
+     * @todo Move to TimeTracker.
+     *
      * @param Integer $harvest_user_id
      * @return String Full name
      */
@@ -412,6 +460,9 @@ abstract class BugYieldCommand
 
     /**
      * Fetch the Harvest Entry by id
+     *
+     * @todo Move to TimeTracker.
+     *
      * @param Integer $harvestEntryId
      * @param Integer|bool $user_id
      * @return Result object
@@ -433,6 +484,8 @@ abstract class BugYieldCommand
     /**
      * Fetch the Harvest user by searching for the full name
      * This will of course make odd results if you have two or more active users with exactly the same name...
+     *
+     * @todo Move to TimeTracker.
      *
      * @param String $fullname
      * @return User object
