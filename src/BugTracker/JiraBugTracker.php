@@ -4,7 +4,7 @@ namespace BugYield\BugTracker;
 
 use JiraApi\Clients\IssueClient as JiraApi;
 
-class JiraBugTracker implements \BugYield\BugTracker\BugTracker
+class JiraBugTracker extends BugTrackerBase
 {
 
     private $api    = null;
@@ -14,9 +14,10 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker
     private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
     private $bugtrackerConfig = null;
 
-    public function setOptions($bugtrackerConfig)
+    public function __construct($bugtrackerConfig)
     {
         $this->bugtrackerConfig = $bugtrackerConfig;
+        $this->getApi($bugtrackerConfig['url'], $bugtrackerConfig['username'], $bugtrackerConfig['password']);
     }
 
     public function getName()
@@ -29,7 +30,7 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker
         return $this->urlTicketPattern;
     }
 
-    public function getApi($url, $username, $password)
+    protected function getApi($url, $username, $password)
     {
         $this->currentUsername = $username;
         $this->api = new JiraApi(rtrim($url, '/') . '/rest/api/2/', $username, $password);

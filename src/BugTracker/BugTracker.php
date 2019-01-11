@@ -9,7 +9,6 @@ interface BugTracker
 
   // Name of the tracker for presentation purposes.
     public function getName();
-    public function getApi($url, $username, $password);
     public function getTitle($ticketId);
     public function extractIds($string);
     public function getTimelogEntries($ticketId);
@@ -32,6 +31,4 @@ interface BugTracker
     public function sanitizeTicketId($ticketId);
 
     public function getUrlTicketPattern();
-
-    public function setOptions($bugtrackerConfig);
 }

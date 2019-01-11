@@ -2,7 +2,7 @@
 
 namespace BugYield\Command;
 
-use BugYield\BugTracker\JiraBugTracker;
+use BugYield\BugTracker\BugTracker;
 use BugYield\Config;
 
 use Harvest\HarvestApi;
@@ -29,9 +29,10 @@ abstract class BugYieldCommand
     private $harvestUsers = null;
     private $harvestTasks = null;
 
-    public function __construct(Config $config)
+    public function __construct(Config $config, BugTracker $bugtracker)
     {
         $this->config = $config;
+        $this->bugtracker = $bugtracker;
     }
 
     /**
@@ -109,7 +110,7 @@ abstract class BugYieldCommand
         $urlTicketPattern = $this->config->bugtracker('url_ticket_pattern');
         if (is_null($urlTicketPattern) || empty($urlTicketPattern)) {
             // fetch the default fallback url
-            $urlTicketPattern = $this->bugtracker->getUrlTicketPattern();
+            $urlTicketPattern = $this->getBugtracker()->getUrlTicketPattern();
         }
 
         return sprintf($this->config->bugtracker('url') . $urlTicketPattern, $ticketId, $remoteId);
@@ -152,39 +153,6 @@ abstract class BugYieldCommand
             return true;
         }
         return false;
-    }
-
-    /**
-     * Returns a connection to the BugTracker API based on the configuration.
-     *
-     * @param InputInterface $input
-     * @return Object
-     */
-    protected function getBugTrackerApi(InputInterface $input)
-    {
-        // The bugtracker system is defined in the config. As a fallback
-        // we use the config section label as bugtracker system
-        // identifier.
-        if ($this->config->bugtracker('bugtracker')) {
-            $bugtracker =  $this->config->bugtracker('bugtracker');
-        } else {
-            $bugtracker = $this->config->bugtrackerKey();
-        }
-        switch ($bugtracker) {
-            case 'jira':
-                $this->bugtracker = new JiraBugTracker;
-                break;
-            default:
-                $this->bugtracker = new JiraBugTracker;
-                break;
-        }
-
-        $this->bugtracker->getApi(
-            $this->config->bugtracker('url'),
-            $this->config->bugtracker('username'),
-            $this->config->bugtracker('password')
-        );
-        $this->bugtracker->setOptions($this->config->bugtrackerConfig());
     }
 
     protected function getBugyieldEmailFrom()
@@ -382,7 +350,7 @@ abstract class BugYieldCommand
      */
     protected function getTicketIds(DayEntry $entry)
     {
-        return $this->bugtracker->extractIds($entry->get('notes'));
+        return $this->getBugtracker()->extractIds($entry->get('notes'));
     }
 
     /**

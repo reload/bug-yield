@@ -2,11 +2,14 @@
 
 namespace BugYield;
 
-use BugYield\Config;
-use BugYield\Command\TitleSync;
+use BugYield\BugTracker\BugTracker;
+use BugYield\BugTracker\BugTrackerBase;
 use BugYield\Command\TimeSync;
-use Symfony\Component\Yaml\Yaml;
+use BugYield\Command\TitleSync;
+use BugYield\Config;
+use Psr\Container\ContainerInterface;
 use Silly\Edition\PhpDi\Application;
+use Symfony\Component\Yaml\Yaml;
 
 class BugYield extends Application
 {
@@ -43,6 +46,16 @@ class BugYield extends Application
                 ->constructorParameter('bugtracker', $input->getOption('bugtracker'))
             );
 
+            // Define bugtracker. Consider letting Config load all bugtrackers
+            // and have BugTrackerBase::getInstance pull out the config for
+            // the selected one.
+            $this->getContainer()->set(
+                BugTracker::class,
+                function (ContainerInterface $container) use ($input) {
+                    return BugTrackerBase::getInstance($container->get(Config::class));
+                }
+            );
+
             // Invoke the command class much as silly would have done it.
             return $this->getInvoker()->call(TimeSync::class, [
                 'input' => $input,
@@ -52,11 +65,21 @@ class BugYield extends Application
             ->descriptions('Sync time registration from Harvest to bug tracker', $commonOptionsDescs)
             ->defaults($commonOptionsDefaults);
 
+        // Repeat for titlesync. Double work, but someday we'll refactor the
+        // commands together to one command that does both jobs at once, with
+        // switches to disable parts.
         $this->command('titlesync ' . $commonOptions, function ($input, $output) {
             $this->getContainer()->set(
                 Config::class,
                 \DI\object()->constructorParameter('configFile', $input->getOption('config'))
                 ->constructorParameter('bugtracker', $input->getOption('bugtracker'))
+            );
+
+            $this->getContainer()->set(
+                BugTracker::class,
+                function (ContainerInterface $container) use ($input) {
+                    return BugTrackerBase::getInstance($container->get(Config::class));
+                }
             );
 
             return $this->getInvoker()->call(TitleSync::class, [

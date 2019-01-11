@@ -15,7 +15,6 @@ class TimeSync extends BugYieldCommand
     public function __invoke(InputInterface $input, OutputInterface $output)
     {
         $this->setDebug($input);
-        $this->getBugTrackerApi($input);
 
         //Setup Harvest API access
         $harvest = $this->getHarvestApi();
