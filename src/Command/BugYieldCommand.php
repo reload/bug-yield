@@ -3,6 +3,7 @@
 namespace BugYield\Command;
 
 use BugYield\BugTracker\JiraBugTracker;
+use BugYield\Config;
 
 use Harvest\HarvestApi;
 use Harvest\Model\DayEntry;
@@ -16,15 +17,22 @@ use Symfony\Component\Console\Input\InputOption;
 
 abstract class BugYieldCommand
 {
-    private $harvestConfig;
-    private $bugyieldConfig;
-    private $bugtrackerConfig;
+    /**
+     * @var Config
+     */
+    protected $config;
+
     protected $bugtracker;
     private $debug;
 
     /* singletons for caching data */
     private $harvestUsers = null;
     private $harvestTasks = null;
+
+    public function __construct(Config $config)
+    {
+        $this->config = $config;
+    }
 
     /**
      * Returns a connection to the Harvest API based on the configuration.
@@ -34,16 +42,16 @@ abstract class BugYieldCommand
     protected function getHarvestApi()
     {
         $harvest = new HarvestApi();
-        $harvest->setAccount($this->harvestConfig['account']);
-        $harvest->setUser($this->harvestConfig['username']);
-        $harvest->setPassword($this->harvestConfig['password']);
+        $harvest->setAccount($this->config->harvest('account'));
+        $harvest->setUser($this->config->harvest('username'));
+        $harvest->setPassword($this->config->harvest('password'));
         $harvest->setRetryMode(HarvestApi::RETRY);
         return $harvest;
     }
 
     protected function getHarvestProjects()
     {
-        return $this->bugtrackerConfig['projects'];
+        return $this->config->bugtracker('projects');
     }
 
     /**
@@ -52,7 +60,7 @@ abstract class BugYieldCommand
      */
     protected function getHarvestDaysBack()
     {
-        return intval($this->harvestConfig['daysback']);
+        return intval($this->config->harvest('daysback'));
     }
 
     /**
@@ -64,8 +72,8 @@ abstract class BugYieldCommand
     protected function getMaxEntryHours()
     {
         $maxHours = null;
-        if (isset($this->harvestConfig['max_entry_hours'])) {
-            $maxHours = $this->harvestConfig['max_entry_hours'];
+        if ($this->config->harvest('max_entry_hours')) {
+            $maxHours = $this->config->harvest('max_entry_hours');
             // Do not allow non-numeric number of hours
             if (!is_numeric($maxHours)) {
                 $this->debug(sprintf('Number of warnings %s is not a valid integer', $maxHours));
@@ -75,13 +83,17 @@ abstract class BugYieldCommand
         return $maxHours;
     }
 
+    protected function getBugtracker()
+    {
+        return $this->bugtracker;
+    }
     /**
      * Fetch url to the bugtracker
      * @return String Url
      */
     protected function getBugtrackerURL()
     {
-        return $this->bugtrackerConfig['url'];
+        return $this->config->bugtracker('url');
     }
 
     /**
@@ -94,13 +106,13 @@ abstract class BugYieldCommand
     protected function getBugtrackerTicketURL($ticketId, $remoteId = null)
     {
 
-        $urlTicketPattern = $this->bugtrackerConfig['url_ticket_pattern'];
+        $urlTicketPattern = $this->config->bugtracker('url_ticket_pattern');
         if (is_null($urlTicketPattern) || empty($urlTicketPattern)) {
             // fetch the default fallback url
             $urlTicketPattern = $this->bugtracker->getUrlTicketPattern();
         }
 
-        return sprintf($this->bugtrackerConfig['url'] . $urlTicketPattern, $ticketId, $remoteId);
+        return sprintf($this->config->bugtracker('url') . $urlTicketPattern, $ticketId, $remoteId);
     }
 
     /**
@@ -110,9 +122,8 @@ abstract class BugYieldCommand
     protected function getEmailNotifyOnError()
     {
         $email = null;
-        if (isset($this->bugtrackerConfig['email_notify_on_error']) &&
-            !empty($this->bugtrackerConfig['email_notify_on_error'])) {
-            $email = trim($this->bugtrackerConfig['email_notify_on_error']);
+        if (!empty($this->config->bugtracker('email_notify_on_error'))) {
+            $email = trim($this->config->bugtracker('email_notify_on_error'));
         }
         return $email;
     }
@@ -124,10 +135,8 @@ abstract class BugYieldCommand
     protected function doExtendedTest()
     {
 
-        if (isset($this->bugtrackerConfig['extended_test'])) {
-            if ($this->bugtrackerConfig['extended_test'] === true) {
-                return true;
-            }
+        if ($this->config->bugtracker('extended_test') === true) {
+            return true;
         }
         return false;
     }
@@ -139,10 +148,8 @@ abstract class BugYieldCommand
     protected function fixMissingReferences()
     {
 
-        if (isset($this->bugtrackerConfig['fix_missing_references'])) {
-            if ($this->bugtrackerConfig['fix_missing_references'] === true) {
-                return true;
-            }
+        if ($this->config->bugtracker('fix_missing_references') === true) {
+            return true;
         }
         return false;
     }
@@ -158,10 +165,10 @@ abstract class BugYieldCommand
         // The bugtracker system is defined in the config. As a fallback
         // we use the config section label as bugtracker system
         // identifier.
-        if (isset($this->bugtrackerConfig['bugtracker'])) {
-            $bugtracker =  $this->bugtrackerConfig['bugtracker'];
+        if ($this->config->bugtracker('bugtracker')) {
+            $bugtracker =  $this->config->bugtracker('bugtracker');
         } else {
-            $bugtracker = $input->getOption('bugtracker');
+            $bugtracker = $this->config->bugtrackerKey();
         }
         switch ($bugtracker) {
             case 'jira':
@@ -173,51 +180,31 @@ abstract class BugYieldCommand
         }
 
         $this->bugtracker->getApi(
-            $this->bugtrackerConfig['url'],
-            $this->bugtrackerConfig['username'],
-            $this->bugtrackerConfig['password']
+            $this->config->bugtracker('url'),
+            $this->config->bugtracker('username'),
+            $this->config->bugtracker('password')
         );
-        $this->bugtracker->setOptions($this->bugtrackerConfig);
+        $this->bugtracker->setOptions($this->config->bugtrackerConfig());
     }
 
     protected function getBugyieldEmailFrom()
     {
-        return $this->bugyieldConfig["email_from"];
+        return $this->config->bugyield("email_from");
     }
 
     protected function getBugyieldEmailFallback()
     {
-        return $this->bugyieldConfig["email_fallback"];
+        return $this->config->bugyield("email_fallback");
     }
 
     /**
-     * Loads the configuration from a yaml file
+     * Set debug mode depending on argument.
      *
      * @param InputInterface $input
-     * @throws \Exception
      */
-    protected function loadConfig(InputInterface $input)
+    protected function setDebug(InputInterface $input)
     {
-        // enable debug?
         $this->debug = $input->getOption('debug');
-
-        $configFile = $input->getOption('config');
-        if (file_exists($configFile)) {
-            $config = Yaml::parse($configFile);
-            $this->harvestConfig = $config['harvest'];
-            $this->bugyieldConfig = $config['bugyield'];
-
-            if (isset($config[$input->getOption('bugtracker')])) {
-                $this->bugtrackerConfig = $config[$input->getOption('bugtracker')];
-            } else {
-                throw new \Exception(sprintf(
-                    'Configuration file error: Unknown bugtracker label "%s"',
-                    $input->getOption('bugtracker')
-                ));
-            }
-        } else {
-            throw new \Exception(sprintf('Missing configuration file %s', $configFile));
-        }
     }
 
     /**

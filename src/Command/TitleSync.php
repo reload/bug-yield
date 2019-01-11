@@ -13,7 +13,7 @@ class TitleSync extends BugYieldCommand
      */
     public function __invoke(InputInterface $input, OutputInterface $output)
     {
-        $this->loadConfig($input);
+        $this->setDebug($input);
         $this->getBugTrackerApi($input);
 
         //Setup Harvest API access
@@ -22,7 +22,7 @@ class TitleSync extends BugYieldCommand
         $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
         $output->writeln(sprintf(
             'Bugtracker is %s (%s)',
-            $this->bugtracker->getName(),
+            $this->getBugtracker()->getName(),
             $this->getBugtrackerURL()
         ));
         $output->writeln('Verifying projects in Harvest');
@@ -103,7 +103,7 @@ class TitleSync extends BugYieldCommand
                 foreach ($this->getTicketIds($entry) as $ticketId) {
                     //Get the case title.
                     $this->debug("/");
-                    $title = $this->bugtracker->getTitle($ticketId);
+                    $title = $this->getBugtracker()->getTitle($ticketId);
                     $this->debug("\\");
 
                     if ($title) {

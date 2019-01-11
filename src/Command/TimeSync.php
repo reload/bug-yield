@@ -2,6 +2,7 @@
 
 namespace BugYield\Command;
 
+use BugYield\Config;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -13,7 +14,7 @@ class TimeSync extends BugYieldCommand
      */
     public function __invoke(InputInterface $input, OutputInterface $output)
     {
-        $this->loadConfig($input);
+        $this->setDebug($input);
         $this->getBugTrackerApi($input);
 
         //Setup Harvest API access
@@ -23,7 +24,7 @@ class TimeSync extends BugYieldCommand
         $checkHarvestEntries = array();
 
         $output->writeln('TimeSync executed: ' . date('Ymd H:i:s'));
-        $output->writeln(sprintf('Bugtracker is %s (%s)', $this->bugtracker->getName(), $this->getBugtrackerURL()));
+        $output->writeln(sprintf('Bugtracker is %s (%s)', $this->getBugtracker()->getName(), $this->getBugtrackerURL()));
         $output->writeln('Verifying projects in Harvest');
 
         $projects = $this->getProjects($this->getProjectIds($input));
@@ -183,7 +184,7 @@ class TimeSync extends BugYieldCommand
                     try {
                         // saveTimelogEntry() will handle whether to add or update
                         $this->debug("/");
-                        $updated = $this->bugtracker->saveTimelogEntry($id, $worklog);
+                        $updated = $this->getBugtracker()->saveTimelogEntry($id, $worklog);
                         $this->debug("\\");
 
                         if ($updated) {
@@ -191,7 +192,7 @@ class TimeSync extends BugYieldCommand
                                 'Added work to %s: %s in %s',
                                 $id,
                                 $worklog->notes,
-                                $this->bugtracker->getName()
+                                $this->getBugtracker()->getName()
                             ));
                             $this->debug($worklog);
                         }
@@ -251,11 +252,11 @@ class TimeSync extends BugYieldCommand
             $checkBugtrackerEntries = array();
             $possibleErrors = array();
             $worklog = null;
-            $bugtrackerName   = $this->bugtracker->getName();
+            $bugtrackerName   = $this->getBugtracker()->getName();
 
             foreach ($uniqueTicketIds as $id) {
                 $this->debug(".");
-                $checkBugtrackerEntries[$id] = $this->bugtracker->getTimelogEntries($id);
+                $checkBugtrackerEntries[$id] = $this->getBugtracker()->getTimelogEntries($id);
             }
 
             foreach ($checkBugtrackerEntries as $fbId => $harvestEntriesData) {
@@ -347,7 +348,7 @@ class TimeSync extends BugYieldCommand
                                 if ($this->fixMissingReferences()) {
                                     $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... " .
                                                      "(set fix_missing_references to false to disable this)");
-                                    if ($this->bugtracker->deleteWorkLogEntry(
+                                    if ($this->getBugtracker()->deleteWorkLogEntry(
                                         $errorData["remoteId"],
                                         $errorData["bugID"]
                                     )) {
@@ -391,7 +392,7 @@ class TimeSync extends BugYieldCommand
                             if ($this->fixMissingReferences()) {
                                 $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... " .
                                                  "(set fix_missing_references to false to disable this)");
-                                if ($this->bugtracker->deleteWorkLogEntry(
+                                if ($this->getBugtracker()->deleteWorkLogEntry(
                                     $errorData["remoteId"],
                                     $errorData["bugID"]
                                 )
@@ -455,7 +456,7 @@ class TimeSync extends BugYieldCommand
                             "\nLink to %s: %s",
                             $bugtrackerName,
                             self::getBugtrackerTicketURL(
-                                $this->bugtracker->sanitizeTicketId($errorData["bugID"]),
+                                $this->getBugtracker()->sanitizeTicketId($errorData["bugID"]),
                                 $errorData["remoteId"]
                             )
                         );
