@@ -11,3 +11,5 @@ RUN curl -sS https://getcomposer.org/installer | php && \
     mv composer.phar /usr/local/bin/composer && \
     cd /bug-yield && composer install && \
     crontab /bug-yield/docker/crontab
+
+WORKDIR /bug-yield
