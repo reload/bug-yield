@@ -8,16 +8,10 @@ use Symfony\Component\Console\Input\InputInterface;
 class TimeSync extends BugYieldCommand
 {
 
-    protected function configure()
-    {
-        $this
-            ->setName('bugyield:timesync')
-            ->setAliases(array('tim', 'timesync'))
-            ->setDescription('Sync time registration from Harvest to bug tracker');
-        parent::configure();
-    }
-
-    protected function execute(InputInterface $input, OutputInterface $output)
+    /**
+     * Invoke TimeSync command.
+     */
+    public function __invoke(InputInterface $input, OutputInterface $output)
     {
         $this->loadConfig($input);
         $this->getBugTrackerApi($input);

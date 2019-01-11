@@ -13,9 +13,8 @@ use Harvest\Model\User;
 use Symfony\Component\Yaml\Yaml;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
-use Symfony\Component\Console\Command\Command;
 
-abstract class BugYieldCommand extends Command
+abstract class BugYieldCommand
 {
     private $harvestConfig;
     private $bugyieldConfig;
@@ -26,38 +25,6 @@ abstract class BugYieldCommand extends Command
     /* singletons for caching data */
     private $harvestUsers = null;
     private $harvestTasks = null;
-
-    protected function configure()
-    {
-        $this->addOption(
-            'harvest-project',
-            'p',
-            InputOption::VALUE_OPTIONAL,
-            'One or more Harvest projects (id, name or code) separated by , (comma). Use "all" for all projects.',
-            null
-        );
-        $this->addOption(
-            'config',
-            null,
-            InputOption::VALUE_OPTIONAL,
-            'Path to the configuration file',
-            'config.yml'
-        );
-        $this->addOption(
-            'bugtracker',
-            null,
-            InputOption::VALUE_OPTIONAL,
-            'Bug Tracker to yield',
-            'jira'
-        );
-        $this->addOption(
-            'debug',
-            null,
-            InputOption::VALUE_OPTIONAL,
-            'Show debug info',
-            false
-        );
-    }
 
     /**
      * Returns a connection to the Harvest API based on the configuration.

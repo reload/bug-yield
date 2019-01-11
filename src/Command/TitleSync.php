@@ -7,16 +7,11 @@ use Symfony\Component\Console\Input\InputInterface;
 
 class TitleSync extends BugYieldCommand
 {
-    protected function configure()
-    {
-        $this
-            ->setName('bugyield:titlesync')
-            ->setAliases(array('tit', 'titlesync'))
-            ->setDescription('Sync ticket titles from bug tracker to Harvest');
-        parent::configure();
-    }
 
-    protected function execute(InputInterface $input, OutputInterface $output)
+    /**
+     * Invoke TitleSync command.
+     */
+    public function __invoke(InputInterface $input, OutputInterface $output)
     {
         $this->loadConfig($input);
         $this->getBugTrackerApi($input);

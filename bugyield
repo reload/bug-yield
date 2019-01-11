@@ -1,6 +1,7 @@
 #!/usr/bin/env php
-
 <?php
-$abspath = realpath(__DIR__);
-chdir($abspath);
-include(__DIR__.'/bugyield.php');
+
+require __DIR__ . '/vendor/autoload.php';
+
+$app = new BugYield\BugYield();
+$app->run();
