@@ -4,7 +4,7 @@ namespace BugYield\BugTracker;
 
 use JiraApi\Clients\IssueClient as JiraApi;
 
-class JiraBugTracker extends BugTrackerBase
+class Jira extends BugTrackerBase
 {
 
     private $api    = null;
