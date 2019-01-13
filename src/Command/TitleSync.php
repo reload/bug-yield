@@ -23,7 +23,7 @@ class TitleSync extends BugYieldCommand
         ));
         $output->writeln('Verifying projects in Harvest');
 
-        $projects = $this->getProjects($this->getProjectIds($input));
+        $projects = $this->getTimetracker()->getProjects($this->getProjectIds($input));
         if (sizeof($projects) == 0) {
             //We have no projects to work with so bail
             if (!isset($input) || !is_string($input)) {

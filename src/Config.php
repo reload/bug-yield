@@ -58,4 +58,9 @@ class Config
     {
         return $this->bugtrackerConfig;
     }
+
+    public function timetrackerConfig()
+    {
+        return $this->harvestConfig;
+    }
 }

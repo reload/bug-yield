@@ -4,6 +4,8 @@ namespace BugYield;
 
 use BugYield\BugTracker\BugTracker;
 use BugYield\BugTracker\BugTrackerBase;
+use BugYield\TimeTracker\TimeTracker;
+use BugYield\TimeTracker\TimeTrackerBase;
 use BugYield\Command\TimeSync;
 use BugYield\Command\TitleSync;
 use BugYield\Config;
@@ -56,6 +58,14 @@ class BugYield extends Application
                 }
             );
 
+            // Define timetracker.
+            $this->getContainer()->set(
+                TimeTracker::class,
+                function (ContainerInterface $container) use ($input) {
+                    return TimeTrackerBase::getInstance($container->get(Config::class));
+                }
+            );
+
             // Invoke the command class much as silly would have done it.
             return $this->getInvoker()->call(TimeSync::class, [
                 'input' => $input,
@@ -79,6 +89,13 @@ class BugYield extends Application
                 BugTracker::class,
                 function (ContainerInterface $container) use ($input) {
                     return BugTrackerBase::getInstance($container->get(Config::class));
+                }
+            );
+
+            $this->getContainer()->set(
+                TimeTracker::class,
+                function (ContainerInterface $container) use ($input) {
+                    return TimeTrackerBase::getInstance($container->get(Config::class));
                 }
             );
 

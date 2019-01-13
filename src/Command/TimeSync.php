@@ -23,7 +23,7 @@ class TimeSync extends BugYieldCommand
         $output->writeln(sprintf('Bugtracker is %s (%s)', $this->getBugtracker()->getName(), $this->getBugtrackerURL()));
         $output->writeln('Verifying projects in Harvest');
 
-        $projects = $this->getProjects($this->getProjectIds($input));
+        $projects = $this->getTimetracker()->getProjects($this->getProjectIds($input));
         if (sizeof($projects) == 0) {
             //We have no projects to work with so bail
             if (!isset($input) || !is_string($input)) {
@@ -98,9 +98,9 @@ class TimeSync extends BugYieldCommand
                 }
 
                 //Determine base info
-                $taskName             = $this->getTaskNameById($entry->get('task-id'));
-                $harvestUserName      = $this->getUserNameById($entry->get("user-id"));
-                $harvestProjectName   = self::getProjectNameById($projects, $entry->get("project-id"));
+                $taskName             = $this->getTimetracker()->getTaskNameById($entry->get('task-id'));
+                $harvestUserName      = $this->getTimetracker()->getUserNameById($entry->get("user-id"));
+                $harvestProjectName   = $this->getTimetracker()->getProjectNameById($projects, $entry->get("project-id"));
                 $harvestTimestamp     = $entry->get("spent-at");
 
                 $entryText = sprintf(
@@ -121,7 +121,7 @@ class TimeSync extends BugYieldCommand
                 $worklog = new \stdClass;
                 $worklog->harvestId = $entry->get('id');
                 $worklog->user      = $harvestUserName;
-                $worklog->userEmail = $this->getUserEmailById($entry->get('user-id'));
+                $worklog->userEmail = $this->getTimetracker()->getUserEmailById($entry->get('user-id'));
                 $worklog->hours     = $hoursPerTicket;
                 $worklog->spentAt   = $harvestTimestamp;
                 $worklog->project   = $harvestProjectName;
@@ -140,8 +140,8 @@ class TimeSync extends BugYieldCommand
                         $worklog->hours
                     ));
 
-                    $to = '"' . $this->getUserNameById($entry->get('user-id')) .
-                        '" <' . $this->getUserEmailById($entry->get('user-id')) .
+                    $to = '"' . $this->getTimetracker()->getUserNameById($entry->get('user-id')) .
+                        '" <' . $this->getTimetracker()->getUserEmailById($entry->get('user-id')) .
                         '>';
                     $subject = sprintf(
                         'BugYield warning: %s hours registered on %s. Really?',
@@ -202,8 +202,8 @@ class TimeSync extends BugYieldCommand
                             }
                         }
                     } catch (\Exception $e) {
-                        $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' .
-                            $this->getUserEmailById($entry->get('user-id')) . '>';
+                        $to = '"' . $this->getTimetracker()->getUserNameById($entry->get('user-id')) . '" <' .
+                            $this->getTimetracker()->getUserEmailById($entry->get('user-id')) . '>';
                         $subject = $id . ': time sync exception';
                         $body = array();
                         $body[] = 'Trying to sync Harvest entry:';
@@ -282,7 +282,7 @@ class TimeSync extends BugYieldCommand
                         $hUserEmail     = self::getBugyieldEmailFallback();
 
                         $hEntryUser     = trim(html_entity_decode($worklog->user, ENT_COMPAT, "UTF-8"));
-                        $Harvest_User   = self::getHarvestUserByFullName($hEntryUser);
+                        $Harvest_User   = $this->getTimetracker()->getHarvestUserByFullName($hEntryUser);
 
                         if ($Harvest_User) {
                             $hUserId    = $Harvest_User->get("id");
@@ -308,7 +308,7 @@ class TimeSync extends BugYieldCommand
                         $errorData["remoteId"]  = $worklog->remoteId;
 
                         // fetch entry from Harvest
-                        if ($entry = self::getEntryById($worklog->harvestId, $hUserId)) {
+                        if ($entry = $this->getTimetracker()->getEntryById($worklog->harvestId, $hUserId)) {
                             // look for the ID
                             $ticketIds = self::getTicketIds($entry);
                             if (!in_array($fbId, $ticketIds)) {
