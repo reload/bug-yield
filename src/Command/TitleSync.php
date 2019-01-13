@@ -15,9 +15,6 @@ class TitleSync extends BugYieldCommand
     {
         $this->setDebug($input);
 
-        //Setup Harvest API access
-        $harvest = $this->getHarvestApi();
-
         $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
         $output->writeln(sprintf(
             'Bugtracker is %s (%s)',
@@ -179,7 +176,7 @@ class TitleSync extends BugYieldCommand
                     $entry->set('notes', $entry->get('notes'));
 
                     //Update the entry in Harvest
-                    $result = $harvest->updateEntry($entry);
+                    $result = $this->getTimetracker()->updateEntry($entry);
                     if ($result->isSuccess()) {
                         $output->writeln(sprintf(
                             'Updated entry %s: %s',

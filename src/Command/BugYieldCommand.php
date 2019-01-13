@@ -23,6 +23,7 @@ abstract class BugYieldCommand
     protected $config;
 
     protected $bugtracker;
+    protected $timetracker;
     private $debug;
 
     /* singletons for caching data */
@@ -33,21 +34,13 @@ abstract class BugYieldCommand
     {
         $this->config = $config;
         $this->bugtracker = $bugtracker;
-    }
 
-    /**
-     * Returns a connection to the Harvest API based on the configuration.
-     *
-     * @return HarvestAPI
-     */
-    protected function getHarvestApi()
-    {
         $harvest = new HarvestApi();
         $harvest->setAccount($this->config->harvest('account'));
         $harvest->setUser($this->config->harvest('username'));
         $harvest->setPassword($this->config->harvest('password'));
         $harvest->setRetryMode(HarvestApi::RETRY);
-        return $harvest;
+        $this->timetracker = $harvest;
     }
 
     protected function getHarvestProjects()
@@ -88,6 +81,12 @@ abstract class BugYieldCommand
     {
         return $this->bugtracker;
     }
+
+    protected function getTimetracker()
+    {
+        return $this->timetracker;
+    }
+
     /**
      * Fetch url to the bugtracker
      *
@@ -228,11 +227,8 @@ abstract class BugYieldCommand
     {
         $projects = array();
 
-        //Setup Harvest API access
-        $harvest = $this->getHarvestApi();
-
         //Prepare by getting all projects
-        $result = $harvest->getProjects();
+        $result = $this->timetracker->getProjects();
         $harvestProjects = ($result->isSuccess()) ? $result->get('data') : array();
 
         //Collect all requested projects
@@ -240,7 +236,7 @@ abstract class BugYieldCommand
         foreach ($projectIds as $projectId) {
             if (is_numeric($projectId)) {
                 //If numeric id then try to get a specific project
-                $result = $harvest->getProject($projectId);
+                $result = $this->timetracker->getProject($projectId);
                 if ($result->isSuccess()) {
                     $projects[] = $result->get('data');
                 } else {
@@ -282,11 +278,8 @@ abstract class BugYieldCommand
             return $this->harvestUsers;
         }
 
-        //Setup Harvest API access
-        $harvest = $this->getHarvestApi();
-
         //Prepare by getting all projects
-        $result = $harvest->getUsers();
+        $result = $this->timetracker->getUsers();
         $harvestUsers = ($result->isSuccess()) ? $result->get('data') : array();
 
         $this->harvestUsers = $harvestUsers;
@@ -309,11 +302,8 @@ abstract class BugYieldCommand
         $taskname = "Unknown";
 
         if (!is_array($this->harvestTasks) && !isset($this->harvestTasks[$harvest_task_id])) {
-            //Setup Harvest API access
-            $harvest = $this->getHarvestApi();
-
             //Prepare by getting all projects
-            $result = $harvest->getTasks();
+            $result = $this->timetracker->getTasks();
             $harvestTasks = ($result->isSuccess()) ? $result->get('data') : array();
 
             $this->harvestTasks = $harvestTasks;
@@ -340,9 +330,6 @@ abstract class BugYieldCommand
      */
     protected function getTicketEntries($projects, $ignore_locked = true, $from_date = null, $to_date = null)
     {
-        //Setup Harvest API access
-        $harvest = $this->getHarvestApi();
-
         //Collect the ticket entries
         $ticketEntries = array();
         foreach ($projects as $project) {
@@ -356,7 +343,7 @@ abstract class BugYieldCommand
 
             $range = new Range($from_date, $to_date);
 
-            $result = $harvest->getProjectEntries($project->get('id'), $range);
+            $result = $this->timetracker->getProjectEntries($project->get('id'), $range);
             if ($result->isSuccess()) {
                 foreach ($result->get('data') as $entry) {
                     // check that the entry is actually writeable
@@ -469,10 +456,9 @@ abstract class BugYieldCommand
      */
     protected function getEntryById($harvestEntryId, $user_id = false)
     {
-        $harvest = $this->getHarvestApi();
         $entry = false;
 
-        $result = $harvest->getEntry($harvestEntryId, $user_id);
+        $result = $this->timetracker->getEntry($harvestEntryId, $user_id);
 
         if ($result->isSuccess()) {
             $entry = $result->get('data');

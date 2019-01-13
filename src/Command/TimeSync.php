@@ -16,9 +16,6 @@ class TimeSync extends BugYieldCommand
     {
         $this->setDebug($input);
 
-        //Setup Harvest API access
-        $harvest = $this->getHarvestApi();
-
         //store harvestentries and ticket id's for later comparison and double checking
         $checkHarvestEntries = array();
 
