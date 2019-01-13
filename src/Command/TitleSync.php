@@ -56,7 +56,6 @@ class TitleSync extends BugYieldCommand
             return;
         }
 
-        $ignore_locked  = true;
         $from_date      = date("Ymd", time()-(86400*$this->getHarvestDaysBack()));
         $to_date        = date("Ymd");
 
@@ -65,10 +64,11 @@ class TitleSync extends BugYieldCommand
             $from_date,
             $to_date
         ));
-        if ($ignore_locked) {
-            $output->writeln("-- Ignoring entries already billed or otherwise closed.");
-        }
-        $ticketEntries = $this->getTicketEntries($projects, $ignore_locked, $from_date, $to_date);
+
+        // As we'd like to update Harvest entries, we'll only work on
+        // non-locked entries.
+        $output->writeln("-- Ignoring entries already billed or otherwise closed.");
+        $ticketEntries = $this->getTicketEntries($projects, true, $from_date, $to_date);
 
         $output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
         if (sizeof($ticketEntries) == 0) {

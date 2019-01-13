@@ -49,18 +49,16 @@ class TimeSync extends BugYieldCommand
             ));
         }
 
-        $ignore_locked    = false;
         $from_date        = date("Ymd", time()-(86400*$this->getHarvestDaysBack()));
         $to_date          = date("Ymd");
         $uniqueTicketIds  = array();
         $notifyOnError    = self::getEmailNotifyOnError(); // email to notify on error, typically a PM
 
         $output->writeln(sprintf("Collecting Harvest entries between %s to %s", $from_date, $to_date));
-        if ($ignore_locked) {
-            $output->writeln("-- Ignoring entries already billed or otherwise closed.");
-        }
 
-        $ticketEntries = $this->getTicketEntries($projects, $ignore_locked, $from_date, $to_date);
+        // As we're not editing the Harvest entries, we can work with already
+        // billed or locked entries too.
+        $ticketEntries = $this->getTicketEntries($projects, false, $from_date, $to_date);
 
         $output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
         if (sizeof($ticketEntries) == 0) {
