@@ -56,7 +56,17 @@ class TimeSync extends BugYieldCommand
 
         // As we're not editing the Harvest entries, we can work with already
         // billed or locked entries too.
-        $ticketEntries = $this->getTicketEntries($projects, false, $from_date, $to_date);
+        $ticketEntries = array();
+        foreach ($projects as $project) {
+            $entries = $this->getTimetracker()->getProjectEntries($project->get('id'), false, $from_date, $to_date);
+            foreach ($entries as $entry) {
+                $ids = $this->getBugtracker()->extractIds($entry->get('notes'));
+                if (sizeof($ids) > 0) {
+                    //If the entry has ticket ids it is a ticket entry.
+                    $ticketEntries[] = $entry;
+                }
+            }
+        }
 
         $output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
         if (sizeof($ticketEntries) == 0) {
@@ -86,7 +96,7 @@ class TimeSync extends BugYieldCommand
                 }
 
                 //One entry may - but shouldn't - contain multiple ticket ids
-                $ticketIds = $this->getTicketIds($entry);
+                $ticketIds = $this->getBugtracker()->extractIds($entry->get('notes'));
 
                 // store the ticketinfo
                 if (!empty($ticketIds)) {
@@ -313,7 +323,7 @@ class TimeSync extends BugYieldCommand
                         // fetch entry from Harvest
                         if ($entry = $this->getTimetracker()->getEntryById($worklog->harvestId, $hUserId)) {
                             // look for the ID
-                            $ticketIds = self::getTicketIds($entry);
+                            $ticketIds = $this->getBugtracker()->extractIds($entry->get('notes'));
                             if (!in_array($fbId, $ticketIds)) {
                                 // Error found! The time entry still exist,
                                 // but there is no reference to this bug any

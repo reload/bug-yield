@@ -67,7 +67,17 @@ class TitleSync extends BugYieldCommand
         // As we'd like to update Harvest entries, we'll only work on
         // non-locked entries.
         $output->writeln("-- Ignoring entries already billed or otherwise closed.");
-        $ticketEntries = $this->getTicketEntries($projects, true, $from_date, $to_date);
+        $ticketEntries = array();
+        foreach ($projects as $project) {
+            $entries = $this->getTimetracker()->getProjectEntries($project->get('id'), true, $from_date, $to_date);
+            foreach ($entries as $entry) {
+                $ids = $this->getBugtracker()->extractIds($entry->get('notes'));
+                if (sizeof($ids) > 0) {
+                    //If the entry has ticket ids it is a ticket entry.
+                    $ticketEntries[] = $entry;
+                }
+            }
+        }
 
         $output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
         if (sizeof($ticketEntries) == 0) {
@@ -94,8 +104,8 @@ class TitleSync extends BugYieldCommand
                     continue;
                 }
 
-                //One entry may - but shouldn't - contain multiple ticket ids
-                foreach ($this->getTicketIds($entry) as $ticketId) {
+                // One entry may - but shouldn't - contain multiple ticket ids.
+                foreach ($this->getBugtracker()->extractIds($entry->get('notes')) as $ticketId) {
                     //Get the case title.
                     $this->debug("/");
                     $title = $this->getBugtracker()->getTitle($ticketId);
