@@ -169,14 +169,17 @@ class Jira extends BugTrackerBase
 
                 // Initialize API for the specific user.
                 if ($this->currentUsername != $username) {
-                    print 'SWITCHING USER: ' . $timelog->userEmail."\n";
+                    // @todo: shouldn't just print here, DI'ing some sort of
+                    // logger which would then be wired up to stdout would
+                    // probably be the right way.
+                    print 'Jira: Switching user to ' . $timelog->userEmail."\n";
                     $url = $this->bugtrackerConfig['url'];
                     $this->getApi($url, $username, $password);
                 }
             } else {
-                print "ERROR, USER CREDENTIALS NOT FOUND for $timelog->userEmail \n";
+                print "Jira: Error, user credentials not found for $timelog->userEmail \n";
                 if (!empty($this->bugtrackerConfig['worklog_allow_admin'])) {
-                    print "SWITCHING TO ADMIN USER FOR FALLBACK LOGGING ENABLED... \n";
+                    print "Jira: Switching to admin user for fallback logging enabled... \n";
                     // Switch to admin user if already logged in as specific user.
                     if ($this->currentUsername != $this->bugtrackerConfig['username']) {
                         $this->getApi(
