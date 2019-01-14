@@ -55,7 +55,7 @@ class TitleSync extends BugYieldCommand
             return;
         }
 
-        $from_date      = date("Ymd", time()-(86400*$this->getHarvestDaysBack()));
+        $from_date      = date("Ymd", time()-(86400 * $config->getDaysBack()));
         $to_date        = date("Ymd");
 
         $output->writeln(sprintf(

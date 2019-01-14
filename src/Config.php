@@ -16,6 +16,11 @@ class Config
      */
     protected $projects;
 
+    /**
+     * Maximum number of hours in a time entry before it's considered faulty.
+     */
+    protected $maxHours;
+
     protected $harvestConfig;
     protected $bugyieldConfig;
     protected $bugtrackerConfig;
@@ -45,6 +50,15 @@ class Config
             }
         } else {
             throw new Exception(sprintf('Missing configuration file %s', $configFile));
+        }
+
+        // Validate max_entry_hours.
+        if ($this->harvest('max_entry_hours')) {
+            $this->maxHours = $this->harvest('max_entry_hours');
+            // Do not allow non-numeric number of hours.
+            if (!is_numeric($this->maxHours)) {
+                throw new Exception(sprintf('Number of warnings %s is not a valid integer', $maxHours));
+            }
         }
 
         $this->bugtracker = $bugtracker;
@@ -109,6 +123,67 @@ class Config
     public function getTimetrackerProjects()
     {
         return $this->bugtracker('projects');
+    }
+
+    /**
+     * Number of days of entries to work with.
+     *
+     * @return integer
+     *   Number of days
+     */
+    public function getDaysBack()
+    {
+        return intval($this->harvest('daysback'));
+    }
+
+    /**
+     * Max number of hours allowed on a single time entry.
+     *
+     * If this limit is exceeded the entry is considered potentially faulty.
+     *
+     * @return int/float/null The number of hours or NULL if not defined.
+     */
+    public function getMaxEntryHours()
+    {
+        return $this->maxHours;
+    }
+
+    /**
+     * Whether to do extended tests.
+     *
+     * If true we will test all referenced tickets in the bugtracker for inconsistency with Harvest
+     */
+    public function doExtendedTest()
+    {
+        return $this->bugtracker('extended_test') === true;
+    }
+
+    /**
+     * Whether to fix missing references.
+     *
+     * If true we remove any errornous references from the BugTracker to Harvest, thus "fixing" Error 2
+     */
+    public function fixMissingReferences()
+    {
+        return $this->bugtracker('fix_missing_references') === true;
+    }
+
+    /**
+     * Fetch email of email to notify extra if errors occur
+     *
+     * @todo Not really a bugtracker specific setting as such, but as
+     *   timetracker and bugyield settings are global, it's in the bugtracker
+     *   config for the moment being.
+     *
+     * @return String Url
+     */
+    protected function getEmailNotifyOnError()
+    {
+        $email = null;
+        if (!empty($this->bugtracker('email_notify_on_error'))) {
+            $email = trim($this->bugtracker('email_notify_on_error'));
+        }
+        return $email;
     }
 
     public function harvest($key)

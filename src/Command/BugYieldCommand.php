@@ -31,35 +31,6 @@ abstract class BugYieldCommand
         $this->timetracker = $timetracker;
     }
 
-    /**
-     * Number of days back compared to today to look for harvestentries
-     * @return Integer Number of days
-     */
-    protected function getHarvestDaysBack()
-    {
-        return intval($this->config->harvest('daysback'));
-    }
-
-    /**
-     * Max number of hours allowed on a single time entry. If this limit is
-     * exceeded the entry is considered potentially faulty.
-     *
-     * @return int/float/null The number of hours or NULL if not defined.
-     */
-    protected function getMaxEntryHours()
-    {
-        $maxHours = null;
-        if ($this->config->harvest('max_entry_hours')) {
-            $maxHours = $this->config->harvest('max_entry_hours');
-            // Do not allow non-numeric number of hours
-            if (!is_numeric($maxHours)) {
-                $this->debug(sprintf('Number of warnings %s is not a valid integer', $maxHours));
-                $maxHours = null;
-            }
-        }
-        return $maxHours;
-    }
-
     protected function getBugtracker()
     {
         return $this->bugtracker;
@@ -101,54 +72,6 @@ abstract class BugYieldCommand
         }
 
         return sprintf($this->config->bugtracker('url') . $urlTicketPattern, $ticketId, $remoteId);
-    }
-
-    /**
-     * Fetch email of email to notify extra if errors occur
-     *
-     * @todo move to BugTracker. Not really a bugtracker specific setting as
-     *   such, but as timetracker and bugyield settings are global, it's here
-     *   for the moment being.
-     *
-     * @return String Url
-     */
-    protected function getEmailNotifyOnError()
-    {
-        $email = null;
-        if (!empty($this->config->bugtracker('email_notify_on_error'))) {
-            $email = trim($this->config->bugtracker('email_notify_on_error'));
-        }
-        return $email;
-    }
-
-    /**
-     * Check value of config setting "extended_test".
-     * If true we will test all referenced tickets in the bugtracker for inconsistency with Harvest
-     *
-     * @todo move to BugTracker.
-     */
-    protected function doExtendedTest()
-    {
-
-        if ($this->config->bugtracker('extended_test') === true) {
-            return true;
-        }
-        return false;
-    }
-
-    /**
-     * Check value of config setting "fix_missing_references".
-     * If true we remove any errornous references from the BugTracker to Harvest, thus "fixing" Error 2
-     *
-     * @todo move to BugTracker.
-     */
-    protected function fixMissingReferences()
-    {
-
-        if ($this->config->bugtracker('fix_missing_references') === true) {
-            return true;
-        }
-        return false;
     }
 
     /**

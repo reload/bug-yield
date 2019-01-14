@@ -47,10 +47,10 @@ class TimeSync extends BugYieldCommand
             ));
         }
 
-        $from_date        = date("Ymd", time()-(86400*$this->getHarvestDaysBack()));
+        $from_date        = date("Ymd", time()-(86400 * $config->getDaysBack()));
         $to_date          = date("Ymd");
         $uniqueTicketIds  = array();
-        $notifyOnError    = self::getEmailNotifyOnError(); // email to notify on error, typically a PM
+        $notifyOnError    = $config->getEmailNotifyOnError(); // email to notify on error, typically a PM
 
         $output->writeln(sprintf("Collecting Harvest entries between %s to %s", $from_date, $to_date));
 
@@ -128,11 +128,11 @@ class TimeSync extends BugYieldCommand
 
                 // report an error if you have one single ticket entry with more than
                 // a configurable number of hours straight. That's very odd.
-                if ($this->getMaxEntryHours() &&
-                    $hoursPerTicket > $this->getMaxEntryHours()) {
+                if ($config->getMaxEntryHours() &&
+                    $hoursPerTicket > $config->getMaxEntryHours()) {
                     $output->writeln(sprintf(
                         'WARNING: More than %s hours registrered on %s: %s (%s hours). Email sent to user.',
-                        $this->getMaxEntryHours(),
+                        $config->getMaxEntryHours(),
                         $worklog->harvestId,
                         $worklog->notes,
                         $worklog->hours
@@ -152,7 +152,7 @@ class TimeSync extends BugYieldCommand
                     $body = array();
                     $body[] = sprintf(
                         'The following Harvest entry seems invalid due to more than %s registered hours on one task:',
-                        $this->getMaxEntryHours()
+                        $config->getMaxEntryHours()
                     );
                     $body[] = '';
                     $body[] = print_r($worklog, true);
@@ -196,7 +196,7 @@ class TimeSync extends BugYieldCommand
 
                         // save entries for the error checking below.
                         // This only runs/checks if a ticket has been updated.
-                        if ($updated || $this->doExtendedTest()) {
+                        if ($updated || $config->doExtendedTest()) {
                             if (empty($uniqueTicketIds) ||
                                 !array_key_exists($id, $uniqueTicketIds)) {
                                 $uniqueTicketIds[$id] = $id;
@@ -239,7 +239,7 @@ class TimeSync extends BugYieldCommand
             // HAVE JIRA MULTIUSER ENABLED as it does not log in as the
             // correct user.
 
-            if ($this->doExtendedTest()) {
+            if ($config->doExtendedTest()) {
                 $output->writeln('EXTENDED TEST has been enabled, all referenced tickets will be checked even ' .
                                  'if they were not updated. Set extended_test = false to disable this.');
             }
@@ -344,7 +344,7 @@ class TimeSync extends BugYieldCommand
 
                                 $this->debug($errorData);
 
-                                if ($this->fixMissingReferences()) {
+                                if ($config->fixMissingReferences()) {
                                     $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... " .
                                                      "(set fix_missing_references to false to disable this)");
                                     if ($this->getBugtracker()->deleteWorkLogEntry(
@@ -388,7 +388,7 @@ class TimeSync extends BugYieldCommand
 
                             $this->debug($errorData);
 
-                            if ($this->fixMissingReferences()) {
+                            if ($config->fixMissingReferences()) {
                                 $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... " .
                                                  "(set fix_missing_references to false to disable this)");
                                 if ($this->getBugtracker()->deleteWorkLogEntry(
