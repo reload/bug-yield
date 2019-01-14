@@ -52,8 +52,8 @@ class TimeSync extends BugYieldCommand
             }
             $output->writeln(sprintf(
                 'Working with project: %s %s %s',
-                self::mb_str_pad($Harvest_Project->get("name"), 40, " "),
-                self::mb_str_pad($Harvest_Project->get("code"), 18, " "),
+                self::mbStrPad($Harvest_Project->get("name"), 40, " "),
+                self::mbStrPad($Harvest_Project->get("code"), 18, " "),
                 $archivedText
             ));
         }
@@ -165,7 +165,8 @@ class TimeSync extends BugYieldCommand
                     $body[] = '';
                     $body[] = print_r($worklog, true);
                     $body[] = 'ACTION: Please review the time entry.';
-                    $body[] = 'If it is actually valid, then you have to split it up in separate entries below 8 hours in order to avoid this message.';
+                    $body[] = 'If it is actually valid, then you have to split it up in separate entries below 8 ' .
+                        'hours in order to avoid this message.';
                     $body[] = '';
                     $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
                     $body[] = 'in Harvest please ask your friendly BugYield administrator: ' .
@@ -210,7 +211,8 @@ class TimeSync extends BugYieldCommand
                             }
                         }
                     } catch (\Exception $e) {
-                        $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' . $this->getUserEmailById($entry->get('user-id')) . '>';
+                        $to = '"' . $this->getUserNameById($entry->get('user-id')) . '" <' .
+                            $this->getUserEmailById($entry->get('user-id')) . '>';
                         $subject = $id . ': time sync exception';
                         $body = array();
                         $body[] = 'Trying to sync Harvest entry:';
@@ -220,8 +222,10 @@ class TimeSync extends BugYieldCommand
                         $body[] = $e->getMessage();
                         $body[] = '';
                         $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
-                        $body[] = 'in Harvest please ask your friendly BugYield administrator: ' . self::getBugyieldEmailFrom();
-                        $headers = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
+                        $body[] = 'in Harvest please ask your friendly BugYield administrator: ' .
+                            self::getBugyieldEmailFrom();
+                        $headers = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' .
+                            self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
                         // add CC if defined in the config
                         if (!empty($notifyOnError)) {
                             $headers .= 'Cc: ' . $notifyOnError . "\r\n";
@@ -242,7 +246,8 @@ class TimeSync extends BugYieldCommand
             // correct user.
 
             if ($this->doExtendedTest()) {
-                $output->writeln('EXTENDED TEST has been enabled, all referenced tickets will be checked even if they were not updated. Set extended_test = false to disable this.');
+                $output->writeln('EXTENDED TEST has been enabled, all referenced tickets will be checked even ' .
+                                 'if they were not updated. Set extended_test = false to disable this.');
             }
             $output->writeln(sprintf(
                 'Starting error checking: %d tickets will be checked...',
@@ -291,12 +296,13 @@ class TimeSync extends BugYieldCommand
                         if ($Harvest_User) {
                             $hUserId    = $Harvest_User->get("id");
                             $hUserEmail = $Harvest_User->get("email");
-
-                            //$output->writeln(sprintf('DEBUG: User %s results in uid %d and email %s', $hEntryUser, $hUserId, $hUserEmail));
                         } else {
                             $output->writeln(sprintf('WARNING: Could not find email for this user: "%s"', $hEntryUser));
-                            $output->writeln('-------- As the user cannot be found, the following checks will fail as well, so this entry will be skipped. Check user names for spelling errors, check ticket name for weird characters breaking the regex etc.');
-                            $output->writeln(sprintf('-------- Worklog Data [BUGID %s]: %s', $fbId, "\n" . var_export($worklog, true)));
+                            $output->writeln('-------- As the user cannot be found, the following checks will fail ' .
+                                             'as well, so this entry will be skipped. Check user names for spelling ' .
+                                             'errors, check ticket name for weird characters breaking the regex etc.');
+                            $output->writeln(sprintf('-------- Worklog Data [BUGID %s]: %s', $fbId, "\n" .
+                                                     var_export($worklog, true)));
                             continue;
                         }
 
@@ -322,23 +328,48 @@ class TimeSync extends BugYieldCommand
                                 // proper user.
                                 if ($hUserId != $entry->get("user-id")) {
                                     // hmm, this is unusual...
-                                    $output->writeln(sprintf('WARNING: We have an errornous reference from BugID %s to timeentry %s where the users do not match: %s', $fbId, $entry->get("id"), var_export($hEntryData, true)));
+                                    $output->writeln(sprintf(
+                                        'WARNING: We have an errornous reference from BugID %s ' .
+                                        'to timeentry %s where the users do not match: %s',
+                                        $fbId,
+                                        $entry->get("id"),
+                                        var_export($hEntryData, true)
+                                    ));
                                 }
 
                                 // Add error 1 reason for later use
                                 $errorData["entryNote"] = $entry->get("notes");
-                                $errorData["reason"]  = sprintf("Error 1: The time entry (%s) still exist in Harvest, but there is no reference to ticket %s from the entry. This could mean that you have changed or removed the ticketId in this particular Harvest time entry.", $errorData["entryid"], $fbId);
-
+                                $errorData["reason"]  = sprintf(
+                                    "Error 1: The time entry (%s) still exist in Harvest, but there " .
+                                    "is no reference to ticket %s from the entry. This could mean " .
+                                    "that you have changed or removed the ticketId in this particular " .
+                                    "Harvest time entry.",
+                                    $errorData["entryid"],
+                                    $fbId
+                                );
 
                                 $this->debug($errorData);
 
                                 if ($this->fixMissingReferences()) {
-                                    $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... (set fix_missing_references to false to disable this)");
-                                    if ($this->bugtracker->deleteWorkLogEntry($errorData["remoteId"], $errorData["bugID"])) {
-                                        $output->writeln(sprintf("  > AUTO-FIXED an potential %s. WORKLOG HAS BEEN AUTO REMOVED BY BUGYIELD!", $errorData["reason"]));
+                                    $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... " .
+                                                     "(set fix_missing_references to false to disable this)");
+                                    if ($this->bugtracker->deleteWorkLogEntry(
+                                        $errorData["remoteId"],
+                                        $errorData["bugID"]
+                                    )) {
+                                        $output->writeln(sprintf(
+                                            "  > AUTO-FIXED an potential %s. WORKLOG HAS BEEN AUTO REMOVED BY " .
+                                            "BUGYIELD!",
+                                            $errorData["reason"]
+                                        ));
                                         continue;
                                     }
-                                    $output->writeln(sprintf("  > AUTO-FIX FAILED in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
+                                    $output->writeln(sprintf(
+                                        "  > AUTO-FIX FAILED in %s: %s - Reason: %s",
+                                        $errorData["bugID"],
+                                        $errorData["bugNote"],
+                                        $errorData["reason"]
+                                    ));
                                 }
 
                                 // Add error 1 to the RealErrors
@@ -353,17 +384,36 @@ class TimeSync extends BugYieldCommand
 
                             // Add Error 2 reason for later use
                             $errorData["entryNote"] = "ENTRY DELETED";
-                            $errorData["reason"]  = sprintf("Error 2: No entry found in Harvest, %s ticket %s is referring to a timeentry (%s) that does not exist anylonger.", $bugtrackerName, $fbId, $errorData["entryid"]);
+                            $errorData["reason"]  = sprintf(
+                                "Error 2: No entry found in Harvest, %s ticket %s is referring to a timeentry " .
+                                "(%s) that does not exist anylonger.",
+                                $bugtrackerName,
+                                $fbId,
+                                $errorData["entryid"]
+                            );
 
                             $this->debug($errorData);
 
                             if ($this->fixMissingReferences()) {
-                                $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... (set fix_missing_references to false to disable this)");
-                                if ($this->bugtracker->deleteWorkLogEntry($errorData["remoteId"], $errorData["bugID"])) {
-                                    $output->writeln(sprintf("  > AUTO-FIXED an potential %s. REFERENCE HAS BEEN AUTO REMOVED BY BUGYIELD!", $errorData["reason"]));
+                                $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... " .
+                                                 "(set fix_missing_references to false to disable this)");
+                                if ($this->bugtracker->deleteWorkLogEntry(
+                                    $errorData["remoteId"],
+                                    $errorData["bugID"]
+                                )
+                                ) {
+                                    $output->writeln(sprintf(
+                                        "  > AUTO-FIXED an potential %s. REFERENCE HAS BEEN AUTO REMOVED BY BUGYIELD!",
+                                        $errorData["reason"]
+                                    ));
                                     continue;
                                 }
-                                $output->writeln(sprintf("  > AUTO-FIX FAILED in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
+                                $output->writeln(sprintf(
+                                    "  > AUTO-FIX FAILED in %s: %s - Reason: %s",
+                                    $errorData["bugID"],
+                                    $errorData["bugNote"],
+                                    $errorData["reason"]
+                                ));
                             }
 
                             // Add error 2 to the RealErrors
@@ -373,30 +423,73 @@ class TimeSync extends BugYieldCommand
                 }
 
                 if (!empty($realErrors)) {
-                    $output->writeln(sprintf('ERRORs found: We have %s erroneous references from %s to Harvest. Users will be notified by email, stand by...', count($realErrors), $bugtrackerName));
+                    $output->writeln(sprintf(
+                        'ERRORs found: We have %s erroneous references from %s to Harvest. Users will be notified ' .
+                        'by email, stand by...',
+                        count($realErrors),
+                        $bugtrackerName
+                    ));
 
                     foreach ($realErrors as $errorData) {
                         // data for the mail
                         $unixdate         = strtotime($errorData["date"]);
                         $year             = date("Y", $unixdate); // YYYY
                         $dayno            = date("z", $unixdate)+1; // Day of the year, eg. 203
-                        $harvestEntryUrl  = sprintf(self::getHarvestURL() . "daily/%d/%d/%d#timer_link_%d", $errorData["userid"], $dayno, $year, $errorData["entryid"]);
+                        $harvestEntryUrl  = sprintf(
+                            self::getHarvestURL() . "daily/%d/%d/%d#timer_link_%d",
+                            $errorData["userid"],
+                            $dayno,
+                            $year,
+                            $errorData["entryid"]
+                        );
 
                         // build the mail to be sent
-                        $subject  = sprintf("BugYield Synchronisation error found in %s registered %s by %s", $errorData["bugID"], $errorData["date"], $errorData["name"]);
-                        $body     = sprintf("Hi %s,\nBugYield has found some inconsistencies between Harvest and data registrered on bug %s. Please review this error:\n\n%s\n", $errorData["name"], $errorData["bugID"], $errorData["reason"]);
-                        $body     .= sprintf("\nLink to %s: %s", $bugtrackerName, self::getBugtrackerTicketURL($this->bugtracker->sanitizeTicketId($errorData["bugID"]), $errorData["remoteId"]));
+                        $subject  = sprintf(
+                            "BugYield Synchronisation error found in %s registered %s by %s",
+                            $errorData["bugID"],
+                            $errorData["date"],
+                            $errorData["name"]
+                        );
+                        $body     = sprintf(
+                            "Hi %s,\nBugYield has found some inconsistencies between Harvest and data registrered" .
+                            " on bug %s. Please review this error:\n\n%s\n",
+                            $errorData["name"],
+                            $errorData["bugID"],
+                            $errorData["reason"]
+                        );
+                        $body     .= sprintf(
+                            "\nLink to %s: %s",
+                            $bugtrackerName,
+                            self::getBugtrackerTicketURL(
+                                $this->bugtracker->sanitizeTicketId($errorData["bugID"]),
+                                $errorData["remoteId"]
+                            )
+                        );
                         $body     .= sprintf("\nLink to Harvest: %s", $harvestEntryUrl);
                         $body     .= sprintf("\n\nCurrent data from Harvest entry:\n  %s", $errorData["entryNote"]);
-                        $body     .= sprintf("\n\nOutdated Harvest data logged in %s:\n  %s", $bugtrackerName, $errorData["bugNote"]);
-                        $body     .= sprintf("\n\nIMPORTANT: In order to fix this, you must manually edit the entries, e.g. by editing/removing the logdata from %s and subtract the time added.", $bugtrackerName);
-                        $headers  = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
+                        $body     .= sprintf(
+                            "\n\nOutdated Harvest data logged in %s:\n  %s",
+                            $bugtrackerName,
+                            $errorData["bugNote"]
+                        );
+                        $body     .= sprintf(
+                            "\n\nIMPORTANT: In order to fix this, you must manually edit the entries, e.g. by " .
+                            "editing/removing the logdata from %s and subtract the time added.",
+                            $bugtrackerName
+                        );
+                        $headers  = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' .
+                            self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
                         // add CC if defined in the config
                         if (!empty($notifyOnError)) {
                             $headers .= 'Cc: ' . $notifyOnError . "\r\n";
                         }
 
-                        $output->writeln(sprintf("  > Sync error found in %s: %s - Reason: %s", $errorData["bugID"], $errorData["bugNote"], $errorData["reason"]));
+                        $output->writeln(sprintf(
+                            "  > Sync error found in %s: %s - Reason: %s",
+                            $errorData["bugID"],
+                            $errorData["bugNote"],
+                            $errorData["reason"]
+                        ));
 
                         if (!$this->mail($errorData["email"], $subject, $body, $headers)) {
                             $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"]));
@@ -408,7 +501,6 @@ class TimeSync extends BugYieldCommand
                     }
                 }
             }
-
         } catch (\Exception $e) {
             $output->writeln('Error communicating with bugtracker: '. $e->getMessage());
         }

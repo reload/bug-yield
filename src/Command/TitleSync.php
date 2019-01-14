@@ -42,20 +42,27 @@ class TitleSync extends BugYieldCommand
             return;
         }
 
-        foreach ($projects as $Harvest_Project) {
-            $archivedText = "";
-            if ($Harvest_Project->get("active") == "false") {
-                $archivedText = sprintf(
-                    "ARCHIVED (Latest activity: %s)",
-                    $Harvest_Project->get("hint-latest-record-at")
-                );
+        $projects = array_filter($projects, function ($project) use ($output) {
+            if ($project->get("active") == "false") {
+                $output->writeln(sprintf(
+                    "Project %s %s is archived (Latest activity: %s), ignoring",
+                    self::mbStrPad($project->get("name"), 40, " "),
+                    self::mbStrPad($project->get("code"), 18, " "),
+                    $project->get("hint-latest-record-at")
+                ));
+                return false;
             }
             $output->writeln(sprintf(
-                'Working with project: %s %s %s',
-                self::mb_str_pad($Harvest_Project->get("name"), 40, " "),
-                self::mb_str_pad($Harvest_Project->get("code"), 18, " "),
-                $archivedText
+                'Working with project: %s %s',
+                self::mbStrPad($project->get("name"), 40, " "),
+                self::mbStrPad($project->get("code"), 18, " ")
             ));
+            return true;
+        });
+
+        if (sizeof($projects) == 0) {
+            $output->writeln('No active projects.');
+            return;
         }
 
         $ignore_locked  = true;
@@ -132,16 +139,34 @@ class TitleSync extends BugYieldCommand
                                     // just insert the ticket title, as we
                                     // cannot differentiate what's title and
                                     // whats comment.
-                                    $entry->set('notes', $ticketId.'['.$title.'] (BugYield removed comments due to [brackets] in the ticket title)');
+                                    $entry->set(
+                                        'notes',
+                                        $ticketId . '[' . $title .
+                                        '] (BugYield removed comments due to [brackets] in the ticket title)'
+                                    );
                                 } else {
-                                    $entry->set('notes', preg_replace('/'.$ticketId.'(\[.*?\])/i', $ticketId.'['.$title.']', $entry->get('notes')));
+                                    $entry->set(
+                                        'notes',
+                                        preg_replace(
+                                            '/' . $ticketId . '(\[.*?\])/i',
+                                            $ticketId . '[' . $title . ']',
+                                            $entry->get('notes')
+                                        )
+                                    );
                                 }
 
                                 $update = true;
                             }
                         } else {
                             //Entry note does not include ticket title so add it
-                            $entry->set('notes', preg_replace('/'.$ticketId.'/i', strtoupper($ticketId).'['.$title.']', $entry->get('notes')));
+                            $entry->set(
+                                'notes',
+                                preg_replace(
+                                    '/' . $ticketId . '/i',
+                                    strtoupper($ticketId) . '[' . $title . ']',
+                                    $entry->get('notes')
+                                )
+                            );
 
                             $update = true;
                         }
