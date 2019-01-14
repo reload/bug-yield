@@ -4,7 +4,6 @@ namespace BugYield\Command;
 
 use BugYield\Config;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputInterface;
 
 class TimeSync extends BugYieldCommand
 {
@@ -12,7 +11,7 @@ class TimeSync extends BugYieldCommand
     /**
      * Invoke TimeSync command.
      */
-    public function __invoke(InputInterface $input, OutputInterface $output, Config $config)
+    public function __invoke(OutputInterface $output, Config $config)
     {
         //store harvestentries and ticket id's for later comparison and double checking
         $checkHarvestEntries = array();

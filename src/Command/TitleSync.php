@@ -4,7 +4,6 @@ namespace BugYield\Command;
 
 use BugYield\Config;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputInterface;
 
 class TitleSync extends BugYieldCommand
 {
@@ -12,7 +11,7 @@ class TitleSync extends BugYieldCommand
     /**
      * Invoke TitleSync command.
      */
-    public function __invoke(InputInterface $input, OutputInterface $output, Config $config)
+    public function __invoke(OutputInterface $output, Config $config)
     {
         $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
         $output->writeln(sprintf(
