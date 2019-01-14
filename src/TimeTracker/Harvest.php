@@ -70,6 +70,7 @@ class Harvest extends TimeTrackerBase
                         }
                     }
                 }
+                // @todo do something intelligent with this.
                 if (!$identified) {
                     $unknownProjectIds[] = $projectId;
                 }
