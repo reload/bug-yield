@@ -44,7 +44,7 @@ class Jira extends BugTrackerBase
      * @return string
      *   The URL.
      */
-    protected function getTicketURL($ticketId, $remoteId = null)
+    public function getTicketURL($ticketId, $remoteId = null)
     {
 
         $urlTicketPattern = $this->bugtrackerConfig('url_ticket_pattern');

@@ -46,23 +46,15 @@ abstract class BugYieldCommand
      *
      * @param array $projects An array of projects
      * @param boolean $ignore_locked Should we filter the closed/billed entries? We cannot update them...
-     * @param Integer $from_date Date in YYYYMMDD format
-     * @param Integer $to_date Date in YYYYMMDD format
+     * @param string $from_date Date in YYYYMMDD format
+     * @param string $to_date Date in YYYYMMDD format
      * @return array
      */
-    protected function getTicketEntries($projects, $ignore_locked = true, $from_date = null, $to_date = null)
+    protected function getTicketEntries($projects, $ignore_locked, $from_date, $to_date)
     {
         //Collect the ticket entries
         $ticketEntries = array();
         foreach ($projects as $project) {
-            if (!is_numeric($from_date)) {
-                $from_date = "19000101";
-            }
-
-            if (!is_numeric($to_date)) {
-                $to_date = date('Ymd');
-            }
-
             $entries = $this->timetracker->getProjectEntries($project->get('id'), $ignore_locked, $from_date, $to_date);
             foreach ($entries as $entry) {
                 $ids = $this->getTicketIds($entry);
