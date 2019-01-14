@@ -19,7 +19,6 @@ abstract class BugYieldCommand
 
     protected $bugtracker;
     protected $timetracker;
-    private $debug;
 
     /* singletons for caching data */
     private $harvestUsers = null;
@@ -158,18 +157,6 @@ abstract class BugYieldCommand
     }
 
     /**
-     * Set debug mode depending on argument.
-     *
-     * @todo Config might take this.
-     *
-     * @param InputInterface $input
-     */
-    protected function setDebug(InputInterface $input)
-    {
-        $this->debug = $input->getOption('debug');
-    }
-
-    /**
      * Returns the project ids for this command from command line options or configuration.
      *
      * @param InputInterface $input
@@ -246,7 +233,7 @@ abstract class BugYieldCommand
     // if debug is enabled by --debug=true in cmd, then print the statements
     protected function debug($data)
     {
-        if ($this->debug == true) {
+        if ($this->config->isDebug()) {
             print_r($data);
         }
     }

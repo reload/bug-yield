@@ -14,8 +14,6 @@ class TimeSync extends BugYieldCommand
      */
     public function __invoke(InputInterface $input, OutputInterface $output)
     {
-        $this->setDebug($input);
-
         //store harvestentries and ticket id's for later comparison and double checking
         $checkHarvestEntries = array();
 

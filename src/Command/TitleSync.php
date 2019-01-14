@@ -13,8 +13,6 @@ class TitleSync extends BugYieldCommand
      */
     public function __invoke(InputInterface $input, OutputInterface $output)
     {
-        $this->setDebug($input);
-
         $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
         $output->writeln(sprintf(
             'Bugtracker is %s (%s)',

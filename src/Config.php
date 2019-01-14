@@ -8,6 +8,7 @@ use Symfony\Component\Yaml\Yaml;
 
 class Config
 {
+    protected $debug = false;
     protected $harvestConfig;
     protected $bugyieldConfig;
     protected $bugtrackerConfig;
@@ -15,6 +16,8 @@ class Config
 
     public function __construct(InputInterface $input)
     {
+        $this->debug = (bool) $input->getOption('debug');
+
         $configFile = $input->getOption('config');
         $bugtracker = $input->getOption('bugtracker');
 
@@ -67,6 +70,14 @@ class Config
             'config' => 'config.yml',
             'bugtracker' => 'jira',
         ];
+    }
+
+    /**
+     * Get debug status.
+     */
+    public function isDebug()
+    {
+        return $this->debug;
     }
 
     public function harvest($key)
