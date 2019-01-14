@@ -42,18 +42,6 @@ abstract class BugYieldCommand
     }
 
     /**
-     * Fetch url to the bugtracker
-     *
-     * @todo move to BugTracker.
-     *
-     * @return String Url
-     */
-    protected function getBugtrackerURL()
-    {
-        return $this->config->bugtracker('url');
-    }
-
-    /**
      * Create direct url to ticket
      *
      * @todo move to BugTracker.

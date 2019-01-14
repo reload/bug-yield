@@ -7,12 +7,12 @@ use JiraApi\Clients\IssueClient as JiraApi;
 class Jira extends BugTrackerBase
 {
 
-    private $api    = null;
-    private $token  = null;
-    public $currentUsername = null;
+    private $api;
+    private $token;
+    public $currentUsername;
     private $name   = "Jira";
     private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
-    private $bugtrackerConfig = null;
+    private $bugtrackerConfig;
 
     public function __construct($bugtrackerConfig)
     {
@@ -23,6 +23,11 @@ class Jira extends BugTrackerBase
     public function getName()
     {
         return $this->name;
+    }
+
+    public function getURL()
+    {
+        return $this->bugtrackerConfig['url'];
     }
 
     public function getUrlTicketPattern()

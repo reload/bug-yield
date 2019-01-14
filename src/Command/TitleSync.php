@@ -18,7 +18,7 @@ class TitleSync extends BugYieldCommand
         $output->writeln(sprintf(
             'Bugtracker is %s (%s)',
             $this->getBugtracker()->getName(),
-            $this->getBugtrackerURL()
+            $this->getBugtracker()->getURL()
         ));
         $output->writeln('Verifying projects in Harvest');
 

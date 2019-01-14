@@ -18,7 +18,7 @@ class TimeSync extends BugYieldCommand
         $checkHarvestEntries = array();
 
         $output->writeln('TimeSync executed: ' . date('Ymd H:i:s'));
-        $output->writeln(sprintf('Bugtracker is %s (%s)', $this->getBugtracker()->getName(), $this->getBugtrackerURL()));
+        $output->writeln(sprintf('Bugtracker is %s (%s)', $this->getBugtracker()->getName(), $this->getBugtracker()->getURL()));
         $output->writeln('Verifying projects in Harvest');
 
         $projects = $this->getTimetracker()->getProjects($config->getProjectIds($input));

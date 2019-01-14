@@ -9,6 +9,7 @@ interface BugTracker
 
   // Name of the tracker for presentation purposes.
     public function getName();
+    public function getURL();
     public function getTitle($ticketId);
     public function extractIds($string);
     public function getTimelogEntries($ticketId);
