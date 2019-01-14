@@ -13,8 +13,11 @@ class Config
     protected $bugtrackerConfig;
     protected $bugtracker;
 
-    public function __construct(string $configFile, string $bugtracker)
+    public function __construct(InputInterface $input)
     {
+        $configFile = $input->getOption('config');
+        $bugtracker = $input->getOption('bugtracker');
+
         if (file_exists($configFile)) {
             $config = Yaml::parse($configFile);
             $this->harvestConfig = $config['harvest'];
@@ -32,6 +35,38 @@ class Config
         }
 
         $this->bugtracker = $bugtracker;
+    }
+
+    /**
+     * Extra options definition.
+     */
+    public static function getOptions()
+    {
+        return '[--harvest-project=] [--config=] [--bugtracker=] [--debug]';
+    }
+
+    /**
+     * Options descriptions.
+     */
+    public static function getOptionsDescriptions()
+    {
+        return [
+            '--harvest-project' => 'One or more Harvest projects (id, name or code) separated by "," (comma). Use "all" for all projects',
+            '--config' => 'Path to the configuration file',
+            '--bugtracker' => 'Bug Tracker to yield',
+            '--debug' => 'Show debug info',
+        ];
+    }
+
+    /**
+     * Options defaults.
+     */
+    public static function getOptionsDefaults()
+    {
+        return [
+            'config' => 'config.yml',
+            'bugtracker' => 'jira',
+        ];
     }
 
     public function harvest($key)
