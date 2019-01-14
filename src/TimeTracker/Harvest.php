@@ -258,4 +258,8 @@ class Harvest extends TimeTrackerBase
         return $user;
     }
 
+    public function updateEntry($entry)
+    {
+        return $this->harvest->updateEntry($entry);
+    }
 }

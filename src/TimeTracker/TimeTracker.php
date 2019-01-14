@@ -86,4 +86,9 @@ interface TimeTracker
      * @return User object
      */
     public function getHarvestUserByFullName($fullname);
+
+    /**
+     * Update time entry.
+     */
+    public function updateEntry($entry);
 }
