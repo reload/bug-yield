@@ -116,10 +116,12 @@ class TimeSync extends BugYieldCommand
                 //In case there are several ids in an entry then distribute the the time spent evenly
                 $hoursPerTicket = round(floatval($entry->get('hours')) / sizeof($ticketIds), 2);
 
+                $email = $this->getTimetracker()->getUserEmailById($entry->get('user-id')) ?:
+                    $config->bugyield("email_fallback");
                 $worklog = new \stdClass;
                 $worklog->harvestId = $entry->get('id');
                 $worklog->user      = $harvestUserName;
-                $worklog->userEmail = $this->getTimetracker()->getUserEmailById($entry->get('user-id'));
+                $worklog->userEmail = $email;
                 $worklog->hours     = $hoursPerTicket;
                 $worklog->spentAt   = $harvestTimestamp;
                 $worklog->project   = $harvestProjectName;
@@ -138,8 +140,11 @@ class TimeSync extends BugYieldCommand
                         $worklog->hours
                     ));
 
+                    $email = $this->getTimetracker()->getUserEmailById($entry->get('user-id')) ?:
+                        $config->bugyield("email_fallback");
+
                     $to = '"' . $this->getTimetracker()->getUserNameById($entry->get('user-id')) .
-                        '" <' . $this->getTimetracker()->getUserEmailById($entry->get('user-id')) .
+                        '" <' . $email .
                         '>';
                     $subject = sprintf(
                         'BugYield warning: %s hours registered on %s. Really?',
@@ -159,9 +164,9 @@ class TimeSync extends BugYieldCommand
                     $body[] = '';
                     $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
                     $body[] = 'in Harvest please ask your friendly BugYield administrator: ' .
-                        self::getBugyieldEmailFrom();
-                    $headers = 'From: ' . self::getBugyieldEmailFrom() .
-                        "\r\n" . 'Reply-To: ' . self::getBugyieldEmailFrom() .
+                        $config->bugyield("email_from");
+                    $headers = 'From: ' . $config->bugyield("email_from") .
+                        "\r\n" . 'Reply-To: ' . $config->bugyield("email_from") .
                         "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
                     // add CC if defined in the config
                     if (!empty($notifyOnError)) {
@@ -200,8 +205,10 @@ class TimeSync extends BugYieldCommand
                             }
                         }
                     } catch (\Exception $e) {
+                        $email = $this->getTimetracker()->getUserEmailById($entry->get('user-id')) ?:
+                            $config->bugyield("email_fallback");
                         $to = '"' . $this->getTimetracker()->getUserNameById($entry->get('user-id')) . '" <' .
-                            $this->getTimetracker()->getUserEmailById($entry->get('user-id')) . '>';
+                            $email . '>';
                         $subject = $id . ': time sync exception';
                         $body = array();
                         $body[] = 'Trying to sync Harvest entry:';
@@ -212,9 +219,9 @@ class TimeSync extends BugYieldCommand
                         $body[] = '';
                         $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
                         $body[] = 'in Harvest please ask your friendly BugYield administrator: ' .
-                            self::getBugyieldEmailFrom();
-                        $headers = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' .
-                            self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
+                            $config->bugyield("email_from");
+                        $headers = 'From: ' . $config->bugyield("email_from") . "\r\n" . 'Reply-To: ' .
+                            $config->bugyield("email_from") . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
                         // add CC if defined in the config
                         if (!empty($notifyOnError)) {
                             $headers .= 'Cc: ' . $notifyOnError . "\r\n";
@@ -277,7 +284,7 @@ class TimeSync extends BugYieldCommand
                     foreach ($data as $fbId => $worklog) {
                         $errorData      = array();
                         $hUserId        = false;
-                        $hUserEmail     = self::getBugyieldEmailFallback();
+                        $hUserEmail     = $config->bugyield("email_fallback");
 
                         $hEntryUser     = trim(html_entity_decode($worklog->user, ENT_COMPAT, "UTF-8"));
                         $Harvest_User   = $this->getTimetracker()->getHarvestUserByFullName($hEntryUser);
@@ -466,8 +473,8 @@ class TimeSync extends BugYieldCommand
                             "editing/removing the logdata from %s and subtract the time added.",
                             $bugtrackerName
                         );
-                        $headers  = 'From: ' . self::getBugyieldEmailFrom() . "\r\n" . 'Reply-To: ' .
-                            self::getBugyieldEmailFrom() . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
+                        $headers  = 'From: ' . $config->bugyield("email_from") . "\r\n" . 'Reply-To: ' .
+                            $config->bugyield("email_from") . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
                         // add CC if defined in the config
                         if (!empty($notifyOnError)) {
                             $headers .= 'Cc: ' . $notifyOnError . "\r\n";
@@ -483,7 +490,7 @@ class TimeSync extends BugYieldCommand
                         if (!$this->mail($errorData["email"], $subject, $body, $headers)) {
                             $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"]));
                             // send to admin instead
-                            $this->mail(self::getBugyieldEmailFallback(), "FALLBACK: " . $subject, $body, $headers);
+                            $this->mail($config->bugyield("email_fallback"), "FALLBACK: " . $subject, $body, $headers);
                         } else {
                             $output->writeln(sprintf('  > Email sent to %s', $errorData["email"]));
                         }

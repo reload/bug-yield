@@ -158,22 +158,6 @@ abstract class BugYieldCommand
     }
 
     /**
-     * @deprecated available from Config.
-     */
-    protected function getBugyieldEmailFrom()
-    {
-        return $this->config->bugyield("email_from");
-    }
-
-    /**
-     * @deprecated available from Config.
-     */
-    protected function getBugyieldEmailFallback()
-    {
-        return $this->config->bugyield("email_fallback");
-    }
-
-    /**
      * Set debug mode depending on argument.
      *
      * @todo Config might take this.

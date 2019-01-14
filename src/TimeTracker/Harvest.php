@@ -191,12 +191,12 @@ class Harvest extends TimeTrackerBase
      *
      * @todo Move to TimeTracker.
      *
-     * @param Integer $harvest_user_id
-     * @return String Full name
+     * @param integer $harvest_user_id
+     * @return string|null email or null if not found.
      */
     public function getUserEmailById($harvest_user_id)
     {
-        $email = self::getBugyieldEmailFallback();
+        $email = null;
 
         $harvestUsers = $this->getUsers();
 

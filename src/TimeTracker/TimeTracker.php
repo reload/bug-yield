@@ -63,8 +63,8 @@ interface TimeTracker
      *
      * @todo Move to TimeTracker.
      *
-     * @param Integer $userId
-     * @return String Full name
+     * @param integer $userId
+     * @return string|null User email or null if not found.
      */
     public function getUserEmailById($userId);
 
