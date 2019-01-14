@@ -2,6 +2,7 @@
 
 namespace BugYield\Command;
 
+use BugYield\Config;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Input\InputInterface;
 
@@ -11,7 +12,7 @@ class TitleSync extends BugYieldCommand
     /**
      * Invoke TitleSync command.
      */
-    public function __invoke(InputInterface $input, OutputInterface $output)
+    public function __invoke(InputInterface $input, OutputInterface $output, Config $config)
     {
         $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
         $output->writeln(sprintf(
@@ -21,7 +22,7 @@ class TitleSync extends BugYieldCommand
         ));
         $output->writeln('Verifying projects in Harvest');
 
-        $projects = $this->getTimetracker()->getProjects($this->getProjectIds($input));
+        $projects = $this->getTimetracker()->getProjects($config->getProjectIds($input));
         if (sizeof($projects) == 0) {
             //We have no projects to work with so bail
             if (!isset($input) || !is_string($input)) {

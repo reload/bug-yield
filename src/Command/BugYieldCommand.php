@@ -31,11 +31,6 @@ abstract class BugYieldCommand
         $this->timetracker = $timetracker;
     }
 
-    protected function getHarvestProjects()
-    {
-        return $this->config->bugtracker('projects');
-    }
-
     /**
      * Number of days back compared to today to look for harvestentries
      * @return Integer Number of days
@@ -154,22 +149,6 @@ abstract class BugYieldCommand
             return true;
         }
         return false;
-    }
-
-    /**
-     * Returns the project ids for this command from command line options or configuration.
-     *
-     * @param InputInterface $input
-     * @return array An array of project identifiers
-     */
-    protected function getProjectIds(InputInterface $input)
-    {
-        $projectIds = ($project = $input->getOption('harvest-project')) ? $project : $this->getHarvestProjects();
-        if (!is_array($projectIds)) {
-            $projectIds = explode(',', $projectIds);
-            array_walk($projectIds, 'trim');
-        }
-        return $projectIds;
     }
 
     /**

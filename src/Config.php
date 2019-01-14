@@ -9,6 +9,13 @@ use Symfony\Component\Yaml\Yaml;
 class Config
 {
     protected $debug = false;
+    /**
+     * Projects to work on.
+     *
+     * Comma separated string.
+     */
+    protected $projects;
+
     protected $harvestConfig;
     protected $bugyieldConfig;
     protected $bugtrackerConfig;
@@ -17,6 +24,9 @@ class Config
     public function __construct(InputInterface $input)
     {
         $this->debug = (bool) $input->getOption('debug');
+        if ($input->hasOption('harvest-project')) {
+            $this->projects = $input->getOption('harvest-project');
+        }
 
         $configFile = $input->getOption('config');
         $bugtracker = $input->getOption('bugtracker');
@@ -78,6 +88,27 @@ class Config
     public function isDebug()
     {
         return $this->debug;
+    }
+
+    /**
+     * Returns the project ids for this command from command line options or configuration.
+     *
+     * @param InputInterface $input
+     * @return array An array of project identifiers
+     */
+    public function getProjectIds(InputInterface $input)
+    {
+        $projectIds = $this->projects ?: $this->getTimetrackerProjects();
+        if (!is_array($projectIds)) {
+            $projectIds = explode(',', $projectIds);
+            array_walk($projectIds, 'trim');
+        }
+        return $projectIds;
+    }
+
+    public function getTimetrackerProjects()
+    {
+        return $this->bugtracker('projects');
     }
 
     public function harvest($key)

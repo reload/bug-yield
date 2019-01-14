@@ -12,7 +12,7 @@ class TimeSync extends BugYieldCommand
     /**
      * Invoke TimeSync command.
      */
-    public function __invoke(InputInterface $input, OutputInterface $output)
+    public function __invoke(InputInterface $input, OutputInterface $output, Config $config)
     {
         //store harvestentries and ticket id's for later comparison and double checking
         $checkHarvestEntries = array();
@@ -21,7 +21,7 @@ class TimeSync extends BugYieldCommand
         $output->writeln(sprintf('Bugtracker is %s (%s)', $this->getBugtracker()->getName(), $this->getBugtrackerURL()));
         $output->writeln('Verifying projects in Harvest');
 
-        $projects = $this->getTimetracker()->getProjects($this->getProjectIds($input));
+        $projects = $this->getTimetracker()->getProjects($config->getProjectIds($input));
         if (sizeof($projects) == 0) {
             //We have no projects to work with so bail
             if (!isset($input) || !is_string($input)) {
