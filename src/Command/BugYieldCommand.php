@@ -42,27 +42,6 @@ abstract class BugYieldCommand
     }
 
     /**
-     * Create direct url to ticket
-     *
-     * @todo move to BugTracker.
-     *
-     * @param String $ticketId ID of ticket, eg "4564" or "SCL-34"
-     * @param Integer $remoteId EventID of the exact worklog item/comment, eg "12344"
-     * @return String Url
-     */
-    protected function getBugtrackerTicketURL($ticketId, $remoteId = null)
-    {
-
-        $urlTicketPattern = $this->config->bugtracker('url_ticket_pattern');
-        if (is_null($urlTicketPattern) || empty($urlTicketPattern)) {
-            // fetch the default fallback url
-            $urlTicketPattern = $this->getBugtracker()->getUrlTicketPattern();
-        }
-
-        return sprintf($this->config->bugtracker('url') . $urlTicketPattern, $ticketId, $remoteId);
-    }
-
-    /**
      * Return ticket entries from projects.
      *
      * @param array $projects An array of projects

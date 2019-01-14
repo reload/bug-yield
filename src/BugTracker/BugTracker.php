@@ -31,5 +31,15 @@ interface BugTracker
 
     public function sanitizeTicketId($ticketId);
 
-    public function getUrlTicketPattern();
+    /**
+     * Get URL to ticket
+     *
+     * @param string $ticketId
+     *   ID of ticket, eg "4564" or "SCL-34".
+     * @param integer $remoteId
+     *   EventID of the exact worklog item/comment, eg "12344".
+     * @return string
+     *   The URL.
+     */
+    public function getTicketURL($ticketId, $remoteId);
 }

@@ -11,6 +11,10 @@ class Jira extends BugTrackerBase
     private $token;
     public $currentUsername;
     private $name   = "Jira";
+
+    /**
+     * Default URL to issues.
+     */
     private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
     private $bugtrackerConfig;
 
@@ -30,9 +34,26 @@ class Jira extends BugTrackerBase
         return $this->bugtrackerConfig['url'];
     }
 
-    public function getUrlTicketPattern()
+    /**
+     * Get URL to ticket
+     *
+     * @param string $ticketId
+     *   ID of ticket, eg "4564" or "SCL-34".
+     * @param integer $remoteId
+     *   EventID of the exact worklog item/comment, eg "12344".
+     * @return string
+     *   The URL.
+     */
+    protected function getTicketURL($ticketId, $remoteId = null)
     {
-        return $this->urlTicketPattern;
+
+        $urlTicketPattern = $this->bugtrackerConfig('url_ticket_pattern');
+        if (is_null($urlTicketPattern) || empty($urlTicketPattern)) {
+            // fetch the default fallback url
+            $urlTicketPattern = $this->urlTicketPattern;
+        }
+
+        return sprintf($this->getURL() . $urlTicketPattern, $ticketId, $remoteId);
     }
 
     protected function getApi($url, $username, $password)

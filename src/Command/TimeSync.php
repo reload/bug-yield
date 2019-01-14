@@ -454,7 +454,7 @@ class TimeSync extends BugYieldCommand
                         $body     .= sprintf(
                             "\nLink to %s: %s",
                             $bugtrackerName,
-                            self::getBugtrackerTicketURL(
+                            $this->getBugtracker()->getTicketURL(
                                 $this->getBugtracker()->sanitizeTicketId($errorData["bugID"]),
                                 $errorData["remoteId"]
                             )
