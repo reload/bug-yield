@@ -28,8 +28,8 @@ specify the path to the config file using the `--config` option.
 
 BugYield currently supports two use cases:
 
-# *Time synchronization*: Mapping entries in Harvest to time elapsed in Jira tickets
-# *Title synchronization*: Mapping ticket titles from Jira to Harvest entries
+1. *Time synchronization*: Mapping entries in Harvest to time elapsed in Jira tickets
+2. *Title synchronization*: Mapping ticket titles from Jira to Harvest entries
 
 BugYield works in the context of one or more Harvest projects
 identified through their id, full name or code. Projects can be
