@@ -21,13 +21,17 @@ class TimeSync extends BugYieldCommand
         $output->writeln(sprintf('Bugtracker is %s (%s)', $this->getBugtracker()->getName(), $this->getBugtracker()->getURL()));
         $output->writeln('Verifying projects in Harvest');
 
-        $projects = $this->getTimetracker()->getProjects($config->getProjectIds($input));
+        $projects = $this->getTimetracker()->getProjects($config->getProjectIds());
         if (sizeof($projects) == 0) {
-            //We have no projects to work with so bail
-            if (!isset($input) || !is_string($input)) {
-                $input = "ARGUMENT IS NULL";
+            // We have no projects to work with so bail.
+            if ($config->getTimetrackerProjects()) {
+                $output->writeln(sprintf(
+                    'Could not find any projects matching: %s',
+                    $config->getTimetrackerProjects()
+                ));
+            } else {
+                $output->writeln(sprintf('Could not find any configured projects matching.'));
             }
-            $output->writeln(sprintf('Could not find any projects matching: %s', $input));
             return;
         }
 

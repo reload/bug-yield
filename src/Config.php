@@ -107,10 +107,9 @@ class Config
     /**
      * Returns the project ids for this command from command line options or configuration.
      *
-     * @param InputInterface $input
      * @return array An array of project identifiers
      */
-    public function getProjectIds(InputInterface $input)
+    public function getProjectIds()
     {
         $projectIds = $this->projects ?: $this->getTimetrackerProjects();
         if (!is_array($projectIds)) {
