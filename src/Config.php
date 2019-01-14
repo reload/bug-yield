@@ -37,7 +37,7 @@ class Config
         $bugtracker = $input->getOption('bugtracker');
 
         if (file_exists($configFile)) {
-            $config = Yaml::parse($configFile);
+            $config = Yaml::parseFile($configFile);
             $this->harvestConfig = $config['harvest'];
             $this->bugyieldConfig = $config['bugyield'];
             if (isset($config[$bugtracker])) {
