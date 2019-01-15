@@ -8,7 +8,10 @@
     }
   },
   "platform": {
-    "php": "7.1"
+    "php": "7.1",
+    "ext-curl": "*",
+    "ext-xml": "*",
+    "ext-mbstring": "*"
   },
   "require": {
     "php": ">=7.1.0",
