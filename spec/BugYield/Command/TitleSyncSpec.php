@@ -74,6 +74,11 @@ class TitleSyncSpec extends ObjectBehavior
             'notes' => '#ID-3 #ID-4',
             'timer-started-at' => '',
         ]);
+        $entries2[] = $this->prophesize(DayEntry::class, [
+            'id' => 8,
+            'notes' => '#ID-3',
+            'timer-started-at' => '111111',
+        ]);
 
         $config->getProjectIds()->willReturn(['project-1', 'project-2']);
         $config->getDaysBack()->willReturn(2);
@@ -88,6 +93,7 @@ class TitleSyncSpec extends ObjectBehavior
         $bugtracker->extractIds('#ID-2')->willReturn(['ID-2']);
         $bugtracker->extractIds('Some random string')->willReturn([]);
         $bugtracker->extractIds('#ID-3 #ID-4')->willReturn(['ID-3', 'ID-4']);
+        $bugtracker->extractIds('#ID-3')->willReturn(['ID-3']);
         $bugtracker->getTitle('ID-2')->willReturn('Ticket number 2');
         $bugtracker->getTitle('ID-3')->willReturn('Ticket number 3');
         $bugtracker->getTitle('ID-4')->willReturn('Ticket number 4');
@@ -113,7 +119,9 @@ class TitleSyncSpec extends ObjectBehavior
             $buffer .= trim($args[0]) . "\n";
         });
 
+        // And ACTION!
         $this->callOnWrappedObject('__invoke', [$output, $config]);
+
         // Eliminate variance from output.
         $buffer = preg_replace(
             '/TitleSync executed: \d{8} \d{2}:\d{2}:\d{2}/',
@@ -134,9 +142,10 @@ Working with project: Project 2                                project-2
 Project Project 3                                project-3          is archived (Latest activity: 121299), ignoring
 Collecting Harvest entries between 00000000 to 00000000
 -- Ignoring entries already billed or otherwise closed.
-Collected 2 ticket entries
+Collected 3 ticket entries
 Updated entry 5: #ID-2[Ticket number 2]
 Updated entry 7: #ID-3[Ticket number 3] #ID-4[Ticket number 4]
+SKIPPED (active timer) entry 8: #ID-3
 TitleSync completed
 
 EOF;
