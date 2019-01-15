@@ -8,10 +8,10 @@
     }
   },
   "platform": {
-    "php": "7.0.3"
+    "php": "7.1"
   },
   "require": {
-    "php": ">=7.0.0",
+    "php": ">=7.1.0",
     "gridonic/hapi": "dev-master",
     "symfony/console": "^3.4",
     "symfony/yaml": "^3.4",
