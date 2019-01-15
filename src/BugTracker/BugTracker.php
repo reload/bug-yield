@@ -9,7 +9,7 @@ interface BugTracker
 
   // Name of the tracker for presentation purposes.
     public function getName();
-    public function getApi($url, $username, $password);
+    public function getURL();
     public function getTitle($ticketId);
     public function extractIds($string);
     public function getTimelogEntries($ticketId);
@@ -31,7 +31,15 @@ interface BugTracker
 
     public function sanitizeTicketId($ticketId);
 
-    public function getUrlTicketPattern();
-
-    public function setOptions($bugtrackerConfig);
+    /**
+     * Get URL to ticket
+     *
+     * @param string $ticketId
+     *   ID of ticket, eg "4564" or "SCL-34".
+     * @param integer $remoteId
+     *   EventID of the exact worklog item/comment, eg "12344".
+     * @return string
+     *   The URL.
+     */
+    public function getTicketURL($ticketId, $remoteId);
 }

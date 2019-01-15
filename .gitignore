@@ -1,4 +1,4 @@
-config.yml
+/config.yml
 error.log
 php_errors.log
 vendor/

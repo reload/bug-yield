@@ -2,43 +2,36 @@
 
 namespace BugYield\Command;
 
+use BugYield\Config;
 use Symfony\Component\Console\Output\OutputInterface;
-use Symfony\Component\Console\Input\InputInterface;
 
 class TitleSync extends BugYieldCommand
 {
-    protected function configure()
+
+    /**
+     * Invoke TitleSync command.
+     */
+    public function __invoke(OutputInterface $output, Config $config)
     {
-        $this
-            ->setName('bugyield:titlesync')
-            ->setAliases(array('tit', 'titlesync'))
-            ->setDescription('Sync ticket titles from bug tracker to Harvest');
-        parent::configure();
-    }
-
-    protected function execute(InputInterface $input, OutputInterface $output)
-    {
-        $this->loadConfig($input);
-        $this->getBugTrackerApi($input);
-
-        //Setup Harvest API access
-        $harvest = $this->getHarvestApi();
-
         $output->writeln('TitleSync executed: ' . date('Ymd H:i:s'));
         $output->writeln(sprintf(
             'Bugtracker is %s (%s)',
-            $this->bugtracker->getName(),
-            $this->getBugtrackerURL()
+            $this->getBugtracker()->getName(),
+            $this->getBugtracker()->getURL()
         ));
         $output->writeln('Verifying projects in Harvest');
 
-        $projects = $this->getProjects($this->getProjectIds($input));
+        $projects = $this->getTimetracker()->getProjects($config->getProjectIds());
         if (sizeof($projects) == 0) {
-            //We have no projects to work with so bail
-            if (!isset($input) || !is_string($input)) {
-                $input = "ARGUMENT IS NULL";
+            // We have no projects to work with so bail.
+            if ($config->getTimetrackerProjects()) {
+                $output->writeln(sprintf(
+                    'Could not find any projects matching: %s',
+                    $config->getTimetrackerProjects()
+                ));
+            } else {
+                $output->writeln(sprintf('Could not find any configured projects matching.'));
             }
-            $output->writeln(sprintf('Could not find any projects matching: %s', $input));
             return;
         }
 
@@ -65,8 +58,7 @@ class TitleSync extends BugYieldCommand
             return;
         }
 
-        $ignore_locked  = true;
-        $from_date      = date("Ymd", time()-(86400*$this->getHarvestDaysBack()));
+        $from_date      = date("Ymd", time()-(86400 * $config->getDaysBack()));
         $to_date        = date("Ymd");
 
         $output->writeln(sprintf(
@@ -74,10 +66,21 @@ class TitleSync extends BugYieldCommand
             $from_date,
             $to_date
         ));
-        if ($ignore_locked) {
-            $output->writeln("-- Ignoring entries already billed or otherwise closed.");
+
+        // As we'd like to update Harvest entries, we'll only work on
+        // non-locked entries.
+        $output->writeln("-- Ignoring entries already billed or otherwise closed.");
+        $ticketEntries = array();
+        foreach ($projects as $project) {
+            $entries = $this->getTimetracker()->getProjectEntries($project->get('id'), true, $from_date, $to_date);
+            foreach ($entries as $entry) {
+                $ids = $this->getBugtracker()->extractIds($entry->get('notes'));
+                if (sizeof($ids) > 0) {
+                    //If the entry has ticket ids it is a ticket entry.
+                    $ticketEntries[] = $entry;
+                }
+            }
         }
-        $ticketEntries = $this->getTicketEntries($projects, $ignore_locked, $from_date, $to_date);
 
         $output->writeln(sprintf('Collected %d ticket entries', sizeof($ticketEntries)));
         if (sizeof($ticketEntries) == 0) {
@@ -104,11 +107,11 @@ class TitleSync extends BugYieldCommand
                     continue;
                 }
 
-                //One entry may - but shouldn't - contain multiple ticket ids
-                foreach ($this->getTicketIds($entry) as $ticketId) {
+                // One entry may - but shouldn't - contain multiple ticket ids.
+                foreach ($this->getBugtracker()->extractIds($entry->get('notes')) as $ticketId) {
                     //Get the case title.
                     $this->debug("/");
-                    $title = $this->bugtracker->getTitle($ticketId);
+                    $title = $this->getBugtracker()->getTitle($ticketId);
                     $this->debug("\\");
 
                     if ($title) {
@@ -179,13 +182,8 @@ class TitleSync extends BugYieldCommand
                 }
 
                 if ($update) {
-                    // adding CDATA tags around the notes - or Harvest will
-                    // fail on chars as < > & -- Harvest removes < and > in
-                    // the website editor btw
-                    $entry->set('notes', $entry->get('notes'));
-
                     //Update the entry in Harvest
-                    $result = $harvest->updateEntry($entry);
+                    $result = $this->getTimetracker()->updateEntry($entry);
                     if ($result->isSuccess()) {
                         $output->writeln(sprintf(
                             'Updated entry %s: %s',

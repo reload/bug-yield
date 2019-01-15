@@ -4,19 +4,24 @@ namespace BugYield\BugTracker;
 
 use JiraApi\Clients\IssueClient as JiraApi;
 
-class JiraBugTracker implements \BugYield\BugTracker\BugTracker
+class Jira extends BugTrackerBase
 {
 
-    private $api    = null;
-    private $token  = null;
-    public $currentUsername = null;
+    private $api;
+    private $token;
+    public $currentUsername;
     private $name   = "Jira";
-    private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
-    private $bugtrackerConfig = null;
 
-    public function setOptions($bugtrackerConfig)
+    /**
+     * Default URL to issues.
+     */
+    private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
+    private $bugtrackerConfig;
+
+    public function __construct($bugtrackerConfig)
     {
         $this->bugtrackerConfig = $bugtrackerConfig;
+        $this->getApi($bugtrackerConfig['url'], $bugtrackerConfig['username'], $bugtrackerConfig['password']);
     }
 
     public function getName()
@@ -24,12 +29,34 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker
         return $this->name;
     }
 
-    public function getUrlTicketPattern()
+    public function getURL()
     {
-        return $this->urlTicketPattern;
+        return $this->bugtrackerConfig['url'];
     }
 
-    public function getApi($url, $username, $password)
+    /**
+     * Get URL to ticket
+     *
+     * @param string $ticketId
+     *   ID of ticket, eg "4564" or "SCL-34".
+     * @param integer $remoteId
+     *   EventID of the exact worklog item/comment, eg "12344".
+     * @return string
+     *   The URL.
+     */
+    public function getTicketURL($ticketId, $remoteId = null)
+    {
+
+        $urlTicketPattern = $this->bugtrackerConfig('url_ticket_pattern');
+        if (is_null($urlTicketPattern) || empty($urlTicketPattern)) {
+            // fetch the default fallback url
+            $urlTicketPattern = $this->urlTicketPattern;
+        }
+
+        return sprintf($this->getURL() . $urlTicketPattern, $ticketId, $remoteId);
+    }
+
+    protected function getApi($url, $username, $password)
     {
         $this->currentUsername = $username;
         $this->api = new JiraApi(rtrim($url, '/') . '/rest/api/2/', $username, $password);
@@ -142,14 +169,17 @@ class JiraBugTracker implements \BugYield\BugTracker\BugTracker
 
                 // Initialize API for the specific user.
                 if ($this->currentUsername != $username) {
-                    print 'SWITCHING USER: ' . $timelog->userEmail."\n";
+                    // @todo: shouldn't just print here, DI'ing some sort of
+                    // logger which would then be wired up to stdout would
+                    // probably be the right way.
+                    print 'Jira: Switching user to ' . $timelog->userEmail."\n";
                     $url = $this->bugtrackerConfig['url'];
                     $this->getApi($url, $username, $password);
                 }
             } else {
-                print "ERROR, USER CREDENTIALS NOT FOUND for $timelog->userEmail \n";
+                print "Jira: Error, user credentials not found for $timelog->userEmail \n";
                 if (!empty($this->bugtrackerConfig['worklog_allow_admin'])) {
-                    print "SWITCHING TO ADMIN USER FOR FALLBACK LOGGING ENABLED... \n";
+                    print "Jira: Switching to admin user for fallback logging enabled... \n";
                     // Switch to admin user if already logged in as specific user.
                     if ($this->currentUsername != $this->bugtrackerConfig['username']) {
                         $this->getApi(

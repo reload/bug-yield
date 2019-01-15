@@ -1,0 +1,37 @@
+version: 2
+
+shared: &shared
+  steps:
+    - checkout
+    - restore_cache:
+        keys:
+          - v1-dependencies-{{ checksum "composer.json" }}
+          - v1-dependencies-
+    - run: composer install
+    - run: ./vendor/bin/phpspec run --format=pretty
+    - save_cache:
+        paths:
+          - ./vendor
+        key: v1-dependencies-{{ checksum "composer.json" }}
+
+jobs:
+  php7.1:
+    <<: *shared
+    docker:
+      - image: circleci/php:7.1-cli
+  php7.2:
+    <<: *shared
+    docker:
+      - image: circleci/php:7.2-cli
+  php7.3:
+    <<: *shared
+    docker:
+      - image: circleci/php:7.3-cli
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - php7.1
+      - php7.2
+      - php7.3

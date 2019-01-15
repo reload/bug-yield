@@ -1,5 +1,7 @@
 # BugYield
 
+![](https://img.shields.io/circleci/project/github/reload/bug-yield/master.svg?style=for-the-badge)
+
 BugYield is a console application which tracks changes to tickets
 (issues, work items, bugs whatever) across systems (two-way) to avoid
 tedious double registrations.
@@ -12,9 +14,7 @@ synchronized in Jira.
 ## Installation
 
 Clone the repository and run composer install to install dependencies.
-The PHP extensions curl, xml and mbstring are required, and BugYield
-has currently been tested with PHP 7.2, though 7.0 should probably
-work.
+The PHP extensions curl, xml and mbstring are required.
 
 ## Configuration
 
