@@ -19,10 +19,6 @@ class TitleSyncSpec extends ObjectBehavior
 {
     protected $prophet;
 
-    // function it_is_initializable()
-    // {
-    //     $this->shouldHaveType(TitleSync::class);
-    // }
     function let(Config $config, BugTracker $bugtracker, TimeTracker $timetracker)
     {
         // We need a Prophet to create mocks on the fly.
@@ -36,6 +32,10 @@ class TitleSyncSpec extends ObjectBehavior
         $this->prophet->checkPredictions();
     }
 
+    /*
+     * This is rather involved, but the code was clearly not written for
+     * testing, so it's positive that it's not worse than this.
+     */
     function it_should_sync_titles(OutputInterface $output, Config $config, BugTracker $bugtracker, TimeTracker $timetracker)
     {
         $projects[] = $this->prophesize(Project::class, [
@@ -49,6 +49,13 @@ class TitleSyncSpec extends ObjectBehavior
             'code' => 'project-2',
             'active' => 'true',
             'name' => 'Project 2',
+        ]);
+        $projects[] = $this->prophesize(Project::class, [
+            'id' => '3',
+            'code' => 'project-3',
+            'active' => 'false',
+            'name' => 'Project 3',
+            'hint-latest-record-at' => '121299',
         ]);
 
         $entries1[] = $this->prophesize(DayEntry::class, [
@@ -124,6 +131,7 @@ Bugtracker is Jira (http://jira.reload.dk)
 Verifying projects in Harvest
 Working with project: Project 1                                project-1
 Working with project: Project 2                                project-2
+Project Project 3                                project-3          is archived (Latest activity: 121299), ignoring
 Collecting Harvest entries between 00000000 to 00000000
 -- Ignoring entries already billed or otherwise closed.
 Collected 2 ticket entries
@@ -132,7 +140,12 @@ Updated entry 7: #ID-3[Ticket number 3] #ID-4[Ticket number 4]
 TitleSync completed
 
 EOF;
-        expect($buffer)->toBe($expectedOutput);
+        try {
+            expect($buffer)->toBe($expectedOutput);
+        } catch (\Exception $e) {
+            print($buffer);
+            throw $e;
+        }
     }
 
     protected function prophesize($class, $data)
