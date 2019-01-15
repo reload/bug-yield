@@ -176,7 +176,7 @@ class Config
      *
      * @return String Url
      */
-    protected function getEmailNotifyOnError()
+    public function getEmailNotifyOnError()
     {
         $email = null;
         if (!empty($this->bugtracker('email_notify_on_error'))) {
