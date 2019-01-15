@@ -98,20 +98,19 @@ class TitleSyncSpec extends ObjectBehavior
         $bugtracker->getTitle('ID-3')->willReturn('Ticket number 3');
         $bugtracker->getTitle('ID-4')->willReturn('Ticket number 4');
 
-        $success = $this->prophet->prophesize(Result::class);
-        $success->isSuccess()->willReturn(true);
-
         // Set the get('notes') to return what was just set.
         $setNotes = function ($args, $entry) {
             $entry->get('notes')->willReturn($args[1]);
         };
         $entries1[0]->set('notes', '#ID-2[Ticket number 2]')->will($setNotes);
-        $timetracker->updateEntry($entries1[0])->willReturn($success);
-        //
         $entries2[0]->set('notes', '#ID-3[Ticket number 3] #ID-4')->will($setNotes);
         $entries2[0]->set('notes', '#ID-3[Ticket number 3] #ID-4[Ticket number 4]')->will($setNotes);
-        $timetracker->updateEntry($entries2[0])->willReturn($success);
 
+        // This is the important part, the result we're really after.
+        $success = $this->prophet->prophesize(Result::class);
+        $success->isSuccess()->willReturn(true);
+        $timetracker->updateEntry($entries1[0])->willReturn($success);
+        $timetracker->updateEntry($entries2[0])->willReturn($success);
 
         // Capture output.
         $buffer = "";
