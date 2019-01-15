@@ -8,7 +8,7 @@ shared: &shared
           - v1-dependencies-{{ checksum "composer.json" }}
           - v1-dependencies-
     - run: composer install
-    - run: ./vendor/bin/phpspec run
+    - run: ./vendor/bin/phpspec run --format=pretty
     - save_cache:
         paths:
           - ./vendor
