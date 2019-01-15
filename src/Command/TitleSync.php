@@ -182,11 +182,6 @@ class TitleSync extends BugYieldCommand
                 }
 
                 if ($update) {
-                    // adding CDATA tags around the notes - or Harvest will
-                    // fail on chars as < > & -- Harvest removes < and > in
-                    // the website editor btw
-                    $entry->set('notes', $entry->get('notes'));
-
                     //Update the entry in Harvest
                     $result = $this->getTimetracker()->updateEntry($entry);
                     if ($result->isSuccess()) {
