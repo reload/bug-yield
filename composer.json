@@ -7,6 +7,9 @@
       "BugYield\\": "src/"
     }
   },
+  "platform": {
+    "php": "7.0.3"
+  },
   "require": {
     "php": ">=7.0.0",
     "gridonic/hapi": "dev-master",
@@ -16,7 +19,7 @@
     "mnapoli/silly-php-di": "^1.2"
   },
   "require-dev": {
-    "phpspec/phpspec": "^5.1",
-    "bossa/phpspec2-expect": "^3.1"
+    "phpspec/phpspec": "^3",
+    "bossa/phpspec2-expect": "^2"
   }
 }
