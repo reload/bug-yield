@@ -12,6 +12,7 @@ use BugYield\TimeTracker\TimeTrackerBase;
 use Psr\Container\ContainerInterface;
 use Silly\Edition\PhpDi\Application;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Yaml\Yaml;
 
 class BugYield extends Application
@@ -28,6 +29,9 @@ class BugYield extends Application
         $this->command('timesync ' . Config::getOptions(), function ($input, $output) {
             // Add input to container for Config to get.
             $this->getContainer()->set(InputInterface::class, $input);
+            // Until we have a proper log service for classes to use, add
+            // output for those who wish to print debugging information.
+            $this->getContainer()->set(OutputInterface::class, $output);
 
             // Define bugtracker. Consider letting Config load all bugtrackers
             // and have BugTrackerBase::getInstance pull out the config for
@@ -61,6 +65,7 @@ class BugYield extends Application
         // switches to disable parts.
         $this->command('titlesync ' . Config::getOptions(), function ($input, $output) {
             $this->getContainer()->set(InputInterface::class, $input);
+            $this->getContainer()->set(OutputInterface::class, $output);
 
             $this->getContainer()->set(
                 BugTracker::class,

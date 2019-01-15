@@ -3,6 +3,7 @@
 namespace BugYield\Command;
 
 use BugYield\Config;
+use BugYield\Mailer;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class TimeSync extends BugYieldCommand
@@ -11,7 +12,7 @@ class TimeSync extends BugYieldCommand
     /**
      * Invoke TimeSync command.
      */
-    public function __invoke(OutputInterface $output, Config $config)
+    public function __invoke(OutputInterface $output, Config $config, Mailer $mailer)
     {
         //store harvestentries and ticket id's for later comparison and double checking
         $checkHarvestEntries = array();
@@ -184,7 +185,7 @@ class TimeSync extends BugYieldCommand
                         $headers .= 'Cc: ' . $notifyOnError . "\r\n";
                     }
 
-                    if (!$this->mail($to, $subject, implode("\n", $body), $headers)) {
+                    if (!$mailer->mail($to, $subject, implode("\n", $body), $headers)) {
                         $output->writeln('  > ERROR: Could not send email to: '. $to);
                     }
                 }
@@ -237,7 +238,7 @@ class TimeSync extends BugYieldCommand
                         if (!empty($notifyOnError)) {
                             $headers .= 'Cc: ' . $notifyOnError . "\r\n";
                         }
-                        $this->mail($to, $subject, implode("\n", $body), $headers);
+                        $mailer->mail($to, $subject, implode("\n", $body), $headers);
                     }
                 }
             }
@@ -498,10 +499,10 @@ class TimeSync extends BugYieldCommand
                             $errorData["reason"]
                         ));
 
-                        if (!$this->mail($errorData["email"], $subject, $body, $headers)) {
+                        if (!$mailer->mail($errorData["email"], $subject, $body, $headers)) {
                             $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"]));
                             // send to admin instead
-                            $this->mail($config->bugyield("email_fallback"), "FALLBACK: " . $subject, $body, $headers);
+                            $mailer->mail($config->bugyield("email_fallback"), "FALLBACK: " . $subject, $body, $headers);
                         } else {
                             $output->writeln(sprintf('  > Email sent to %s', $errorData["email"]));
                         }

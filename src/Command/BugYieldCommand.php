@@ -41,15 +41,6 @@ abstract class BugYieldCommand
         return $this->timetracker;
     }
 
-    // mail wrapper - prepared for enabling debug info
-    protected function mail($to, $subject, $body, $headers)
-    {
-        $this->debug($subject);
-        $this->debug($body);
-        $this->debug("\n --- EOM ---\n");
-        return mail($to, $subject, $body, $headers);
-    }
-
     // if debug is enabled by --debug=true in cmd, then print the statements
     protected function debug($data)
     {
