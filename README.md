@@ -1,5 +1,7 @@
 # BugYield
 
+![](https://img.shields.io/circleci/project/github/reload/bug-yield/di-rearchitecting.svg?style=for-the-badge)
+
 BugYield is a console application which tracks changes to tickets
 (issues, work items, bugs whatever) across systems (two-way) to avoid
 tedious double registrations.
