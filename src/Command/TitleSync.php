@@ -27,7 +27,7 @@ class TitleSync extends BugYieldCommand
             if ($config->getTimetrackerProjects()) {
                 $output->writeln(sprintf(
                     'Could not find any projects matching: %s',
-                    $config->getTimetrackerProjects()
+                    implode(',', $config->getTimetrackerProjects())
                 ));
             } else {
                 $output->writeln(sprintf('Could not find any configured projects matching.'));
