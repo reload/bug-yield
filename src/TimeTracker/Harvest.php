@@ -84,7 +84,7 @@ class Harvest extends TimeTrackerBase
      */
     public function getUsers()
     {
-        if (is_array($this->harvestUsers)) {
+        if (property_exists($this, 'harvestUsers') && is_array($this->harvestUsers)) {
             return $this->harvestUsers;
         }
 
@@ -108,7 +108,7 @@ class Harvest extends TimeTrackerBase
     {
         $taskname = "Unknown";
 
-        if (!is_array($this->harvestTasks) && !isset($this->harvestTasks[$harvest_task_id])) {
+        if (!property_exists($this, 'harvestTasks') || (!is_array($this->harvestTasks) && !isset($this->harvestTasks[$harvest_task_id]))) {
             //Prepare by getting all projects
             $result = $this->harvest->getTasks();
             $harvestTasks = ($result->isSuccess()) ? $result->get('data') : array();
