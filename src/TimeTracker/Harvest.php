@@ -89,7 +89,7 @@ class Harvest extends TimeTrackerBase
         }
 
         // Prepare by getting all projects.
-        $result = $this->getUsers();
+        $result = $this->harvest->getUsers();
         $harvestUsers = ($result->isSuccess()) ? $result->get('data') : array();
 
         $this->harvestUsers = $harvestUsers;
