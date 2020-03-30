@@ -16,6 +16,16 @@ class Harvest extends TimeTrackerBase
      */
     protected $harvest;
 
+    /**
+     * @var array
+     */
+    protected $harvestUsers;
+
+    /**
+     * @var array
+     */
+    protected $harvestTasks;
+
     public function __construct($timetrackerConfig)
     {
         $harvest = new HarvestApi();
@@ -89,7 +99,7 @@ class Harvest extends TimeTrackerBase
         }
 
         // Prepare by getting all projects.
-        $result = $this->getUsers();
+        $result = $this->harvest->getUsers();
         $harvestUsers = ($result->isSuccess()) ? $result->get('data') : array();
 
         $this->harvestUsers = $harvestUsers;
