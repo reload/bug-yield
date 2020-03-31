@@ -251,7 +251,7 @@ class Harvest extends TimeTrackerBase
         $user = false;
         $fullname = trim($fullname);
 
-        foreach ($this->harvest->getUsers() as $Harvest_User) {
+        foreach ($this->getUsers() as $Harvest_User) {
             // only search for active users.
             // prey that you do not have two users with identical names. TODO this is a possible bug in spe
             if ($Harvest_User->get("is-active") == "false") {

@@ -3,6 +3,5 @@
 */30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=reloadjira titlesync | logger -t bug-yield-cron
 
 # BugYield: JIRA KK
-# Disabled as it causes massive disk usage for some reason.
-# 10 23 * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=kkjira tim | logger -t bug-yield-cron
+10 23 * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=kkjira tim | logger -t bug-yield-cron
 */30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=kkjira titlesync | logger -t bug-yield-cron
