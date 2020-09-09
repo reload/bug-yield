@@ -76,18 +76,9 @@ class Jira extends BugTrackerBase
 
     public function getTitle($ticketId)
     {
-        // the Jira throws an exception if the issue does not exists or are
-        // unreachable. We don't want that, hence the try/catch
-        try {
-            $response = $this->getIssue($ticketId);
-        } catch (\Exception $e) {
-            // Valuable information will be returned from Jira here, e.g.:
-            // com.atlassian.jira.rpc.exception.RemotePermissionException:
-            // This issue does not exist or you don't have permission to view
-            // it.
-            error_log(date("d-m-Y H:i:s") . " | ".__CLASS__." FAILED: " . $ticketId . " >> " . $e->getMessage(). "\n", 3, "error.log");
-            return false;
-        }
+        // Jira throws an exception if the issue does not exists or are
+        // unreachable.
+        $response = $this->getIssue($ticketId);
 
         if (is_array($response)) {
             return $response['fields']['summary'];
