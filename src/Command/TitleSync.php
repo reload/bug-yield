@@ -58,7 +58,7 @@ class TitleSync extends BugYieldCommand
             return;
         }
 
-        $from_date      = date("Ymd", time()-(86400 * $config->getDaysBack()));
+        $from_date      = date("Ymd", time() - (86400 * $config->getDaysBack()));
         $to_date        = date("Ymd");
 
         $output->writeln(sprintf(
@@ -124,7 +124,7 @@ class TitleSync extends BugYieldCommand
                     $this->debug("\\");
 
                     if ($title) {
-                        preg_match('/'.$ticketId.'(?:\[(.*?)\])?/i', $entry->get('notes'), $matches);
+                        preg_match('/' . $ticketId . '(?:\[(.*?)\])?/i', $entry->get('notes'), $matches);
                         if (isset($matches[1])) {
                             // No bugs found here yet, but I suspect that we
                             // should encode the matches array. NOTE: Added
@@ -138,8 +138,10 @@ class TitleSync extends BugYieldCommand
                                 // this, then we have a problem as the regex
                                 // will break: "[Bracket] - Antal af noder
                                 // TEST"
-                                if (strpos($title, "[") !== false ||
-                                    strpos($title, "]") !== false) {
+                                if (
+                                    strpos($title, "[") !== false ||
+                                    strpos($title, "]") !== false
+                                ) {
                                     // hmm, brackets detected, initiate
                                     // evasive maneuvre :-)
                                     $output->writeln(sprintf(
@@ -216,7 +218,7 @@ class TitleSync extends BugYieldCommand
                 }
             }
         } catch (\Exception $e) {
-            $output->writeln('Error communicating with bug tracker: '. $e->getMessage());
+            $output->writeln('Error communicating with bug tracker: ' . $e->getMessage());
         }
 
         $this->debug("\n");

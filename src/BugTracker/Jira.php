@@ -119,7 +119,7 @@ class Jira extends BugTrackerBase
         // weed out newlines in notes
         $timelog->notes = preg_replace('/[\n\r]+/m', ' ', $timelog->notes);
 
-        $worklog = new \stdClass;
+        $worklog = new \stdClass();
 
         // Set the Jira worklog ID on the worklog object if this Harvest
         // entry is already tracked in Jira.
@@ -137,13 +137,15 @@ class Jira extends BugTrackerBase
             }
 
             // Bail out if we don't need to actually update anything.
-            if ($entry->harvestId == $timelog->harvestId &&
+            if (
+                $entry->harvestId == $timelog->harvestId &&
                 $entry->user      == $timelog->user      &&
                 $entry->hours     == $timelog->hours     &&
                 $entry->spentAt   == $timelog->spentAt   &&
                 $entry->project   == $timelog->project   &&
                 $entry->taskName  == $timelog->taskName  &&
-                $entry->notes     == $timelog->notes) {
+                $entry->notes     == $timelog->notes
+            ) {
                 return false;
             }
         }
@@ -163,7 +165,7 @@ class Jira extends BugTrackerBase
                     // @todo: shouldn't just print here, DI'ing some sort of
                     // logger which would then be wired up to stdout would
                     // probably be the right way.
-                    print 'Jira: Switching user to ' . $timelog->userEmail."\n";
+                    print 'Jira: Switching user to ' . $timelog->userEmail . "\n";
                     $url = $this->bugtrackerConfig['url'];
                     $this->getApi($url, $username, $password);
                 }
@@ -225,7 +227,7 @@ class Jira extends BugTrackerBase
      */
     private function parseComment($comment)
     {
-        $timelog = new \stdClass;
+        $timelog = new \stdClass();
         $num_matches = preg_match('/^Entry\s#(\d+)\s\[([^]]*)\]:\s"(.*)"\sby\s(.*)\sin\s"(.*)"/m', $comment, $matches);
         if ($num_matches > 0) {
             $timelog->harvestId = $matches[1];
