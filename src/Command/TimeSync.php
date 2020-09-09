@@ -469,7 +469,7 @@ class TimeSync extends BugYieldCommand
                             "\nLink to %s: %s",
                             $bugtrackerName,
                             $this->getBugtracker()->getTicketURL(
-                                $this->getBugtracker()->sanitizeTicketId($errorData["bugID"]),
+                                $errorData["bugID"],
                                 $errorData["remoteId"]
                             )
                         );

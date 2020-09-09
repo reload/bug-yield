@@ -70,7 +70,6 @@ class Jira extends BugTrackerBase
      */
     public function getIssue($ticketId)
     {
-        $ticketId = ltrim($ticketId, '#');
         return $this->api->get($ticketId)->json();
     }
 
@@ -90,7 +89,7 @@ class Jira extends BugTrackerBase
     public function extractIds($string)
     {
         $ids = array();
-        if (preg_match_all('/(#[A-Za-z0-9]+-\d+)/', $string, $matches)) {
+        if (preg_match_all('/([A-Za-z0-9]+-\d+)/', $string, $matches)) {
             $ids = array_map('strtoupper', $matches[1]);
         }
         return array_unique($ids);
@@ -98,7 +97,6 @@ class Jira extends BugTrackerBase
 
     public function getTimelogEntries($ticketId)
     {
-        $ticketId = ltrim($ticketId, '#');
         $response = $this->api->getFullWorklog($ticketId)->json();
 
         $timelogs = array();
@@ -115,7 +113,6 @@ class Jira extends BugTrackerBase
 
     public function saveTimelogEntry($ticketId, $timelog)
     {
-        $ticketId = ltrim($ticketId, '#');
         // weed out newlines in notes
         $timelog->notes = preg_replace('/[\n\r]+/m', ' ', $timelog->notes);
 
@@ -215,7 +212,6 @@ class Jira extends BugTrackerBase
      */
     public function deleteWorkLogEntry($worklogId, $issueId)
     {
-        $issueId = ltrim($issueId, '#');
         $this->api->deleteWorklog($issueId, $worklogId);
         return true;
     }
@@ -223,7 +219,7 @@ class Jira extends BugTrackerBase
     /**
      * A comment entry will be formatted like this:
      *
-     * Entry #71791646 Kode: "Fikser #4029[tester harvest med anton]" by Rasmus Luckow-Nielsen in "BugYield test"
+     * Entry #71791646 Kode: "Fikser PROJ-12[tester harvest med anton]" by Rasmus Luckow-Nielsen in "BugYield test"
      */
     private function parseComment($comment)
     {
@@ -251,14 +247,5 @@ class Jira extends BugTrackerBase
                 $timelog->project,
             )
         );
-    }
-
-    /**
-     * Preparing this for JIRA, e.g. removing #hashmark, transforming "#scl-123" to "SCL-123"
-     */
-    public function sanitizeTicketId($ticketId)
-    {
-        $ticketId = trim(strtoupper(str_replace("#", "", $ticketId)));
-        return $ticketId;
     }
 }
