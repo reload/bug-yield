@@ -67,7 +67,7 @@ class TimeSyncSpec extends ObjectBehavior
 
         $entries1[] = $this->prophesize(DayEntry::class, [
             'id' => 5,
-            'notes' => '#ID-2',
+            'notes' => 'ID-2',
             'timer-started-at' => '',
             'user-id' => 77,
             'task-id' => 66,
@@ -89,7 +89,7 @@ class TimeSyncSpec extends ObjectBehavior
 
         $entries2[] = $this->prophesize(DayEntry::class, [
             'id' => 7,
-            'notes' => '#ID-3 #ID-4',
+            'notes' => 'ID-3 ID-4',
             'timer-started-at' => '',
             'user-id' => 77,
             'task-id' => 66,
@@ -99,7 +99,7 @@ class TimeSyncSpec extends ObjectBehavior
         ]);
         $entries2[] = $this->prophesize(DayEntry::class, [
             'id' => 8,
-            'notes' => '#ID-3',
+            'notes' => 'ID-3',
             'timer-started-at' => '111111',
             'user-id' => 77,
             'task-id' => 66,
@@ -128,10 +128,10 @@ class TimeSyncSpec extends ObjectBehavior
 
         $bugtracker->getName()->willReturn('Jira');
         $bugtracker->getURL()->willReturn('http://jira.reload.dk');
-        $bugtracker->extractIds('#ID-2')->willReturn(['ID-2']);
+        $bugtracker->extractIds('ID-2')->willReturn(['ID-2']);
         $bugtracker->extractIds('Some random string')->willReturn([]);
-        $bugtracker->extractIds('#ID-3 #ID-4')->willReturn(['ID-3', 'ID-4']);
-        $bugtracker->extractIds('#ID-3')->willReturn(['ID-3']);
+        $bugtracker->extractIds('ID-3 ID-4')->willReturn(['ID-3', 'ID-4']);
+        $bugtracker->extractIds('ID-3')->willReturn(['ID-3']);
         $bugtracker->getTitle('ID-2')->willReturn('Ticket number 2');
         $bugtracker->getTitle('ID-3')->willReturn('Ticket number 3');
         $bugtracker->getTitle('ID-4')->willReturn('Ticket number 4');
@@ -145,7 +145,7 @@ class TimeSyncSpec extends ObjectBehavior
             'spentAt' => '20181212',
             'project' => 'Project 1',
             'taskName' => 'Development',
-            'notes' => '#ID-2',
+            'notes' => 'ID-2',
         ])->shouldBeCalled();
 
         $bugtracker->saveTimelogEntry('ID-3', (object) [
@@ -156,7 +156,7 @@ class TimeSyncSpec extends ObjectBehavior
             'spentAt' => '20181214',
             'project' => 'Project 2',
             'taskName' => 'Development',
-            'notes' => '#ID-3 #ID-4',
+            'notes' => 'ID-3 ID-4',
         ])->shouldBeCalled();
 
         $bugtracker->saveTimelogEntry('ID-4', (object) [
@@ -167,7 +167,7 @@ class TimeSyncSpec extends ObjectBehavior
             'spentAt' => '20181214',
             'project' => 'Project 2',
             'taskName' => 'Development',
-            'notes' => '#ID-3 #ID-4',
+            'notes' => 'ID-3 ID-4',
         ])->shouldBeCalled();
 
         // Capture output.
@@ -201,7 +201,7 @@ Working with project: Project 2                                project-2
 Working with project: Project 3                                project-3          ARCHIVED (Latest activity: 121299)
 Collecting Harvest entries between 00000000 to 00000000
 Collected 3 ticket entries
-SKIPPED (active timer) entry #8: #ID-3
+SKIPPED (active timer) entry #8: ID-3
 Starting error checking: 0 tickets will be checked...
 TimeSync completed
 

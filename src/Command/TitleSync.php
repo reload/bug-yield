@@ -100,7 +100,7 @@ class TitleSync extends BugYieldCommand
                     // we have an active timer, bounce off!
                     $this->debug("\n");
                     $output->writeln(sprintf(
-                        'SKIPPED (active timer) entry %s: %s',
+                        'SKIPPED (active timer) entry #%d: %s',
                         $entry->get('id'),
                         $entry->get('notes')
                     ));
