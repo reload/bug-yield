@@ -14,15 +14,15 @@
     "ext-mbstring": "*"
   },
   "require": {
-    "php": ">=7.1.0",
+    "php": ">=7.2.0",
     "gridonic/hapi": "dev-master",
-    "symfony/console": "^3.4",
-    "symfony/yaml": "^3.4",
+    "symfony/console": "^5",
+    "symfony/yaml": "^5",
     "alexkovalevych/jira-api": "^1.0.6",
     "mnapoli/silly-php-di": "^1.2"
   },
   "require-dev": {
-    "phpspec/phpspec": "^3",
-    "bossa/phpspec2-expect": "^2"
+    "phpspec/phpspec": "^6",
+    "bossa/phpspec2-expect": "^3"
   }
 }
