@@ -149,7 +149,6 @@ TitleSync completed
 
 EOF;
         try {
-            print_r($buffer);
             expect($buffer)->toBe($expectedOutput);
         } catch (\Exception $e) {
             print($buffer);
