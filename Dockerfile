@@ -1,11 +1,8 @@
 FROM phusion/baseimage:0.11
 
-COPY ./ /bug-yield/
-
 RUN install_clean php-cli php-curl php-xml php-mbstring git unzip
 
-
-# Link output into /var/www/html.
+COPY ./ /bug-yield/
 
 RUN curl -sS https://getcomposer.org/installer | php && \
     mv composer.phar /usr/local/bin/composer && \
