@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "58e06309e331a9f242963df1bb855d73",
+    "content-hash": "e53a966950cafe7c3e6cd0163b4b2d73",
     "packages": [
         {
             "name": "alexkovalevych/jira-api",
