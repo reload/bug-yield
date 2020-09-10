@@ -60,7 +60,7 @@ class TitleSyncSpec extends ObjectBehavior
 
         $entries1[] = $this->prophesize(DayEntry::class, [
             'id' => 5,
-            'notes' => '#ID-2',
+            'notes' => 'ID-2',
             'timer-started-at' => '',
         ]);
         $entries1[] = $this->prophesize(DayEntry::class, [
@@ -71,12 +71,12 @@ class TitleSyncSpec extends ObjectBehavior
 
         $entries2[] = $this->prophesize(DayEntry::class, [
             'id' => 7,
-            'notes' => '#ID-3 #ID-4',
+            'notes' => 'ID-3 ID-4',
             'timer-started-at' => '',
         ]);
         $entries2[] = $this->prophesize(DayEntry::class, [
             'id' => 8,
-            'notes' => '#ID-3',
+            'notes' => 'ID-3',
             'timer-started-at' => '111111',
         ]);
 
@@ -90,10 +90,10 @@ class TitleSyncSpec extends ObjectBehavior
 
         $bugtracker->getName()->willReturn('Jira');
         $bugtracker->getURL()->willReturn('http://jira.reload.dk');
-        $bugtracker->extractIds('#ID-2')->willReturn(['ID-2']);
+        $bugtracker->extractIds('ID-2')->willReturn(['ID-2']);
         $bugtracker->extractIds('Some random string')->willReturn([]);
-        $bugtracker->extractIds('#ID-3 #ID-4')->willReturn(['ID-3', 'ID-4']);
-        $bugtracker->extractIds('#ID-3')->willReturn(['ID-3']);
+        $bugtracker->extractIds('ID-3 ID-4')->willReturn(['ID-3', 'ID-4']);
+        $bugtracker->extractIds('ID-3')->willReturn(['ID-3']);
         $bugtracker->getTitle('ID-2')->willReturn('Ticket number 2');
         $bugtracker->getTitle('ID-3')->willReturn('Ticket number 3');
         $bugtracker->getTitle('ID-4')->willReturn('Ticket number 4');
@@ -102,9 +102,9 @@ class TitleSyncSpec extends ObjectBehavior
         $setNotes = function ($args, $entry) {
             $entry->get('notes')->willReturn($args[1]);
         };
-        $entries1[0]->set('notes', '#ID-2[Ticket number 2]')->will($setNotes);
-        $entries2[0]->set('notes', '#ID-3[Ticket number 3] #ID-4')->will($setNotes);
-        $entries2[0]->set('notes', '#ID-3[Ticket number 3] #ID-4[Ticket number 4]')->will($setNotes);
+        $entries1[0]->set('notes', 'ID-2[Ticket number 2]')->will($setNotes);
+        $entries2[0]->set('notes', 'ID-3[Ticket number 3] ID-4')->will($setNotes);
+        $entries2[0]->set('notes', 'ID-3[Ticket number 3] ID-4[Ticket number 4]')->will($setNotes);
 
         // This is the important part, the result we're really after.
         $success = $this->prophet->prophesize(Result::class);
@@ -142,9 +142,9 @@ Project Project 3                                project-3          is archived 
 Collecting Harvest entries between 00000000 to 00000000
 -- Ignoring entries already billed or otherwise closed.
 Collected 3 ticket entries
-Updated entry 5: #ID-2[Ticket number 2]
-Updated entry 7: #ID-3[Ticket number 3] #ID-4[Ticket number 4]
-SKIPPED (active timer) entry 8: #ID-3
+Updated entry 5: ID-2[Ticket number 2]
+Updated entry 7: ID-3[Ticket number 3] ID-4[Ticket number 4]
+SKIPPED (active timer) entry #8: ID-3
 TitleSync completed
 
 EOF;

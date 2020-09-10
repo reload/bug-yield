@@ -58,7 +58,7 @@ class TitleSync extends BugYieldCommand
             return;
         }
 
-        $from_date      = date("Ymd", time()-(86400 * $config->getDaysBack()));
+        $from_date      = date("Ymd", time() - (86400 * $config->getDaysBack()));
         $to_date        = date("Ymd");
 
         $output->writeln(sprintf(
@@ -100,7 +100,7 @@ class TitleSync extends BugYieldCommand
                     // we have an active timer, bounce off!
                     $this->debug("\n");
                     $output->writeln(sprintf(
-                        'SKIPPED (active timer) entry %s: %s',
+                        'SKIPPED (active timer) entry #%d: %s',
                         $entry->get('id'),
                         $entry->get('notes')
                     ));
@@ -111,11 +111,20 @@ class TitleSync extends BugYieldCommand
                 foreach ($this->getBugtracker()->extractIds($entry->get('notes')) as $ticketId) {
                     //Get the case title.
                     $this->debug("/");
-                    $title = $this->getBugtracker()->getTitle($ticketId);
+                    try {
+                        $title = $this->getBugtracker()->getTitle($ticketId);
+                    } catch (\Throwable $e) {
+                        error_log(
+                            date("d-m-Y H:i:s") . " | " . __CLASS__ . " FAILED: " .
+                            $ticketId . " >> " . $e->getMessage() . "\n",
+                            3,
+                            "error.log"
+                        );
+                    }
                     $this->debug("\\");
 
                     if ($title) {
-                        preg_match('/'.$ticketId.'(?:\[(.*?)\])?/i', $entry->get('notes'), $matches);
+                        preg_match('/' . $ticketId . '(?:\[(.*?)\])?/i', $entry->get('notes'), $matches);
                         if (isset($matches[1])) {
                             // No bugs found here yet, but I suspect that we
                             // should encode the matches array. NOTE: Added
@@ -129,8 +138,10 @@ class TitleSync extends BugYieldCommand
                                 // this, then we have a problem as the regex
                                 // will break: "[Bracket] - Antal af noder
                                 // TEST"
-                                if (strpos($title, "[") !== false ||
-                                    strpos($title, "]") !== false) {
+                                if (
+                                    strpos($title, "[") !== false ||
+                                    strpos($title, "]") !== false
+                                ) {
                                     // hmm, brackets detected, initiate
                                     // evasive maneuvre :-)
                                     $output->writeln(sprintf(
@@ -207,7 +218,7 @@ class TitleSync extends BugYieldCommand
                 }
             }
         } catch (\Exception $e) {
-            $output->writeln('Error communicating with bug tracker: '. $e->getMessage());
+            $output->writeln('Error communicating with bug tracker: ' . $e->getMessage());
         }
 
         $this->debug("\n");

@@ -18,7 +18,11 @@ class TimeSync extends BugYieldCommand
         $checkHarvestEntries = array();
 
         $output->writeln('TimeSync executed: ' . date('Ymd H:i:s'));
-        $output->writeln(sprintf('Bugtracker is %s (%s)', $this->getBugtracker()->getName(), $this->getBugtracker()->getURL()));
+        $output->writeln(sprintf(
+            'Bugtracker is %s (%s)',
+            $this->getBugtracker()->getName(),
+            $this->getBugtracker()->getURL()
+        ));
         $output->writeln('Verifying projects in Harvest');
 
         $projects = $this->getTimetracker()->getProjects($config->getProjectIds());
@@ -51,7 +55,7 @@ class TimeSync extends BugYieldCommand
             ));
         }
 
-        $from_date        = date("Ymd", time()-(86400 * $config->getDaysBack()));
+        $from_date        = date("Ymd", time() - (86400 * $config->getDaysBack()));
         $to_date          = date("Ymd");
         $uniqueTicketIds  = array();
         $notifyOnError    = $config->getEmailNotifyOnError(); // email to notify on error, typically a PM
@@ -110,7 +114,10 @@ class TimeSync extends BugYieldCommand
                 //Determine base info
                 $taskName             = $this->getTimetracker()->getTaskNameById($entry->get('task-id'));
                 $harvestUserName      = $this->getTimetracker()->getUserNameById($entry->get("user-id"));
-                $harvestProjectName   = $this->getTimetracker()->getProjectNameById($projects, $entry->get("project-id"));
+                $harvestProjectName   = $this->getTimetracker()->getProjectNameById(
+                    $projects,
+                    $entry->get("project-id")
+                );
                 $harvestTimestamp     = $entry->get("spent-at");
 
                 $entryText = sprintf(
@@ -130,7 +137,7 @@ class TimeSync extends BugYieldCommand
 
                 $email = $this->getTimetracker()->getUserEmailById($entry->get('user-id')) ?:
                     $config->bugyield("email_fallback");
-                $worklog = new \stdClass;
+                $worklog = new \stdClass();
                 $worklog->harvestId = $entry->get('id');
                 $worklog->user      = $harvestUserName;
                 $worklog->userEmail = $email;
@@ -142,8 +149,10 @@ class TimeSync extends BugYieldCommand
 
                 // report an error if you have one single ticket entry with more than
                 // a configurable number of hours straight. That's very odd.
-                if ($config->getMaxEntryHours() &&
-                    $hoursPerTicket > $config->getMaxEntryHours()) {
+                if (
+                    $config->getMaxEntryHours() &&
+                    $hoursPerTicket > $config->getMaxEntryHours()
+                ) {
                     $output->writeln(sprintf(
                         'WARNING: More than %s hours registrered on %s: %s (%s hours). Email sent to user.',
                         $config->getMaxEntryHours(),
@@ -186,7 +195,7 @@ class TimeSync extends BugYieldCommand
                     }
 
                     if (!$mailer->mail($to, $subject, implode("\n", $body), $headers)) {
-                        $output->writeln('  > ERROR: Could not send email to: '. $to);
+                        $output->writeln('  > ERROR: Could not send email to: ' . $to);
                     }
                 }
 
@@ -211,8 +220,10 @@ class TimeSync extends BugYieldCommand
                         // save entries for the error checking below.
                         // This only runs/checks if a ticket has been updated.
                         if ($updated || $config->doExtendedTest()) {
-                            if (empty($uniqueTicketIds) ||
-                                !array_key_exists($id, $uniqueTicketIds)) {
+                            if (
+                                empty($uniqueTicketIds) ||
+                                !array_key_exists($id, $uniqueTicketIds)
+                            ) {
                                 $uniqueTicketIds[$id] = $id;
                             }
                         }
@@ -278,8 +289,10 @@ class TimeSync extends BugYieldCommand
                         // probably not a Harvest linked worklog entry
                         continue;
                     }
-                    if (!isset($checkBugtrackerEntries[$worklog->harvestId]) ||
-                        !in_array($fbId, $checkHarvestEntries[$worklog->harvestId])) {
+                    if (
+                        !isset($checkBugtrackerEntries[$worklog->harvestId]) ||
+                        !in_array($fbId, $checkHarvestEntries[$worklog->harvestId])
+                    ) {
                         $possibleErrors[] = array($fbId => $worklog);
                     }
                 }
@@ -361,10 +374,12 @@ class TimeSync extends BugYieldCommand
                                 if ($config->fixMissingReferences()) {
                                     $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... " .
                                                      "(set fix_missing_references to false to disable this)");
-                                    if ($this->getBugtracker()->deleteWorkLogEntry(
-                                        $errorData["remoteId"],
-                                        $errorData["bugID"]
-                                    )) {
+                                    if (
+                                        $this->getBugtracker()->deleteWorkLogEntry(
+                                            $errorData["remoteId"],
+                                            $errorData["bugID"]
+                                        )
+                                    ) {
                                         $output->writeln(sprintf(
                                             "  > AUTO-FIXED an potential %s. WORKLOG HAS BEEN AUTO REMOVED BY " .
                                             "BUGYIELD!",
@@ -405,10 +420,11 @@ class TimeSync extends BugYieldCommand
                             if ($config->fixMissingReferences()) {
                                 $output->writeln("  > Fix Missing References is ON: Trying to auto-fix issue... " .
                                                  "(set fix_missing_references to false to disable this)");
-                                if ($this->getBugtracker()->deleteWorkLogEntry(
-                                    $errorData["remoteId"],
-                                    $errorData["bugID"]
-                                )
+                                if (
+                                    $this->getBugtracker()->deleteWorkLogEntry(
+                                        $errorData["remoteId"],
+                                        $errorData["bugID"]
+                                    )
                                 ) {
                                     $output->writeln(sprintf(
                                         "  > AUTO-FIXED an potential %s. REFERENCE HAS BEEN AUTO REMOVED BY BUGYIELD!",
@@ -442,7 +458,7 @@ class TimeSync extends BugYieldCommand
                         // data for the mail
                         $unixdate         = strtotime($errorData["date"]);
                         $year             = date("Y", $unixdate); // YYYY
-                        $dayno            = date("z", $unixdate)+1; // Day of the year, eg. 203
+                        $dayno            = date("z", $unixdate) + 1; // Day of the year, eg. 203
                         $harvestEntryUrl  = sprintf(
                             self::getHarvestURL() . "daily/%d/%d/%d#timer_link_%d",
                             $errorData["userid"],
@@ -469,7 +485,7 @@ class TimeSync extends BugYieldCommand
                             "\nLink to %s: %s",
                             $bugtrackerName,
                             $this->getBugtracker()->getTicketURL(
-                                $this->getBugtracker()->sanitizeTicketId($errorData["bugID"]),
+                                $errorData["bugID"],
                                 $errorData["remoteId"]
                             )
                         );
@@ -502,7 +518,12 @@ class TimeSync extends BugYieldCommand
                         if (!$mailer->mail($errorData["email"], $subject, $body, $headers)) {
                             $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"]));
                             // send to admin instead
-                            $mailer->mail($config->bugyield("email_fallback"), "FALLBACK: " . $subject, $body, $headers);
+                            $mailer->mail(
+                                $config->bugyield("email_fallback"),
+                                "FALLBACK: " . $subject,
+                                $body,
+                                $headers
+                            );
                         } else {
                             $output->writeln(sprintf('  > Email sent to %s', $errorData["email"]));
                         }
@@ -510,7 +531,7 @@ class TimeSync extends BugYieldCommand
                 }
             }
         } catch (\Exception $e) {
-            $output->writeln('Error communicating with bugtracker: '. $e->getMessage());
+            $output->writeln('Error communicating with bugtracker: ' . $e->getMessage());
         }
 
         $output->writeln("TimeSync completed");

@@ -15,10 +15,6 @@ shared: &shared
         key: v1-dependencies-{{ checksum "composer.json" }}
 
 jobs:
-  php7.1:
-    <<: *shared
-    docker:
-      - image: circleci/php:7.1-cli
   php7.2:
     <<: *shared
     docker:
@@ -27,11 +23,15 @@ jobs:
     <<: *shared
     docker:
       - image: circleci/php:7.3-cli
+  php7.4:
+    <<: *shared
+    docker:
+      - image: circleci/php:7.4-cli
 
 workflows:
   version: 2
   build:
     jobs:
-      - php7.1
       - php7.2
       - php7.3
+      - php7.4

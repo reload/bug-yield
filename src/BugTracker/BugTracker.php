@@ -29,8 +29,6 @@ interface BugTracker
 
     public function deleteWorkLogEntry($worklogId, $issue);
 
-    public function sanitizeTicketId($ticketId);
-
     /**
      * Get URL to ticket
      *

@@ -70,24 +70,14 @@ class Jira extends BugTrackerBase
      */
     public function getIssue($ticketId)
     {
-        $ticketId = ltrim($ticketId, '#');
         return $this->api->get($ticketId)->json();
     }
 
     public function getTitle($ticketId)
     {
-        // the Jira throws an exception if the issue does not exists or are
-        // unreachable. We don't want that, hence the try/catch
-        try {
-            $response = $this->getIssue($ticketId);
-        } catch (\Exception $e) {
-            // Valuable information will be returned from Jira here, e.g.:
-            // com.atlassian.jira.rpc.exception.RemotePermissionException:
-            // This issue does not exist or you don't have permission to view
-            // it.
-            error_log(date("d-m-Y H:i:s") . " | ".__CLASS__." FAILED: " . $ticketId . " >> " . $e->getMessage(). "\n", 3, "error.log");
-            return false;
-        }
+        // Jira throws an exception if the issue does not exists or are
+        // unreachable.
+        $response = $this->getIssue($ticketId);
 
         if (is_array($response)) {
             return $response['fields']['summary'];
@@ -99,7 +89,7 @@ class Jira extends BugTrackerBase
     public function extractIds($string)
     {
         $ids = array();
-        if (preg_match_all('/(#[A-Za-z0-9]+-\d+)/', $string, $matches)) {
+        if (preg_match_all('/([A-Za-z0-9]+-\d+)/', $string, $matches)) {
             $ids = array_map('strtoupper', $matches[1]);
         }
         return array_unique($ids);
@@ -107,7 +97,6 @@ class Jira extends BugTrackerBase
 
     public function getTimelogEntries($ticketId)
     {
-        $ticketId = ltrim($ticketId, '#');
         $response = $this->api->getFullWorklog($ticketId)->json();
 
         $timelogs = array();
@@ -124,11 +113,10 @@ class Jira extends BugTrackerBase
 
     public function saveTimelogEntry($ticketId, $timelog)
     {
-        $ticketId = ltrim($ticketId, '#');
         // weed out newlines in notes
         $timelog->notes = preg_replace('/[\n\r]+/m', ' ', $timelog->notes);
 
-        $worklog = new \stdClass;
+        $worklog = new \stdClass();
 
         // Set the Jira worklog ID on the worklog object if this Harvest
         // entry is already tracked in Jira.
@@ -146,13 +134,15 @@ class Jira extends BugTrackerBase
             }
 
             // Bail out if we don't need to actually update anything.
-            if ($entry->harvestId == $timelog->harvestId &&
+            if (
+                $entry->harvestId == $timelog->harvestId &&
                 $entry->user      == $timelog->user      &&
                 $entry->hours     == $timelog->hours     &&
                 $entry->spentAt   == $timelog->spentAt   &&
                 $entry->project   == $timelog->project   &&
                 $entry->taskName  == $timelog->taskName  &&
-                $entry->notes     == $timelog->notes) {
+                $entry->notes     == $timelog->notes
+            ) {
                 return false;
             }
         }
@@ -172,7 +162,7 @@ class Jira extends BugTrackerBase
                     // @todo: shouldn't just print here, DI'ing some sort of
                     // logger which would then be wired up to stdout would
                     // probably be the right way.
-                    print 'Jira: Switching user to ' . $timelog->userEmail."\n";
+                    print 'Jira: Switching user to ' . $timelog->userEmail . "\n";
                     $url = $this->bugtrackerConfig['url'];
                     $this->getApi($url, $username, $password);
                 }
@@ -222,7 +212,6 @@ class Jira extends BugTrackerBase
      */
     public function deleteWorkLogEntry($worklogId, $issueId)
     {
-        $issueId = ltrim($issueId, '#');
         $this->api->deleteWorklog($issueId, $worklogId);
         return true;
     }
@@ -230,11 +219,11 @@ class Jira extends BugTrackerBase
     /**
      * A comment entry will be formatted like this:
      *
-     * Entry #71791646 Kode: "Fikser #4029[tester harvest med anton]" by Rasmus Luckow-Nielsen in "BugYield test"
+     * Entry #71791646 Kode: "Fikser PROJ-12[tester harvest med anton]" by Rasmus Luckow-Nielsen in "BugYield test"
      */
     private function parseComment($comment)
     {
-        $timelog = new \stdClass;
+        $timelog = new \stdClass();
         $num_matches = preg_match('/^Entry\s#(\d+)\s\[([^]]*)\]:\s"(.*)"\sby\s(.*)\sin\s"(.*)"/m', $comment, $matches);
         if ($num_matches > 0) {
             $timelog->harvestId = $matches[1];
@@ -258,14 +247,5 @@ class Jira extends BugTrackerBase
                 $timelog->project,
             )
         );
-    }
-
-    /**
-     * Preparing this for JIRA, e.g. removing #hashmark, transforming "#scl-123" to "SCL-123"
-     */
-    public function sanitizeTicketId($ticketId)
-    {
-        $ticketId = trim(strtoupper(str_replace("#", "", $ticketId)));
-        return $ticketId;
     }
 }
