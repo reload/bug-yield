@@ -112,10 +112,10 @@ entry, and it will fail.
 
 It works like this:
 
-1. Add `#<ticket-id>` (without the <>'s) in the Harvest entry notes
+1. Add `<ticket-id>` (without the <>'s) in the Harvest entry notes
 2. Run the titlesync command
 3. The entry notes in Harvest are updated with the ticket titles from
-   Jira replacing `#<ticket-id>` with `#<ticket-id>[<ticket-title>]`
+   Jira replacing `<ticket-id>` with `<ticket-id>[<ticket-title>]`
 
 If a Jira ticket title is changed at a later point in time, subsequent
 execution of the titlesync command makes sure that the Harvest entry
