@@ -24,6 +24,9 @@ config.sample.yml and update it with account information. If your
 configuration file is not located in the root directory you can
 specify the path to the config file using the `--config` option.
 
+In order to send mails it needs a SendGrid key supplied in the
+environment variable `SENDGRID_API_KEY`.
+
 ## Usage
 
 BugYield currently supports two use cases:

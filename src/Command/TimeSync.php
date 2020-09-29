@@ -5,6 +5,7 @@ namespace BugYield\Command;
 use BugYield\Config;
 use BugYield\Mailer;
 use Symfony\Component\Console\Output\OutputInterface;
+use Throwable;
 
 class TimeSync extends BugYieldCommand
 {
@@ -163,10 +164,7 @@ class TimeSync extends BugYieldCommand
 
                     $email = $this->getTimetracker()->getUserEmailById($entry->get('user-id')) ?:
                         $config->bugyield("email_fallback");
-
-                    $to = '"' . $this->getTimetracker()->getUserNameById($entry->get('user-id')) .
-                        '" <' . $email .
-                        '>';
+                    $name = $this->getTimetracker()->getUserNameById($entry->get('user-id'));
                     $subject = sprintf(
                         'BugYield warning: %s hours registered on %s. Really?',
                         $worklog->hours,
@@ -186,16 +184,11 @@ class TimeSync extends BugYieldCommand
                     $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
                     $body[] = 'in Harvest please ask your friendly BugYield administrator: ' .
                         $config->bugyield("email_from");
-                    $headers = 'From: ' . $config->bugyield("email_from") .
-                        "\r\n" . 'Reply-To: ' . $config->bugyield("email_from") .
-                        "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
-                    // add CC if defined in the config
-                    if (!empty($notifyOnError)) {
-                        $headers .= 'Cc: ' . $notifyOnError . "\r\n";
-                    }
 
-                    if (!$mailer->mail($to, $subject, implode("\n", $body), $headers)) {
-                        $output->writeln('  > ERROR: Could not send email to: ' . $to);
+                    try {
+                        $mailer->mail($email, $name, $subject, implode("\n", $body), true);
+                    } catch (Throwable $e) {
+                        $output->writeln(sprintf('  > ERROR: Could not send email to "%s": %s', $email, $e->getMessage()));
                     }
                 }
 
@@ -230,8 +223,7 @@ class TimeSync extends BugYieldCommand
                     } catch (\Exception $e) {
                         $email = $this->getTimetracker()->getUserEmailById($entry->get('user-id')) ?:
                             $config->bugyield("email_fallback");
-                        $to = '"' . $this->getTimetracker()->getUserNameById($entry->get('user-id')) . '" <' .
-                            $email . '>';
+                        $name = $this->getTimetracker()->getUserNameById($entry->get('user-id'));
                         $subject = $id . ': time sync exception';
                         $body = array();
                         $body[] = 'Trying to sync Harvest entry:';
@@ -243,13 +235,16 @@ class TimeSync extends BugYieldCommand
                         $body[] = 'NOTICE: If you have no clue what you should do to fix your time registration';
                         $body[] = 'in Harvest please ask your friendly BugYield administrator: ' .
                             $config->bugyield("email_from");
-                        $headers = 'From: ' . $config->bugyield("email_from") . "\r\n" . 'Reply-To: ' .
-                            $config->bugyield("email_from") . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
-                        // add CC if defined in the config
-                        if (!empty($notifyOnError)) {
-                            $headers .= 'Cc: ' . $notifyOnError . "\r\n";
+
+                        try {
+                            $mailer->mail($email, $name, $subject, implode("\n", $body), true);
+                        } catch (Throwable $e) {
+                            $output->writeln(sprintf(
+                                '  > ERROR: Could not send email to "%s": %s',
+                                $email,
+                                $e->getMessage()
+                            ));
                         }
-                        $mailer->mail($to, $subject, implode("\n", $body), $headers);
                     }
                 }
             }
@@ -467,6 +462,13 @@ class TimeSync extends BugYieldCommand
                             $errorData["entryid"]
                         );
 
+                        $output->writeln(sprintf(
+                            "  > Sync error found in %s: %s - Reason: %s",
+                            $errorData["bugID"],
+                            $errorData["bugNote"],
+                            $errorData["reason"]
+                        ));
+
                         // build the mail to be sent
                         $subject  = sprintf(
                             "BugYield Synchronisation error found in %s registered %s by %s",
@@ -501,31 +503,34 @@ class TimeSync extends BugYieldCommand
                             "editing/removing the logdata from %s and subtract the time added.",
                             $bugtrackerName
                         );
-                        $headers  = 'From: ' . $config->bugyield("email_from") . "\r\n" . 'Reply-To: ' .
-                            $config->bugyield("email_from") . "\r\n" . 'X-Mailer: PHP/' . phpversion() . "\r\n";
-                        // add CC if defined in the config
-                        if (!empty($notifyOnError)) {
-                            $headers .= 'Cc: ' . $notifyOnError . "\r\n";
-                        }
 
-                        $output->writeln(sprintf(
-                            "  > Sync error found in %s: %s - Reason: %s",
-                            $errorData["bugID"],
-                            $errorData["bugNote"],
-                            $errorData["reason"]
-                        ));
-
-                        if (!$mailer->mail($errorData["email"], $subject, $body, $headers)) {
-                            $output->writeln(sprintf('  > Could not send email to %s', $errorData["email"]));
-                            // send to admin instead
-                            $mailer->mail(
-                                $config->bugyield("email_fallback"),
-                                "FALLBACK: " . $subject,
-                                $body,
-                                $headers
-                            );
-                        } else {
+                        try {
+                            $mailer->mail($errorData["email"], null, $subject, implode("\n", $body), true);
                             $output->writeln(sprintf('  > Email sent to %s', $errorData["email"]));
+                        } catch (Throwable $e) {
+                            $output->writeln(sprintf(
+                                '  > ERROR: Could not send email to "%s": %s',
+                                $errorData["email"],
+                                $e->getMessage()
+                            ));
+
+                            $output->writeln(sprintf('  > Trying fallback ', $config->bugyield("email_fallback")));
+
+                            try {
+                                $mailer->mail(
+                                    $config->bugyield("email_fallback"),
+                                    null,
+                                    "FALLBACK: " . $subject,
+                                    implode("\n", $body),
+                                    true
+                                );
+                            } catch (Throwable $e) {
+                                $output->writeln(sprintf(
+                                    '  > ERROR: Could not send email to fallback "%s": %s',
+                                    $config->bugyield("email_fallback"),
+                                    $e->getMessage()
+                                ));
+                            }
                         }
                     }
                 }
