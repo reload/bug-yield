@@ -148,7 +148,7 @@ class Jira extends BugTrackerBase
         }
 
         $worklog->comment = $this->formatComment($timelog);
-        $worklog->timeSpent = $timelog->hours . 'h';
+        $worklog->timeSpentSeconds = $timelog->hours * 60 * 60;
 
         // Check if individual logging is enabled.
         if (!empty($this->bugtrackerConfig['worklog_individual_logins'])) {
