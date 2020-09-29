@@ -24,6 +24,9 @@ config.sample.yml and update it with account information. If your
 configuration file is not located in the root directory you can
 specify the path to the config file using the `--config` option.
 
+In order to send mails it needs a SendGrid key supplied in the
+environment variable `SENDGRID_API_KEY`.
+
 ## Usage
 
 BugYield currently supports two use cases:
@@ -112,10 +115,10 @@ entry, and it will fail.
 
 It works like this:
 
-1. Add `#<ticket-id>` (without the <>'s) in the Harvest entry notes
+1. Add `<ticket-id>` (without the <>'s) in the Harvest entry notes
 2. Run the titlesync command
 3. The entry notes in Harvest are updated with the ticket titles from
-   Jira replacing `#<ticket-id>` with `#<ticket-id>[<ticket-title>]`
+   Jira replacing `<ticket-id>` with `<ticket-id>[<ticket-title>]`
 
 If a Jira ticket title is changed at a later point in time, subsequent
 execution of the titlesync command makes sure that the Harvest entry
