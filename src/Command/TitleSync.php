@@ -131,7 +131,7 @@ class TitleSync extends BugYieldCommand
                     $this->debug("\\");
                 }
 
-                $newNote = $this->injectTitles($entry->get('notes'), $titles);
+                $newNote = $this->injectTitles($entry->get('notes'), $titles, $output);
                 if ($newNote) {
                     $entry->set('notes', $newNote);
 
@@ -175,7 +175,7 @@ class TitleSync extends BugYieldCommand
      *
      * @return false|string
      */
-    protected function injectTitles(string $note, array $titles)
+    public function injectTitles(string $note, array $titles, OutputInterface $output)
     {
         $newNote = $note;
         foreach ($titles as $ticketId => $title) {

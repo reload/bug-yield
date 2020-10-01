@@ -278,6 +278,41 @@ EOF;
         }
     }
 
+    function it_should_replace_titles(OutputInterface $output)
+    {
+        $this->injectTitles(
+            'ID-1',
+            ['ID-1' => 'The title'],
+            $output
+        )->shouldReturn('ID-1[The title]');
+
+        $this->injectTitles(
+            'ID-1 ID-2',
+            ['ID-1' => 'The title', 'ID-2' => 'The second title'],
+            $output
+        )->shouldReturn('ID-1[The title] ID-2[The second title]');
+
+        $this->injectTitles(
+            'ID-1[An old title]',
+            ['ID-1' => 'The title'],
+            $output
+        )->shouldReturn('ID-1[The title]');
+
+        $this->injectTitles(
+            'ID-1',
+            ['ID-1' => 'The [bracketed] title'],
+            $output
+        )->shouldReturn('ID-1[The [bracketed] title]');
+
+        $this->injectTitles(
+            'ID-1[The old [bracketed] title]postfix',
+            ['ID-1' => 'The [bracketed] title'],
+            $output
+        )->shouldReturn(
+            'ID-1[The [bracketed] title] (BugYield removed comments due to [brackets] in the ticket title)'
+        );
+    }
+
     protected function prophesize($class, $data)
     {
         $project = $this->prophet->prophesize($class);
