@@ -5,9 +5,7 @@ namespace BugYield\Command;
 use BugYield\BugTracker\BugTracker;
 use BugYield\TimeTracker\TimeTracker;
 use BugYield\Config;
-
 use Harvest\Model\DayEntry;
-
 use Symfony\Component\Console\Input\InputInterface;
 
 abstract class BugYieldCommand
@@ -52,6 +50,6 @@ abstract class BugYieldCommand
     // little helper function for multibyte string padding
     protected function mbStrPad($input, $pad_length, $pad_string, $pad_style = STR_PAD_RIGHT, $encoding = "UTF-8")
     {
-        return str_pad($input, strlen($input)-mb_strlen($input, $encoding)+$pad_length, $pad_string, $pad_style);
+        return str_pad($input, strlen($input) - mb_strlen($input, $encoding) + $pad_length, $pad_string, $pad_style);
     }
 }

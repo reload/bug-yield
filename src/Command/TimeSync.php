@@ -188,7 +188,11 @@ class TimeSync extends BugYieldCommand
                     try {
                         $mailer->mail($email, $name, $subject, implode("\n", $body), true);
                     } catch (Throwable $e) {
-                        $output->writeln(sprintf('  > ERROR: Could not send email to "%s": %s', $email, $e->getMessage()));
+                        $output->writeln(sprintf(
+                            '  > ERROR: Could not send email to "%s": %s',
+                            $email,
+                            $e->getMessage()
+                        ));
                     }
                 }
 

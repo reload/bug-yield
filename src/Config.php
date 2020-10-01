@@ -78,7 +78,8 @@ class Config
     public static function getOptionsDescriptions()
     {
         return [
-            '--harvest-project' => 'One or more Harvest projects (id, name or code) separated by "," (comma). Use "all" for all projects',
+            '--harvest-project' => 'One or more Harvest projects (id, name or code) ' .
+            'separated by "," (comma). Use "all" for all projects',
             '--config' => 'Path to the configuration file',
             '--bugtracker' => 'Bug Tracker to yield',
             '--debug' => 'Show debug info',

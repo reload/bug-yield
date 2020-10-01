@@ -15,7 +15,8 @@ class Jira extends BugTrackerBase
     /**
      * Default URL to issues.
      */
-    private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
+    private $urlTicketPattern = '/browse/%1$s?focusedWorklogId=%2$d&page=com.atlassian.jira.plugin.' .
+        'system.issuetabpanels%%3Aworklog-tabpanel#worklog-%2$d';
     private $bugtrackerConfig;
 
     public function __construct($bugtrackerConfig)
