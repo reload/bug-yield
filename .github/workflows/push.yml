@@ -1,0 +1,25 @@
+on: push
+name: Build, test, and deploy
+jobs:
+  spec_tests:
+    name: Spec tests
+    if: '!github.event.deleted'
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Setup PHP, with composer and extensions
+      uses: shivammathur/setup-php@master
+      with:
+        php-version: 7.3
+        coverage: none
+    - name: Install Dependencies
+      run: |
+        composer install --no-interaction --no-scripts --no-progress --prefer-dist
+    - name: Spec tests
+      run: |
+        phpdbg -qrr ./vendor/bin/phpspec run
+    - name: Upload coverage report to Codecov
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+      run: |
+        bash <(curl -s https://codecov.io/bash) -c -F spec -n Spec

@@ -2,3 +2,4 @@
 error.log
 php_errors.log
 vendor/
+/clover.xml

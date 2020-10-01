@@ -134,7 +134,8 @@ class Harvest extends TimeTrackerBase
         return $taskname;
     }
 
-    public function getProjectEntries($project, $only_editable, $from_date, $to_date) {
+    public function getProjectEntries($project, $only_editable, $from_date, $to_date)
+    {
         $range = new Range($from_date, $to_date);
         $result = $this->harvest->getProjectEntries($project, $range);
         $ticketEntries = array();
@@ -142,9 +143,11 @@ class Harvest extends TimeTrackerBase
         if ($result->isSuccess()) {
             foreach ($result->get('data') as $entry) {
                 // Check that the entry is actually writable.
-                if ($only_editable == true &&
+                if (
+                    $only_editable == true &&
                     ($entry->get("is-closed") == "true" ||
-                     $entry->get("is-billed") == "true")) {
+                     $entry->get("is-billed") == "true")
+                ) {
                     continue;
                 }
 

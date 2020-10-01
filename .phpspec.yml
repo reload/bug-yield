@@ -1,0 +1,10 @@
+
+extensions:
+  LeanPHP\PhpSpec\CodeCoverage\CodeCoverageExtension:
+    format:
+      - clover
+    output:
+      clover: clover.xml
+    whitelist:
+      - src
+formatter.name: pretty
