@@ -170,6 +170,114 @@ EOF;
         }
     }
 
+    function it_should_handle_missing_issues(
+        OutputInterface $output,
+        Config $config,
+        BugTracker $bugtracker,
+        TimeTracker $timetracker
+    ) {
+        $projects[] = $this->prophesize(Project::class, [
+            'id' => '1',
+            'code' => 'project-1',
+            'active' => 'true',
+            'name' => 'Project 1',
+        ]);
+
+        $entries1[] = $this->prophesize(DayEntry::class, [
+            'id' => 5,
+            'notes' => 'ID-1',
+            'timer-started-at' => '',
+        ]);
+        $entries1[] = $this->prophesize(DayEntry::class, [
+            'id' => 6,
+            'notes' => 'ID-2',
+            'timer-started-at' => '',
+        ]);
+        $entries1[] = $this->prophesize(DayEntry::class, [
+            'id' => 7,
+            'notes' => 'ID-3',
+            'timer-started-at' => '',
+        ]);
+
+        $config->getProjectIds()->willReturn(['project-1']);
+        $config->getDaysBack()->willReturn(2);
+        $config->isDebug()->willReturn(false);
+
+        $timetracker->getProjects(['project-1'])->willReturn($projects);
+        $timetracker->getProjectEntries(
+            '1',
+            true,
+            date("Ymd", time() - (86400 * 2)),
+            date("Ymd")
+        )->willReturn($entries1);
+
+        $bugtracker->getName()->willReturn('Jira');
+        $bugtracker->getURL()->willReturn('http://jira.reload.dk');
+        $bugtracker->extractIds('ID-1')->willReturn(['ID-1']);
+        $bugtracker->extractIds('ID-2')->willReturn(['ID-2']);
+        $bugtracker->extractIds('ID-3')->willReturn(['ID-3']);
+        $bugtracker->getTitle('ID-1')->willReturn('Ticket number 1');
+        // Throw error when getting the title of the non-existing ticket.
+        $bugtracker->getTitle('ID-2')->willThrow(new \RuntimeException('bad ticket'));
+        $bugtracker->getTitle('ID-3')->willReturn('Ticket number 3');
+
+        // Set the get('notes') to return what was just set.
+        $setNotes = function ($args, $entry) {
+            $entry->get('notes')->willReturn($args[1]);
+        };
+        $entries1[0]->set('notes', 'ID-1[Ticket number 1]')->will($setNotes);
+        // The entry with the non-existent issue shouldn't be updated.
+        $entries1[1]->set('notes', 'ID-2')->shouldNotBeCalled();
+        $entries1[2]->set('notes', 'ID-3[Ticket number 3]')->will($setNotes);
+
+        $success = $this->prophet->prophesize(Result::class);
+        $success->isSuccess()->willReturn(true);
+        $timetracker->updateEntry($entries1[0])->willReturn($success);
+        $timetracker->updateEntry($entries1[1])->shouldNotBeCalled();
+        $timetracker->updateEntry($entries1[2])->willReturn($success);
+
+        // Capture output.
+        $buffer = "";
+        $output->writeln(Argument::any())->will(function ($args) use (&$buffer) {
+            $buffer .= trim($args[0]) . "\n";
+        });
+
+        // And ACTION!
+        $this->callOnWrappedObject('__invoke', [$output, $config]);
+
+        // Eliminate variance from output.
+        $buffer = preg_replace(
+            '/TitleSync executed: \d{8} \d{2}:\d{2}:\d{2}/',
+            'TitleSync executed: 00000000 00:00:00',
+            $buffer
+        );
+        $buffer = preg_replace(
+            '/Collecting Harvest entries between \d{8} to \d{8}/',
+            'Collecting Harvest entries between 00000000 to 00000000',
+            $buffer
+        );
+        $expectedOutput = <<<EOF
+TitleSync executed: 00000000 00:00:00
+Bugtracker is Jira (http://jira.reload.dk)
+Verifying projects in Harvest
+Working with project: Project 1                                project-1
+Collecting Harvest entries between 00000000 to 00000000
+-- Ignoring entries already billed or otherwise closed.
+Collected 3 ticket entries
+Updated entry 5: ID-1[Ticket number 1]
+WARNING: Title for TicketID ID-2 could not be found. Probably wrong ID
+Updated entry 7: ID-3[Ticket number 3]
+TitleSync completed
+
+EOF;
+        try {
+            expect($buffer)->toBe($expectedOutput);
+        } catch (\Exception $e) {
+            print($buffer);
+            throw $e;
+        }
+    }
+
     protected function prophesize($class, $data)
     {
         $project = $this->prophet->prophesize($class);

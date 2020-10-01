@@ -111,6 +111,7 @@ class TitleSync extends BugYieldCommand
                 foreach ($this->getBugtracker()->extractIds($entry->get('notes')) as $ticketId) {
                     //Get the case title.
                     $this->debug("/");
+                    $title = null;
                     try {
                         $title = $this->getBugtracker()->getTitle($ticketId);
                     } catch (\Throwable $e) {
