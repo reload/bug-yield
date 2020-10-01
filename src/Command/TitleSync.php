@@ -91,7 +91,6 @@ class TitleSync extends BugYieldCommand
         //Update Harvest entries with bug tracker ticket titles in the format [ticket-id]([ticket-title])
         try {
             foreach ($ticketEntries as $entry) {
-                $update = false;
                 $this->debug(".");
 
                 // check for active timers - if we update the entry, then the
@@ -131,7 +130,7 @@ class TitleSync extends BugYieldCommand
                     $this->debug("\\");
                 }
 
-                $newNote = $this->injectTitles($entry->get('notes'), $titles, $output);
+                $newNote = $this->injectTitles($entry->get('notes'), $titles);
                 if ($newNote) {
                     $entry->set('notes', $newNote);
 
@@ -175,49 +174,35 @@ class TitleSync extends BugYieldCommand
      *
      * @return false|string
      */
-    public function injectTitles(string $note, array $titles, OutputInterface $output)
+    public function injectTitles(string $note, array $titles)
     {
         $newNote = $note;
         foreach ($titles as $ticketId => $title) {
-            preg_match('/' . $ticketId . '(?:\[(.*?)\])?/i', $newNote, $matches);
+            // Escape bracket in title. The replacement is backslash hell, the
+            // first four is to get a single backslash in the replacement. It
+            // needs to doubled twice, once for the string and another time
+            // for the rexeg engine. The \1 simply refers to the first capture
+            // group in the rexex (the parenthesis matching [ or ]).
+            $title = preg_replace('/(\[|\])/', '\\\\\1', $title);
+
+            // If the title ends in a backslash, pad it with a space so the
+            // closing ] doesn't look like an escaped ].
+            $title = preg_replace('/\\\\$/', '\\\\ ', $title);
+
+            // Use a negative lookbehind assertion "(?<!\\\\)" to only match ]
+            // not preceded by a backslash. The backslash is quadrupled again
+            // to get past two levels of escaping.
+            preg_match('/' . $ticketId . '(?:\\[(.*?)(?<!\\\\)\\])?/i', $newNote, $matches);
             if (isset($matches[1])) {
-                // No bugs found here yet, but I suspect that we
-                // should encode the matches array.
                 if ($matches[1] != $title) {
-                    // Entry note includes ticket title it does not
-                    // match current title so update it.
-
-                    // Look for double brackets - in there are the
-                    // original ticket name contains brakcets like
-                    // this, then we have a problem as the regex
-                    // will break: "[Bracket] - Antal af noder
-                    // TEST"
-                    if (
-                        strpos($title, "[") !== false ||
-                        strpos($title, "]") !== false
-                    ) {
-                        // Hmm, brackets detected, initiate
-                        // evasive maneuvre :-)
-                        $output->writeln(sprintf(
-                            'WARNING (bad practice) ticket contains [brackets] in title %s: %s',
-                            $ticketId,
-                            $title
-                        ));
-                        // We have to drop comments (if any) and
-                        // just insert the ticket title, as we
-                        // cannot differentiate what's title and
-                        // whats comment.
-                        $newNote = $ticketId . '[' . $title .
-                            '] (BugYield removed comments due to [brackets] in the ticket title)';
-                    } else {
-                        $newNote = preg_replace(
-                            '/' . $ticketId . '(\[.*?\])/i',
-                            $ticketId . '[' . $title . ']',
-                            $newNote
-                        );
-                    }
-
-                    $update = true;
+                    // Entry note includes ticket title it does not match
+                    // current title so update it. Uses the same regex as
+                    // above without the capture groups.
+                    $newNote = preg_replace(
+                        '/' . $ticketId . '(\\[.*?(?<!\\\\)\\])/i',
+                        $ticketId . '[' . $title . ']',
+                        $newNote
+                    );
                 }
             } else {
                 // Entry note does not include ticket title so add it.

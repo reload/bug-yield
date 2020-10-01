@@ -278,38 +278,40 @@ EOF;
         }
     }
 
-    function it_should_replace_titles(OutputInterface $output)
+    function it_should_replace_titles()
     {
         $this->injectTitles(
             'ID-1',
-            ['ID-1' => 'The title'],
-            $output
+            ['ID-1' => 'The title']
         )->shouldReturn('ID-1[The title]');
 
         $this->injectTitles(
             'ID-1 ID-2',
-            ['ID-1' => 'The title', 'ID-2' => 'The second title'],
-            $output
+            ['ID-1' => 'The title', 'ID-2' => 'The second title']
         )->shouldReturn('ID-1[The title] ID-2[The second title]');
 
         $this->injectTitles(
             'ID-1[An old title]',
-            ['ID-1' => 'The title'],
-            $output
+            ['ID-1' => 'The title']
         )->shouldReturn('ID-1[The title]');
 
         $this->injectTitles(
             'ID-1',
-            ['ID-1' => 'The [bracketed] title'],
-            $output
-        )->shouldReturn('ID-1[The [bracketed] title]');
+            ['ID-1' => 'The [bracketed] title']
+        )->shouldReturn('ID-1[The \\[bracketed\\] title]');
+
+        // A trailing backslash in the title should be separated from the
+        // closing ] with a space, so it wont look like an escaped ].
+        $this->injectTitles(
+            'ID-1',
+            ['ID-1' => 'The [trailing] title\\']
+        )->shouldReturn('ID-1[The \\[trailing\\] title\\ ]');
 
         $this->injectTitles(
-            'ID-1[The old [bracketed] title]postfix',
-            ['ID-1' => 'The [bracketed] title'],
-            $output
+            'ID-1[The old \\[replaced\\] title\\ ]postfix',
+            ['ID-1' => 'The [replaced] title\\']
         )->shouldReturn(
-            'ID-1[The [bracketed] title] (BugYield removed comments due to [brackets] in the ticket title)'
+            'ID-1[The \\[replaced\\] title\\ ]postfix'
         );
     }
 
