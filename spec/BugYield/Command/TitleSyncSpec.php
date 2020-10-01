@@ -36,8 +36,12 @@ class TitleSyncSpec extends ObjectBehavior
      * This is rather involved, but the code was clearly not written for
      * testing, so it's positive that it's not worse than this.
      */
-    function it_should_sync_titles(OutputInterface $output, Config $config, BugTracker $bugtracker, TimeTracker $timetracker)
-    {
+    function it_should_sync_titles(
+        OutputInterface $output,
+        Config $config,
+        BugTracker $bugtracker,
+        TimeTracker $timetracker
+    ) {
         $projects[] = $this->prophesize(Project::class, [
             'id' => '1',
             'code' => 'project-1',
@@ -85,8 +89,18 @@ class TitleSyncSpec extends ObjectBehavior
         $config->isDebug()->willReturn(false);
 
         $timetracker->getProjects(['project-1', 'project-2'])->willReturn($projects);
-        $timetracker->getProjectEntries('1', true, date("Ymd", time() - (86400 * 2)), date("Ymd"))->willReturn($entries1);
-        $timetracker->getProjectEntries('2', true, date("Ymd", time() - (86400 * 2)), date("Ymd"))->willReturn($entries2);
+        $timetracker->getProjectEntries(
+            '1',
+            true,
+            date("Ymd", time() - (86400 * 2)),
+            date("Ymd")
+        )->willReturn($entries1);
+        $timetracker->getProjectEntries(
+            '2',
+            true,
+            date("Ymd", time() - (86400 * 2)),
+            date("Ymd")
+        )->willReturn($entries2);
 
         $bugtracker->getName()->willReturn('Jira');
         $bugtracker->getURL()->willReturn('http://jira.reload.dk');
