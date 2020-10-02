@@ -91,7 +91,6 @@ class TitleSync extends BugYieldCommand
         //Update Harvest entries with bug tracker ticket titles in the format [ticket-id]([ticket-title])
         try {
             foreach ($ticketEntries as $entry) {
-                $update = false;
                 $this->debug(".");
 
                 // check for active timers - if we update the entry, then the
@@ -108,13 +107,19 @@ class TitleSync extends BugYieldCommand
                 }
 
                 // One entry may - but shouldn't - contain multiple ticket ids.
+                $titles = [];
                 foreach ($this->getBugtracker()->extractIds($entry->get('notes')) as $ticketId) {
                     //Get the case title.
                     $this->debug("/");
-                    $title = null;
+
                     try {
-                        $title = $this->getBugtracker()->getTitle($ticketId);
+                        $titles[$ticketId] = $this->getBugtracker()->getTitle($ticketId);
                     } catch (\Throwable $e) {
+                        $output->writeln(sprintf(
+                            'WARNING: Title for TicketID %s could not be found. Probably wrong ID',
+                            $ticketId
+                        ));
+
                         error_log(
                             date("d-m-Y H:i:s") . " | " . __CLASS__ . " FAILED: " .
                             $ticketId . " >> " . $e->getMessage() . "\n",
@@ -123,78 +128,13 @@ class TitleSync extends BugYieldCommand
                         );
                     }
                     $this->debug("\\");
-
-                    if ($title) {
-                        preg_match('/' . $ticketId . '(?:\[(.*?)\])?/i', $entry->get('notes'), $matches);
-                        if (isset($matches[1])) {
-                            // No bugs found here yet, but I suspect that we
-                            // should encode the matches array. NOTE: Added
-                            // CDATA later on...
-                            if ($matches[1] != $title) {
-                                //Entry note includes ticket title it does not
-                                //match current title so update it
-
-                                // look for double brackets - in there are the
-                                // original ticket name contains brakcets like
-                                // this, then we have a problem as the regex
-                                // will break: "[Bracket] - Antal af noder
-                                // TEST"
-                                if (
-                                    strpos($title, "[") !== false ||
-                                    strpos($title, "]") !== false
-                                ) {
-                                    // hmm, brackets detected, initiate
-                                    // evasive maneuvre :-)
-                                    $output->writeln(sprintf(
-                                        'WARNING (bad practice) ticket contains [brackets] in title %s: %s',
-                                        $ticketId,
-                                        $title
-                                    ));
-                                    // we have to drop comments (if any) and
-                                    // just insert the ticket title, as we
-                                    // cannot differentiate what's title and
-                                    // whats comment.
-                                    $entry->set(
-                                        'notes',
-                                        $ticketId . '[' . $title .
-                                        '] (BugYield removed comments due to [brackets] in the ticket title)'
-                                    );
-                                } else {
-                                    $entry->set(
-                                        'notes',
-                                        preg_replace(
-                                            '/' . $ticketId . '(\[.*?\])/i',
-                                            $ticketId . '[' . $title . ']',
-                                            $entry->get('notes')
-                                        )
-                                    );
-                                }
-
-                                $update = true;
-                            }
-                        } else {
-                            //Entry note does not include ticket title so add it
-                            $entry->set(
-                                'notes',
-                                preg_replace(
-                                    '/' . $ticketId . '/i',
-                                    strtoupper($ticketId) . '[' . $title . ']',
-                                    $entry->get('notes')
-                                )
-                            );
-
-                            $update = true;
-                        }
-                    } else {
-                        $output->writeln(sprintf(
-                            'WARNING: Title for TicketID %s could not be found. Probably wrong ID',
-                            $ticketId
-                        ));
-                    }
                 }
 
-                if ($update) {
-                    //Update the entry in Harvest
+                $newNote = $this->injectTitles($entry->get('notes'), $titles);
+                if ($newNote) {
+                    $entry->set('notes', $newNote);
+
+                    // Update the entry in Harvest.
                     $result = $this->getTimetracker()->updateEntry($entry);
                     if ($result->isSuccess()) {
                         $output->writeln(sprintf(
@@ -224,5 +164,56 @@ class TitleSync extends BugYieldCommand
 
         $this->debug("\n");
         $output->writeln("TitleSync completed");
+    }
+
+    /**
+     * Inject or replace titles in note.
+     *
+     * @param array<string, string> $titles
+     *   Ticket id to title mapping.
+     *
+     * @return false|string
+     */
+    public function injectTitles(string $note, array $titles)
+    {
+        $newNote = $note;
+        foreach ($titles as $ticketId => $title) {
+            // Escape bracket in title. The replacement is backslash hell, the
+            // first four is to get a single backslash in the replacement. It
+            // needs to doubled twice, once for the string and another time
+            // for the rexeg engine. The \1 simply refers to the first capture
+            // group in the rexex (the parenthesis matching [ or ]).
+            $title = preg_replace('/(\[|\])/', '\\\\\1', $title);
+
+            // If the title ends in a backslash, pad it with a space so the
+            // closing ] doesn't look like an escaped ].
+            $title = preg_replace('/\\\\$/', '\\\\ ', $title);
+
+            // Use a negative lookbehind assertion "(?<!\\\\)" to only match ]
+            // not preceded by a backslash. The backslash is quadrupled again
+            // to get past two levels of escaping.
+            preg_match('/' . $ticketId . '(?:\\[(.*?)(?<!\\\\)\\])?/i', $newNote, $matches);
+            if (isset($matches[1])) {
+                if ($matches[1] != $title) {
+                    // Entry note includes ticket title it does not match
+                    // current title so update it. Uses the same regex as
+                    // above without the capture groups.
+                    $newNote = preg_replace(
+                        '/' . $ticketId . '(\\[.*?(?<!\\\\)\\])/i',
+                        $ticketId . '[' . $title . ']',
+                        $newNote
+                    );
+                }
+            } else {
+                // Entry note does not include ticket title so add it.
+                $newNote = preg_replace(
+                    '/' . $ticketId . '/i',
+                    strtoupper($ticketId) . '[' . $title . ']',
+                    $newNote
+                );
+            }
+        }
+
+        return $newNote === $note ? false : $newNote;
     }
 }

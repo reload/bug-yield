@@ -1,5 +1,5 @@
 on: push
-name: Build, test, and deploy
+name: Run tests
 jobs:
   spec_tests:
     name: Spec tests
