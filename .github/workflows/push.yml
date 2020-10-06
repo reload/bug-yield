@@ -5,12 +5,16 @@ jobs:
     name: Spec tests
     if: '!github.event.deleted'
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: [7.2, 7.3, 7.4]
     steps:
     - uses: actions/checkout@master
     - name: Setup PHP, with composer and extensions
       uses: shivammathur/setup-php@master
       with:
-        php-version: 7.3
+        php-version: ${{ matrix.php-version }}
+        # Don't need an extension when using phpdbg.
         coverage: none
     - name: Install Dependencies
       run: |
