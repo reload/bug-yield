@@ -10,7 +10,7 @@ abstract class BugTrackerBase implements BugTracker
     /**
      * Get a bugtracker instance.
      */
-    public static function getInstance(Config $config)
+    public static function getInstance(Config $config): BugTracker
     {
         $bugtracker = $config->bugtracker('bugtracker') ?: $config->bugtrackerKey();
         switch ($bugtracker) {

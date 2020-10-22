@@ -25,27 +25,26 @@ class Jira extends BugTrackerBase
         $this->getApi($bugtrackerConfig['url'], $bugtrackerConfig['username'], $bugtrackerConfig['password']);
     }
 
-    public function getName()
+    /**
+     * {@inheritdoc}
+     */
+    public function getName(): string
     {
         return $this->name;
     }
 
-    public function getURL()
+    /**
+     * {@inheritdoc}
+     */
+    public function getURL(): string
     {
         return $this->bugtrackerConfig['url'];
     }
 
     /**
-     * Get URL to ticket
-     *
-     * @param string $ticketId
-     *   ID of ticket, eg "4564" or "SCL-34".
-     * @param integer $remoteId
-     *   EventID of the exact worklog item/comment, eg "12344".
-     * @return string
-     *   The URL.
+     * {@inheritdoc}
      */
-    public function getTicketURL($ticketId, $remoteId = null)
+    public function getTicketURL(string $ticketId, string $remoteId = null): string
     {
 
         $urlTicketPattern = $this->bugtrackerConfig('url_ticket_pattern');
@@ -57,7 +56,12 @@ class Jira extends BugTrackerBase
         return sprintf($this->getURL() . $urlTicketPattern, $ticketId, $remoteId);
     }
 
-    protected function getApi($url, $username, $password)
+    /**
+     * Instantiate API handler.
+     *
+     * @todo Obviously misnamed.
+     */
+    protected function getApi(string $url, string $username, string $password): void
     {
         $this->currentUsername = $username;
         $this->api = new JiraApi(rtrim($url, '/') . '/rest/api/2/', $username, $password);
@@ -65,16 +69,16 @@ class Jira extends BugTrackerBase
 
     /**
      * Get issue based on ticketId.
-     *
-     * @param $ticketId
-     * @return array
      */
-    public function getIssue($ticketId)
+    public function getIssue(string $ticketId): array
     {
         return $this->api->get($ticketId)->json();
     }
 
-    public function getTitle($ticketId)
+    /**
+     * {@inheritdoc}
+     */
+    public function getTitle(string $ticketId)
     {
         // Jira throws an exception if the issue does not exists or are
         // unreachable.
@@ -87,7 +91,10 @@ class Jira extends BugTrackerBase
         return false;
     }
 
-    public function extractIds($string)
+    /**
+     * {@inheritdoc}
+     */
+    public function extractIds($string): array
     {
         $ids = array();
         // The (?<![A-Z0-9_-]) is to ensure that we don't match things like
@@ -98,7 +105,10 @@ class Jira extends BugTrackerBase
         return array_unique($ids);
     }
 
-    public function getTimelogEntries($ticketId)
+    /**
+     * {@inheritdoc}
+     */
+    public function getTimelogEntries(string $ticketId): array
     {
         $response = $this->api->getFullWorklog($ticketId)->json();
 
@@ -114,7 +124,10 @@ class Jira extends BugTrackerBase
         return $timelogs;
     }
 
-    public function saveTimelogEntry($ticketId, $timelog)
+    /**
+     * {@inheritdoc}
+     */
+    public function saveTimelogEntry(string $ticketId, $timelog): bool
     {
         // weed out newlines in notes
         $timelog->notes = preg_replace('/[\n\r]+/m', ' ', $timelog->notes);
@@ -209,22 +222,26 @@ class Jira extends BugTrackerBase
     }
 
     /**
+     * {@inheritdoc}
+     *
      * Delete the worklog, but retain the remaining estimate
      *
      * (when auto-adjusting the removed time will be added to the remaining work)
      */
-    public function deleteWorkLogEntry($worklogId, $issueId)
+    public function deleteWorkLogEntry($worklogId, $issueId): bool
     {
         $this->api->deleteWorklog($issueId, $worklogId);
         return true;
     }
 
     /**
+     * Parse a worklog comment into a timelog.
+     *
      * A comment entry will be formatted like this:
      *
      * Entry #71791646 Kode: "Fikser PROJ-12[tester harvest med anton]" by Rasmus Luckow-Nielsen in "BugYield test"
      */
-    private function parseComment($comment)
+    private function parseComment(string $comment)
     {
         $timelog = new \stdClass();
         $num_matches = preg_match('/^Entry\s#(\d+)\s\[([^]]*)\]:\s"(.*)"\sby\s(.*)\sin\s"(.*)"/m', $comment, $matches);
@@ -238,7 +255,12 @@ class Jira extends BugTrackerBase
         return $timelog;
     }
 
-    private function formatComment($timelog)
+    /**
+     * Format a timelog into a comment.
+     *
+     * @param object $timelog
+     */
+    private function formatComment($timelog): string
     {
         return vsprintf(
             'Entry #%d [%s]: "%s" by %s in "%s"',
