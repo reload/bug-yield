@@ -90,7 +90,9 @@ class Jira extends BugTrackerBase
     public function extractIds($string)
     {
         $ids = array();
-        if (preg_match_all('/([A-Za-z0-9]+-\d+)/', $string, $matches)) {
+        // The (?<![A-Z0-9_-]) is to ensure that we don't match things like
+        // "1-on-1" or "1stuff-2".
+        if (preg_match_all('/(?<![A-Z0-9_-])([A-Z][A-Z0-9]+-\d+)/i', $string, $matches)) {
             $ids = array_map('strtoupper', $matches[1]);
         }
         return array_unique($ids);
