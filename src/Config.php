@@ -65,17 +65,24 @@ class Config
     }
 
     /**
-     * Extra options definition.
+     * Return extra options definition.
+     *
+     * For \Silly\Edition\PhpDi\Application::command()
      */
-    public static function getOptions()
+    public static function getOptions(): string
     {
         return '[--harvest-project=] [--config=] [--bugtracker=] [--debug]';
     }
 
     /**
-     * Options descriptions.
+     * Get options descriptions.
+     *
+     * For \Silly\Edition\PhpDi\Application::command()
+     *
+     * @return array<string>
+     *
      */
-    public static function getOptionsDescriptions()
+    public static function getOptionsDescriptions(): array
     {
         return [
             '--harvest-project' => 'One or more Harvest projects (id, name or code) ' .
@@ -88,8 +95,12 @@ class Config
 
     /**
      * Options defaults.
+     *
+     * For \Silly\Edition\PhpDi\Application::command()
+     *
+     * @eturn array<string>
      */
-    public static function getOptionsDefaults()
+    public static function getOptionsDefaults(): array
     {
         return [
             'config' => 'config.yml',
@@ -100,7 +111,7 @@ class Config
     /**
      * Get debug status.
      */
-    public function isDebug()
+    public function isDebug(): bool
     {
         return $this->debug;
     }
@@ -108,7 +119,7 @@ class Config
     /**
      * Returns the project ids for this command from command line options or configuration.
      *
-     * @return array An array of project identifiers
+     * @return array<string> An array of project identifiers
      */
     public function getProjectIds()
     {
@@ -120,28 +131,33 @@ class Config
         return $projectIds;
     }
 
-    public function getTimetrackerProjects()
+    /**
+     * Get timetracker projects.
+     *
+     * @return array<string>
+     */
+    public function getTimetrackerProjects(): array
     {
         return $this->bugtracker('projects');
     }
 
     /**
-     * Number of days of entries to work with.
+     * Get number of days of entries to work with.
      *
-     * @return integer
+     * @return int
      *   Number of days
      */
-    public function getDaysBack()
+    public function getDaysBack(): int
     {
         return intval($this->harvest('daysback'));
     }
 
     /**
-     * Max number of hours allowed on a single time entry.
+     * Get max number of hours allowed on a single time entry.
      *
      * If this limit is exceeded the entry is considered potentially faulty.
      *
-     * @return int/float/null The number of hours or NULL if not defined.
+     * @return int/float/null The number of hours or null if not defined.
      */
     public function getMaxEntryHours()
     {
@@ -149,27 +165,29 @@ class Config
     }
 
     /**
-     * Whether to do extended tests.
+     * Return whether to do extended tests.
      *
-     * If true we will test all referenced tickets in the bugtracker for inconsistency with Harvest
+     * If true we will test all referenced tickets in the bugtracker for
+     * inconsistency with Harvest
      */
-    public function doExtendedTest()
+    public function doExtendedTest(): bool
     {
         return $this->bugtracker('extended_test') === true;
     }
 
     /**
-     * Whether to fix missing references.
+     * Return whether to fix missing references.
      *
-     * If true we remove any errornous references from the BugTracker to Harvest, thus "fixing" Error 2
+     * If true we remove any errornous references from the BugTracker to
+     * Harvest, thus "fixing" Error 2.
      */
-    public function fixMissingReferences()
+    public function fixMissingReferences(): bool
     {
         return $this->bugtracker('fix_missing_references') === true;
     }
 
     /**
-     * Fetch email of email to notify extra if errors occur
+     * Get extra email to notify if errors occur
      *
      * @todo Not really a bugtracker specific setting as such, but as
      *   timetracker and bugyield settings are global, it's in the bugtracker
@@ -177,7 +195,7 @@ class Config
      *
      * @return String Url
      */
-    public function getEmailNotifyOnError()
+    public function getEmailNotifyOnError(): ?string
     {
         $email = null;
         if (!empty($this->bugtracker('email_notify_on_error'))) {
