@@ -1,12 +1,10 @@
+FROM composer:2 AS composer
 FROM phusion/baseimage:0.11
 
 RUN install_clean php-cli php-curl php-xml php-mbstring git unzip
 
 COPY ./ /bug-yield/
 
-RUN curl -sS https://getcomposer.org/installer | php && \
-    mv composer.phar /usr/local/bin/composer && \
-    cd /bug-yield && composer install && \
-    crontab /bug-yield/docker/crontab
+COPY --from=composer /usr/bin/composer /usr/bin/composer
 
 WORKDIR /bug-yield
