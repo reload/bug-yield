@@ -1709,36 +1709,31 @@
         },
         {
             "name": "doctrine/instantiator",
-            "version": "1.3.1",
+            "version": "1.4.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/doctrine/instantiator.git",
-                "reference": "f350df0268e904597e3bd9c4685c53e0e333feea"
+                "reference": "d56bf6102915de5702778fe20f2de3b2fe570b5b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/doctrine/instantiator/zipball/f350df0268e904597e3bd9c4685c53e0e333feea",
-                "reference": "f350df0268e904597e3bd9c4685c53e0e333feea",
+                "url": "https://api.github.com/repos/doctrine/instantiator/zipball/d56bf6102915de5702778fe20f2de3b2fe570b5b",
+                "reference": "d56bf6102915de5702778fe20f2de3b2fe570b5b",
                 "shasum": ""
             },
             "require": {
                 "php": "^7.1 || ^8.0"
             },
             "require-dev": {
-                "doctrine/coding-standard": "^6.0",
+                "doctrine/coding-standard": "^8.0",
                 "ext-pdo": "*",
                 "ext-phar": "*",
-                "phpbench/phpbench": "^0.13",
-                "phpstan/phpstan-phpunit": "^0.11",
-                "phpstan/phpstan-shim": "^0.11",
-                "phpunit/phpunit": "^7.0"
+                "phpbench/phpbench": "^0.13 || 1.0.0-alpha2",
+                "phpstan/phpstan": "^0.12",
+                "phpstan/phpstan-phpunit": "^0.12",
+                "phpunit/phpunit": "^7.0 || ^8.0 || ^9.0"
             },
             "type": "library",
-            "extra": {
-                "branch-alias": {
-                    "dev-master": "1.2.x-dev"
-                }
-            },
             "autoload": {
                 "psr-4": {
                     "Doctrine\\Instantiator\\": "src/Doctrine/Instantiator/"
@@ -1752,7 +1747,7 @@
                 {
                     "name": "Marco Pivetta",
                     "email": "ocramius@gmail.com",
-                    "homepage": "http://ocramius.github.com/"
+                    "homepage": "https://ocramius.github.io/"
                 }
             ],
             "description": "A small, lightweight utility to instantiate objects in PHP without invoking their constructors",
@@ -1775,7 +1770,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2020-05-29T17:27:14+00:00"
+            "time": "2020-11-10T18:47:58+00:00"
         },
         {
             "name": "friends-of-phpspec/phpspec-code-coverage",
@@ -2045,22 +2040,22 @@
         },
         {
             "name": "phpspec/phpspec",
-            "version": "6.2.2",
+            "version": "6.3.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpspec/phpspec.git",
-                "reference": "90c4758976af797d485e1f5b8e65df8de981c561"
+                "reference": "fc7b1eff1778db6ab8376bc92f7e31ddcd1e73cd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpspec/phpspec/zipball/90c4758976af797d485e1f5b8e65df8de981c561",
-                "reference": "90c4758976af797d485e1f5b8e65df8de981c561",
+                "url": "https://api.github.com/repos/phpspec/phpspec/zipball/fc7b1eff1778db6ab8376bc92f7e31ddcd1e73cd",
+                "reference": "fc7b1eff1778db6ab8376bc92f7e31ddcd1e73cd",
                 "shasum": ""
             },
             "require": {
                 "doctrine/instantiator": "^1.0.5",
                 "ext-tokenizer": "*",
-                "php": "^7.2, <7.5",
+                "php": "^7.2 || 8.0.*",
                 "phpspec/php-diff": "^1.0.0",
                 "phpspec/prophecy": "^1.9",
                 "sebastian/exporter": "^1.0 || ^2.0 || ^3.0 || ^4.0",
@@ -2087,7 +2082,7 @@
             "type": "library",
             "extra": {
                 "branch-alias": {
-                    "dev-master": "6.2.x-dev"
+                    "dev-master": "6.3.x-dev"
                 }
             },
             "autoload": {
@@ -2125,7 +2120,7 @@
                 "testing",
                 "tests"
             ],
-            "time": "2020-10-28T15:29:44+00:00"
+            "time": "2020-11-01T18:07:30+00:00"
         },
         {
             "name": "phpspec/prophecy",
