@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "a8d90f3244567afc29f9a79d10d46a50",
+    "content-hash": "b84055d4dbcf3451eb645db1d9f25092",
     "packages": [
         {
             "name": "alexkovalevych/jira-api",
@@ -1774,26 +1774,28 @@
         },
         {
             "name": "friends-of-phpspec/phpspec-code-coverage",
-            "version": "v4.3.2",
+            "version": "v5.0.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/friends-of-phpspec/phpspec-code-coverage.git",
-                "reference": "9a54302573094cc1b3bdca3cc78c58582130b254"
+                "reference": "251503979b24a940712134a005f25b3d05ed82bb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/friends-of-phpspec/phpspec-code-coverage/zipball/9a54302573094cc1b3bdca3cc78c58582130b254",
-                "reference": "9a54302573094cc1b3bdca3cc78c58582130b254",
+                "url": "https://api.github.com/repos/friends-of-phpspec/phpspec-code-coverage/zipball/251503979b24a940712134a005f25b3d05ed82bb",
+                "reference": "251503979b24a940712134a005f25b3d05ed82bb",
                 "shasum": ""
             },
             "require": {
-                "php": "^7.1",
-                "phpspec/phpspec": "^4.2 || ^5.0 || ^6.0",
-                "phpunit/php-code-coverage": "^5.0 || ^6.0 || ^7.0"
+                "php": ">= 7.2",
+                "phpspec/phpspec": "^5.0 || ^6.0 || ^7.0",
+                "phpunit/php-code-coverage": "^6.0 || ^7.0 || ^8.0"
+            },
+            "conflict": {
+                "sebastian/comparator": "< 2.0"
             },
             "require-dev": {
-                "drupol/php-conventions": "^1",
-                "scrutinizer/ocular": "^1"
+                "drupol/php-conventions": "^1.7.1 || ^1.8.16"
             },
             "suggest": {
                 "ext-pcov": "Install PCov extension to generate code coverage.",
@@ -1852,7 +1854,7 @@
                 "test",
                 "tests"
             ],
-            "time": "2019-11-12T10:27:45+00:00"
+            "time": "2020-11-16T16:19:51+00:00"
         },
         {
             "name": "phpdocumentor/reflection-common",

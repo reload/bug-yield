@@ -26,6 +26,6 @@
     "phpspec/phpspec": "^6",
     "bossa/phpspec2-expect": "^3",
     "squizlabs/php_codesniffer": "^3.5",
-    "friends-of-phpspec/phpspec-code-coverage": "^4.3"
+    "friends-of-phpspec/phpspec-code-coverage": "^5.0"
   }
 }
