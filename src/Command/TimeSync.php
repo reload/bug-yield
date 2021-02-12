@@ -69,7 +69,7 @@ class TimeSync extends BugYieldCommand
         foreach ($projects as $project) {
             $entries = $this->getTimetracker()->getProjectEntries($project->get('id'), false, $from_date, $to_date);
             foreach ($entries as $entry) {
-                $ids = $this->getBugtracker()->extractIds($entry->get('notes'));
+                $ids = $this->getBugtracker()->extractIds($this->stripTitles($entry->get('notes')));
                 if (sizeof($ids) > 0) {
                     //If the entry has ticket ids it is a ticket entry.
                     $ticketEntries[] = $entry;
@@ -105,7 +105,7 @@ class TimeSync extends BugYieldCommand
                 }
 
                 //One entry may - but shouldn't - contain multiple ticket ids
-                $ticketIds = $this->getBugtracker()->extractIds($entry->get('notes'));
+                $ticketIds = $this->getBugtracker()->extractIds($this->stripTitles($entry->get('notes')));
 
                 // store the ticketinfo
                 if (!empty($ticketIds)) {
@@ -339,7 +339,7 @@ class TimeSync extends BugYieldCommand
                         // fetch entry from Harvest
                         if ($entry = $this->getTimetracker()->getEntryById($worklog->harvestId, $hUserId)) {
                             // look for the ID
-                            $ticketIds = $this->getBugtracker()->extractIds($entry->get('notes'));
+                            $ticketIds = $this->getBugtracker()->extractIds($this->stripTitles($entry->get('notes')));
                             if (!in_array($fbId, $ticketIds)) {
                                 // Error found! The time entry still exist,
                                 // but there is no reference to this bug any

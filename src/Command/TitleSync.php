@@ -74,7 +74,7 @@ class TitleSync extends BugYieldCommand
         foreach ($projects as $project) {
             $entries = $this->getTimetracker()->getProjectEntries($project->get('id'), true, $from_date, $to_date);
             foreach ($entries as $entry) {
-                $ids = $this->getBugtracker()->extractIds($entry->get('notes'));
+                $ids = $this->getBugtracker()->extractIds($this->stripTitles($entry->get('notes')));
                 if (sizeof($ids) > 0) {
                     //If the entry has ticket ids it is a ticket entry.
                     $ticketEntries[] = $entry;
@@ -108,7 +108,7 @@ class TitleSync extends BugYieldCommand
 
                 // One entry may - but shouldn't - contain multiple ticket ids.
                 $titles = [];
-                foreach ($this->getBugtracker()->extractIds($entry->get('notes')) as $ticketId) {
+                foreach ($this->getBugtracker()->extractIds($this->stripTitles($entry->get('notes'))) as $ticketId) {
                     //Get the case title.
                     $this->debug("/");
 

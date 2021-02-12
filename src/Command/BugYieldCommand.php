@@ -52,4 +52,25 @@ abstract class BugYieldCommand
     {
         return str_pad($input, strlen($input) - mb_strlen($input, $encoding) + $pad_length, $pad_string, $pad_style);
     }
+
+    public function stripTitles($string)
+    {
+        // Get all the ticket ids in string, this includes anyone which was
+        // actually in a ticket title.
+        $ticketIds = $this->bugtracker->extractIds($string);
+
+        foreach ($ticketIds as $ticketId) {
+            // Replace all occurrences of "<ticket id>[<something>]" with just
+            // "<ticket id>". This is to avoid a cascade if a ticket title
+            // contains another ticket id. See TitleSync::injectTitles() for
+            // an explanation of the regex.
+            $string = preg_replace(
+                '/' . $ticketId . '(\\[.*?(?<!\\\\)\\])/i',
+                $ticketId,
+                $string
+            );
+        }
+
+        return $string;
+    }
 }
