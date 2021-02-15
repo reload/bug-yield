@@ -7,4 +7,8 @@ COPY ./ /bug-yield/
 
 COPY --from=composer /usr/bin/composer /usr/bin/composer
 
+
+RUN cd /bug-yield && composer install && \
+        crontab /bug-yield/docker/crontab
+
 WORKDIR /bug-yield
