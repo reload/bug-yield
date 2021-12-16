@@ -704,16 +704,16 @@
         },
         {
             "name": "sendgrid/sendgrid",
-            "version": "7.11.0",
+            "version": "7.11.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sendgrid/sendgrid-php.git",
-                "reference": "3dcfc4db6583d5fa581248bb486418963804620d"
+                "reference": "071eac6de115e8c0ead18a7ebdad7c19043f07e4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sendgrid/sendgrid-php/zipball/3dcfc4db6583d5fa581248bb486418963804620d",
-                "reference": "3dcfc4db6583d5fa581248bb486418963804620d",
+                "url": "https://api.github.com/repos/sendgrid/sendgrid-php/zipball/071eac6de115e8c0ead18a7ebdad7c19043f07e4",
+                "reference": "071eac6de115e8c0ead18a7ebdad7c19043f07e4",
                 "shasum": ""
             },
             "require": {
@@ -761,7 +761,7 @@
                 "sendgrid",
                 "twilio sendgrid"
             ],
-            "time": "2021-11-17T19:32:14+00:00"
+            "time": "2021-12-15T21:06:20+00:00"
         },
         {
             "name": "starkbank/ecdsa",
