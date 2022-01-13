@@ -644,16 +644,16 @@
         },
         {
             "name": "sendgrid/php-http-client",
-            "version": "3.14.0",
+            "version": "3.14.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sendgrid/php-http-client.git",
-                "reference": "7880d5aecc53856802130ba83af1dfcf942e9767"
+                "reference": "457bfeb199e01cf7a8b96a60789306d7ea16307e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sendgrid/php-http-client/zipball/7880d5aecc53856802130ba83af1dfcf942e9767",
-                "reference": "7880d5aecc53856802130ba83af1dfcf942e9767",
+                "url": "https://api.github.com/repos/sendgrid/php-http-client/zipball/457bfeb199e01cf7a8b96a60789306d7ea16307e",
+                "reference": "457bfeb199e01cf7a8b96a60789306d7ea16307e",
                 "shasum": ""
             },
             "require": {
@@ -700,20 +700,20 @@
                 "rest",
                 "sendgrid"
             ],
-            "time": "2021-03-24T20:45:06+00:00"
+            "time": "2022-01-12T20:15:12+00:00"
         },
         {
             "name": "sendgrid/sendgrid",
-            "version": "7.11.1",
+            "version": "7.11.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sendgrid/sendgrid-php.git",
-                "reference": "071eac6de115e8c0ead18a7ebdad7c19043f07e4"
+                "reference": "bfe41f9404479e486104c5ff5a22afb38e2a5334"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sendgrid/sendgrid-php/zipball/071eac6de115e8c0ead18a7ebdad7c19043f07e4",
-                "reference": "071eac6de115e8c0ead18a7ebdad7c19043f07e4",
+                "url": "https://api.github.com/repos/sendgrid/sendgrid-php/zipball/bfe41f9404479e486104c5ff5a22afb38e2a5334",
+                "reference": "bfe41f9404479e486104c5ff5a22afb38e2a5334",
                 "shasum": ""
             },
             "require": {
@@ -761,7 +761,7 @@
                 "sendgrid",
                 "twilio sendgrid"
             ],
-            "time": "2021-12-15T21:06:20+00:00"
+            "time": "2022-01-12T20:12:19+00:00"
         },
         {
             "name": "starkbank/ecdsa",
