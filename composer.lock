@@ -618,12 +618,12 @@
             },
             "type": "library",
             "autoload": {
-                "psr-4": {
-                    "React\\Promise\\": "src/"
-                },
                 "files": [
                     "src/functions_include.php"
-                ]
+                ],
+                "psr-4": {
+                    "React\\Promise\\": "src/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -644,16 +644,16 @@
         },
         {
             "name": "sendgrid/php-http-client",
-            "version": "3.14.2",
+            "version": "3.14.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sendgrid/php-http-client.git",
-                "reference": "25377871773a49b508129eb07c9c387020fb97f1"
+                "reference": "ddb0a32ad6a90af587f53a0cfeb9fa1e17dac5ac"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sendgrid/php-http-client/zipball/25377871773a49b508129eb07c9c387020fb97f1",
-                "reference": "25377871773a49b508129eb07c9c387020fb97f1",
+                "url": "https://api.github.com/repos/sendgrid/php-http-client/zipball/ddb0a32ad6a90af587f53a0cfeb9fa1e17dac5ac",
+                "reference": "ddb0a32ad6a90af587f53a0cfeb9fa1e17dac5ac",
                 "shasum": ""
             },
             "require": {
@@ -700,20 +700,20 @@
                 "rest",
                 "sendgrid"
             ],
-            "time": "2022-01-26T20:07:48+00:00"
+            "time": "2022-02-09T22:49:27+00:00"
         },
         {
             "name": "sendgrid/sendgrid",
-            "version": "7.11.3",
+            "version": "7.11.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sendgrid/sendgrid-php.git",
-                "reference": "6fd1c0c0f30cb9d0e6bc27fe85d54e137b6911d2"
+                "reference": "97a509b53ced9d29dde401e3b2c0c55f9ab03f5c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sendgrid/sendgrid-php/zipball/6fd1c0c0f30cb9d0e6bc27fe85d54e137b6911d2",
-                "reference": "6fd1c0c0f30cb9d0e6bc27fe85d54e137b6911d2",
+                "url": "https://api.github.com/repos/sendgrid/sendgrid-php/zipball/97a509b53ced9d29dde401e3b2c0c55f9ab03f5c",
+                "reference": "97a509b53ced9d29dde401e3b2c0c55f9ab03f5c",
                 "shasum": ""
             },
             "require": {
@@ -736,11 +736,11 @@
             "type": "library",
             "autoload": {
                 "psr-4": {
-                    "SendGrid\\Contacts\\": "lib/contacts/",
-                    "SendGrid\\EventWebhook\\": "lib/eventwebhook/",
-                    "SendGrid\\Helper\\": "lib/helper/",
                     "SendGrid\\Mail\\": "lib/mail/",
-                    "SendGrid\\Stats\\": "lib/stats/"
+                    "SendGrid\\Stats\\": "lib/stats/",
+                    "SendGrid\\Helper\\": "lib/helper/",
+                    "SendGrid\\Contacts\\": "lib/contacts/",
+                    "SendGrid\\EventWebhook\\": "lib/eventwebhook/"
                 },
                 "classmap": [
                     "lib/BaseSendGridClientInterface.php",
@@ -761,7 +761,7 @@
                 "sendgrid",
                 "twilio sendgrid"
             ],
-            "time": "2022-01-26T20:09:40+00:00"
+            "time": "2022-02-09T22:49:28+00:00"
         },
         {
             "name": "starkbank/ecdsa",
@@ -1072,12 +1072,12 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "Symfony\\Polyfill\\Intl\\Grapheme\\": ""
-                },
                 "files": [
                     "bootstrap.php"
-                ]
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Intl\\Grapheme\\": ""
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -1150,12 +1150,12 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "Symfony\\Polyfill\\Intl\\Normalizer\\": ""
-                },
                 "files": [
                     "bootstrap.php"
                 ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Intl\\Normalizer\\": ""
+                },
                 "classmap": [
                     "Resources/stubs"
                 ]
@@ -1308,12 +1308,12 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "Symfony\\Polyfill\\Php73\\": ""
-                },
                 "files": [
                     "bootstrap.php"
                 ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Php73\\": ""
+                },
                 "classmap": [
                     "Resources/stubs"
                 ]
@@ -1384,12 +1384,12 @@
                 }
             },
             "autoload": {
-                "psr-4": {
-                    "Symfony\\Polyfill\\Php80\\": ""
-                },
                 "files": [
                     "bootstrap.php"
                 ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Php80\\": ""
+                },
                 "classmap": [
                     "Resources/stubs"
                 ]
