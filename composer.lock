@@ -644,16 +644,16 @@
         },
         {
             "name": "sendgrid/php-http-client",
-            "version": "3.14.3",
+            "version": "3.14.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sendgrid/php-http-client.git",
-                "reference": "ddb0a32ad6a90af587f53a0cfeb9fa1e17dac5ac"
+                "reference": "6d589564522be290c7d7c18e51bcd8b03aeaf0b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sendgrid/php-http-client/zipball/ddb0a32ad6a90af587f53a0cfeb9fa1e17dac5ac",
-                "reference": "ddb0a32ad6a90af587f53a0cfeb9fa1e17dac5ac",
+                "url": "https://api.github.com/repos/sendgrid/php-http-client/zipball/6d589564522be290c7d7c18e51bcd8b03aeaf0b6",
+                "reference": "6d589564522be290c7d7c18e51bcd8b03aeaf0b6",
                 "shasum": ""
             },
             "require": {
@@ -700,20 +700,20 @@
                 "rest",
                 "sendgrid"
             ],
-            "time": "2022-02-09T22:49:27+00:00"
+            "time": "2022-03-09T20:21:55+00:00"
         },
         {
             "name": "sendgrid/sendgrid",
-            "version": "7.11.4",
+            "version": "7.11.5",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sendgrid/sendgrid-php.git",
-                "reference": "97a509b53ced9d29dde401e3b2c0c55f9ab03f5c"
+                "reference": "1d2fd3b72687fe82264853a8888b014f8f99e81f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sendgrid/sendgrid-php/zipball/97a509b53ced9d29dde401e3b2c0c55f9ab03f5c",
-                "reference": "97a509b53ced9d29dde401e3b2c0c55f9ab03f5c",
+                "url": "https://api.github.com/repos/sendgrid/sendgrid-php/zipball/1d2fd3b72687fe82264853a8888b014f8f99e81f",
+                "reference": "1d2fd3b72687fe82264853a8888b014f8f99e81f",
                 "shasum": ""
             },
             "require": {
@@ -761,7 +761,7 @@
                 "sendgrid",
                 "twilio sendgrid"
             ],
-            "time": "2022-02-09T22:49:28+00:00"
+            "time": "2022-03-09T20:21:56+00:00"
         },
         {
             "name": "starkbank/ecdsa",
@@ -1202,7 +1202,7 @@
         },
         {
             "name": "symfony/polyfill-mbstring",
-            "version": "v1.24.0",
+            "version": "v1.25.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/polyfill-mbstring.git",
