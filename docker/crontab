@@ -5,3 +5,7 @@
 # BugYield: JIRA KK
 10 23 * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=kkjira tim | logger -t bug-yield-cron
 */30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=kkjira titlesync | logger -t bug-yield-cron
+
+# BugYield: JIRA Information
+10 42 * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=informationjira tim | logger -t bug-yield-cron
+*/30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=informationjira titlesync | logger -t bug-yield-cron
