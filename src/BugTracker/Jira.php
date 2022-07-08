@@ -132,7 +132,7 @@ class Jira extends BugTrackerBase
      */
     public function saveTimelogEntry(string $ticketId, $timelog): bool
     {
-        // weed out newlines in notes
+        // Weed out newlines in notes.
         $timelog->notes = preg_replace('/[\n\r]+/m', ' ', $timelog->notes);
 
         $worklog = new \stdClass();
