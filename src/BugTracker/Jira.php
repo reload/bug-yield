@@ -115,7 +115,10 @@ class Jira extends BugTrackerBase
         $timelogs = array();
         foreach ($response['worklogs'] as $entry) {
             $timelog = $this->parseComment($entry['comment']);
-            $timelog->hours = (string) round($entry['timeSpentSeconds'] / 3600, 2);
+            // Harvest uses two decimals, so we do the same. Using floor
+            // rather than round seem to hit the munged value we set in
+            // saveTimelogEntry() better.
+            $timelog->hours = (string) floor($entry['timeSpentSeconds'] / 36) / 100;
             $timelog->started = $entry['started'];
             $timelog->spentAt = date('Y-m-d', strtotime($entry['started']));
             $timelog->remoteId = $entry['id'];
@@ -164,7 +167,26 @@ class Jira extends BugTrackerBase
         }
 
         $worklog->comment = $this->formatComment($timelog);
-        $worklog->timeSpentSeconds = $timelog->hours * 60 * 60;
+        // Try to account for Harvest and Jira being lax about time-frames. An
+        // example: 50 minutes is 0.833333333333 (with as many decimals as
+        // precision allows) hour. But Harvest rounds hours to two decimals
+        // when we fetch entries. That's 0.83, which is 49 minutes and 48
+        // seconds. That gets converted to 2988 seconds when we post it to
+        // Jira. But Jira only works in minutes, so that gets rounded to 2940
+        // seconds when we fetch the worklog the next time, so we end up with
+        // 0.816666666667 (again, infinite decimals), which we round to 0.82
+        // hours (which is 49 minutes 12 seconds) that doesn't match the 0.83
+        // from Harvest.
+        //
+        // To deal with this, we round the time to the nearest minute before
+        // sending it to Jira, then Jira at least wont loose time, and when we
+        // convert that into hours and limit to two decimals, we'll hopefully
+        // hit the same number as we got from Harvest.
+        $worklog->timeSpentSeconds = round($timelog->hours * 60) * 60;
+        // We don't know when the entry was actually started, so we'll use the
+        // spentAt date and use 23:00.
+        $worklog->started = $timelog->spentAt . "T23:00:00.000+0200";
+
 
         // Check if individual logging is enabled.
         if (!empty($this->bugtrackerConfig['worklog_individual_logins'])) {
