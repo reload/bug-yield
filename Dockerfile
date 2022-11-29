@@ -1,5 +1,5 @@
 FROM composer:2 AS composer
-FROM phusion/baseimage:0.11
+FROM phusion/baseimage:18.04-1.0.0
 
 RUN install_clean php-cli php-curl php-xml php-mbstring git unzip
 
