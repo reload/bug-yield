@@ -1,19 +1,14 @@
 version: 2
 updates:
-- package-ecosystem: composer
-  directory: "/"
-  schedule:
-    interval: daily
-    timezone: Europe/Copenhagen
-  open-pull-requests-limit: 10
-  reviewers:
-  - "reload/developers"
-- package-ecosystem: docker
-  directory: "/"
-  schedule:
-    interval: daily
-    timezone: Europe/Copenhagen
-  open-pull-requests-limit: 10
-  reviewers:
-  - "reload/developers"
-  
+  - package-ecosystem: composer
+    directory: "/"
+    schedule:
+      interval: daily
+      timezone: Europe/Copenhagen
+    open-pull-requests-limit: 10
+  - package-ecosystem: docker
+    directory: "/"
+    schedule:
+      interval: daily
+      timezone: Europe/Copenhagen
+    open-pull-requests-limit: 10
