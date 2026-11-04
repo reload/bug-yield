@@ -7,21 +7,21 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: [7.4]
+        php-version: [8.5]
     steps:
     - uses: actions/checkout@master
     - name: Setup PHP, with composer and extensions
       uses: shivammathur/setup-php@master
       with:
         php-version: ${{ matrix.php-version }}
-        # Don't need an extension when using phpdbg.
-        coverage: none
+        extensions: gmp
+        coverage: xdebug
     - name: Install Dependencies
       run: |
         composer install --no-interaction --no-scripts --no-progress --prefer-dist
     - name: Spec tests
       run: |
-        phpdbg -qrr ./vendor/bin/phpspec run
+        php -d xdebug.mode=coverage ./vendor/bin/phpspec run
     - name: Upload coverage report to Codecov
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

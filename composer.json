@@ -9,14 +9,15 @@
   },
   "config": {
     "platform": {
-      "php": "7.4.0"
+      "php": "8.5.0"
     }
   },
   "require": {
-    "php": ">=7.4.0",
+    "php": ">=8.5.0",
     "ext-curl": "*",
     "ext-xml": "*",
     "ext-mbstring": "*",
+    "ext-gmp": "*",
     "gridonic/hapi": "dev-master",
     "symfony/console": "^5",
     "symfony/yaml": "^5",
@@ -25,9 +26,8 @@
     "sendgrid/sendgrid": "^8.1"
   },
   "require-dev": {
-    "phpspec/phpspec": "^6",
-    "bossa/phpspec2-expect": "^3",
+    "phpspec/phpspec": "^8",
     "squizlabs/php_codesniffer": "^4.0",
-    "friends-of-phpspec/phpspec-code-coverage": "^5.0"
+    "friends-of-phpspec/phpspec-code-coverage": "^7.0"
   }
 }
