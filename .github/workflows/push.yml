@@ -15,14 +15,13 @@ jobs:
       with:
         php-version: ${{ matrix.php-version }}
         extensions: gmp
-        # Don't need an extension when using phpdbg.
-        coverage: none
+        coverage: xdebug
     - name: Install Dependencies
       run: |
         composer install --no-interaction --no-scripts --no-progress --prefer-dist
     - name: Spec tests
       run: |
-        phpdbg -qrr ./vendor/bin/phpspec run
+        php -d xdebug.mode=coverage ./vendor/bin/phpspec run
     - name: Upload coverage report to Codecov
       env:
         CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
