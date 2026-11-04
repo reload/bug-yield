@@ -1,7 +1,7 @@
 FROM composer:2 AS composer
 FROM phusion/baseimage:focal-1.2.0
 
-RUN install_clean php-cli php-curl php-xml php-mbstring git unzip
+RUN install_clean php-cli php-curl php-xml php-mbstring php-gmp git unzip
 
 COPY ./ /bug-yield/
 
