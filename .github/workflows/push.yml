@@ -7,13 +7,14 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: [7.4]
+        php-version: [8.5]
     steps:
     - uses: actions/checkout@master
     - name: Setup PHP, with composer and extensions
       uses: shivammathur/setup-php@master
       with:
         php-version: ${{ matrix.php-version }}
+        extensions: gmp
         # Don't need an extension when using phpdbg.
         coverage: none
     - name: Install Dependencies

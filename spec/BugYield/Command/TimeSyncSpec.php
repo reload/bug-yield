@@ -207,7 +207,9 @@ TimeSync completed
 
 EOF;
         try {
-            expect($buffer)->toBe($expectedOutput);
+            if ($buffer !== $expectedOutput) {
+                throw new \RuntimeException('Unexpected output');
+            }
         } catch (\Exception $e) {
             print($buffer);
             throw $e;

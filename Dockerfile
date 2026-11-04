@@ -1,7 +1,10 @@
 FROM composer:2 AS composer
-FROM phusion/baseimage:focal-1.2.0
+FROM php:8.5-cli
 
-RUN install_clean php-cli php-curl php-xml php-mbstring php-gmp git unzip
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        cron git unzip util-linux libcurl4-openssl-dev libonig-dev libxml2-dev libgmp-dev && \
+    docker-php-ext-install curl gmp mbstring xml && \
+    rm -rf /var/lib/apt/lists/*
 
 COPY ./ /bug-yield/
 
@@ -12,3 +15,5 @@ RUN cd /bug-yield && composer install && \
         crontab /bug-yield/docker/crontab
 
 WORKDIR /bug-yield
+
+CMD ["cron", "-f"]
