@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cd6f79ad1a368db1f3651d55b552494d",
+    "content-hash": "ca00df6dca732ffabf86999ab2f093b9",
     "packages": [
         {
             "name": "alexkovalevych/jira-api",
@@ -3554,8 +3554,14 @@
     "prefer-stable": false,
     "prefer-lowest": false,
     "platform": {
-        "php": ">=7.2.0"
+        "php": ">=7.4.0",
+        "ext-curl": "*",
+        "ext-xml": "*",
+        "ext-mbstring": "*"
     },
     "platform-dev": {},
+    "platform-overrides": {
+        "php": "7.4.0"
+    },
     "plugin-api-version": "2.9.0"
 }

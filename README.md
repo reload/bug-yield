@@ -15,7 +15,7 @@ synchronized in Jira.
 ## Installation
 
 Clone the repository and run composer install to install dependencies.
-The PHP extensions curl, xml and mbstring are required.
+PHP 7.4 or newer and the PHP extensions curl, xml and mbstring are required.
 
 ## Configuration
 
