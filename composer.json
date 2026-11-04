@@ -7,14 +7,16 @@
       "BugYield\\": "src/"
     }
   },
-  "platform": {
-    "php": "7.1",
-    "ext-curl": "*",
-    "ext-xml": "*",
-    "ext-mbstring": "*"
+  "config": {
+    "platform": {
+      "php": "7.4.0"
+    }
   },
   "require": {
-    "php": ">=7.2.0",
+    "php": ">=7.4.0",
+    "ext-curl": "*",
+    "ext-xml": "*",
+    "ext-mbstring": "*",
     "gridonic/hapi": "dev-master",
     "symfony/console": "^5",
     "symfony/yaml": "^5",
