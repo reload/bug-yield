@@ -19,7 +19,7 @@
     "ext-mbstring": "*",
     "ext-gmp": "*",
     "gridonic/hapi": "dev-master",
-    "symfony/console": "^5",
+    "symfony/console": "^8",
     "symfony/yaml": "^5",
     "alexkovalevych/jira-api": ">=1.0.6",
     "mnapoli/silly-php-di": ">=1.2",
