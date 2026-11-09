@@ -20,7 +20,7 @@
     "ext-gmp": "*",
     "gridonic/hapi": "dev-master",
     "symfony/console": "^8",
-    "symfony/yaml": "^5",
+    "symfony/yaml": "^8",
     "alexkovalevych/jira-api": ">=1.0.6",
     "mnapoli/silly-php-di": ">=1.2",
     "sendgrid/sendgrid": "^8.1"
