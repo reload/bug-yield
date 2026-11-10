@@ -16,4 +16,5 @@ RUN cd /bug-yield && composer install && \
 
 WORKDIR /bug-yield
 
+ENTRYPOINT ["/bug-yield/docker/entrypoint.sh"]
 CMD ["cron", "-f"]

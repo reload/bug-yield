@@ -1,11 +1,15 @@
+# Cron only searches /usr/bin:/bin, but the official PHP image installs PHP
+# in /usr/local/bin.
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
 # BugYield: JIRA Reload
-10 2 * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=reloadjira tim | logger -t bug-yield-cron
-*/30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=reloadjira titlesync | logger -t bug-yield-cron
+10 2 * * * /bug-yield/bugyield --config=/config/config.yml --bugtracker=reloadjira tim > /proc/1/fd/1 2>&1
+*/30 * * * * /bug-yield/bugyield --config=/config/config.yml --bugtracker=reloadjira titlesync > /proc/1/fd/1 2>&1
 
 # BugYield: JIRA KK
-10 23 * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=kkjira tim | logger -t bug-yield-cron
-*/30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=kkjira titlesync | logger -t bug-yield-cron
+10 23 * * * /bug-yield/bugyield --config=/config/config.yml --bugtracker=kkjira tim > /proc/1/fd/1 2>&1
+*/30 * * * * /bug-yield/bugyield --config=/config/config.yml --bugtracker=kkjira titlesync > /proc/1/fd/1 2>&1
 
 # BugYield: JIRA Information
-10 3 * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=informationjira tim | logger -t bug-yield-cron
-*/30 * * * * /bug-yield/bugyield 2>&1 --config=/config/config.yml --bugtracker=informationjira titlesync | logger -t bug-yield-cron
+10 3 * * * /bug-yield/bugyield --config=/config/config.yml --bugtracker=informationjira tim > /proc/1/fd/1 2>&1
+*/30 * * * * /bug-yield/bugyield --config=/config/config.yml --bugtracker=informationjira titlesync > /proc/1/fd/1 2>&1
