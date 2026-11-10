@@ -1,6 +1,6 @@
 # BugYield
 
-[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/reload/bug-yield/Run%20tests/main?style=for-the-badge)](https://github.com/reload/bug-yield/actions?query=branch%3Amain)
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/actions/workflow/status/reload/bug-yield/push.yml?style=for-the-badge)](https://github.com/reload/bug-yield/actions?query=branch%3Amain)
 [![Codecov branch](https://img.shields.io/codecov/c/github/reload/bug-yield/main?style=for-the-badge)](https://codecov.io/gh/reload/bug-yield/branch/main)
 
 BugYield is a console application which tracks changes to tickets
