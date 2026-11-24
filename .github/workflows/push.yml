@@ -3,7 +3,6 @@ name: Run tests
 jobs:
   php_versions:
     name: Lookup PHP versions
-    if: '!github.event.deleted'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.versions.outputs.matrix }}
