@@ -1,13 +1,24 @@
 on: push
 name: Run tests
 jobs:
+  php_versions:
+    name: Lookup PHP versions
+    if: '!github.event.deleted'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.versions.outputs.matrix }}
+    steps:
+    - uses: actions/checkout@master
+    - name: Determine PHP versions from composer.json
+      id: versions
+      uses: antfroger/php-version-action@v1
   spec_tests:
     name: Spec tests
-    if: '!github.event.deleted'
+    needs: php_versions
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: [8.5]
+        php-version: ${{ fromJSON(needs.php_versions.outputs.matrix) }}
     steps:
     - uses: actions/checkout@master
     - name: Setup PHP, with composer and extensions

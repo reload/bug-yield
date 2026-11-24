@@ -6,10 +6,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
+    - name: Determine PHP version from composer.json
+      id: php-version
+      uses: antfroger/php-version-action@v1
     - name: Setup PHP, with composer and extensions
       uses: shivammathur/setup-php@master
       with:
-        php-version: 8.5
+        php-version: ${{ steps.php-version.outputs.minimal }}
         extensions: gmp
         coverage: none
     - name: Install Reviewdog
