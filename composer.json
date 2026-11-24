@@ -23,7 +23,7 @@
     "symfony/yaml": "^8",
     "mnapoli/silly-php-di": ">=1.2",
     "sendgrid/sendgrid": "^8.1",
-    "guzzlehttp/guzzle": "^8.6"
+    "lesstif/php-jira-rest-client": "^5.16"
   },
   "require-dev": {
     "phpspec/phpspec": "^8",

@@ -2,7 +2,10 @@
 
 namespace BugYield\BugTracker;
 
-use GuzzleHttp\Client;
+use JiraRestApi\Configuration\ArrayConfiguration;
+use JiraRestApi\Issue\Issue;
+use JiraRestApi\Issue\IssueService;
+use JiraRestApi\Issue\Worklog;
 
 class Jira extends BugTrackerBase
 {
@@ -64,39 +67,24 @@ class Jira extends BugTrackerBase
     protected function getApi(string $url, string $username, string $password): void
     {
         $this->currentUsername = $username;
-        $this->api = new Client([
-            'base_uri' => rtrim($url, '/') . '/rest/api/2/',
-            'auth' => [$username, $password],
-        ]);
-    }
-
-    /**
-     * Send a request to the Jira REST API and decode the JSON response.
-     *
-     * Guzzle throws an exception on 4xx and 5xx responses.
-     */
-    private function request(string $method, string $uri, ?array $json = null): ?array
-    {
-        $options = [];
-        if (!is_null($json)) {
-            $options['json'] = $json;
-        }
-
-        $body = (string) $this->api->request($method, $uri, $options)->getBody();
-
-        if ($body === '') {
-            return null;
-        }
-
-        return json_decode($body, true, 512, JSON_THROW_ON_ERROR);
+        $this->api = new IssueService(new ArrayConfiguration([
+            'jiraHost' => rtrim($url, '/'),
+            'jiraUser' => $username,
+            'jiraPassword' => $password,
+            // The library turns these off by default.
+            'curlOptSslVerifyHost' => true,
+            'curlOptSslVerifyPeer' => true,
+            // The library writes a log file in the working directory by default.
+            'jiraLogEnabled' => false,
+        ]));
     }
 
     /**
      * Get issue based on ticketId.
      */
-    public function getIssue(string $ticketId): array
+    public function getIssue(string $ticketId): Issue
     {
-        return $this->request('GET', 'issue/' . rawurlencode($ticketId));
+        return $this->api->get($ticketId, ['fields' => 'summary']);
     }
 
     /**
@@ -106,13 +94,7 @@ class Jira extends BugTrackerBase
     {
         // Jira throws an exception if the issue does not exists or are
         // unreachable.
-        $response = $this->getIssue($ticketId);
-
-        if (is_array($response)) {
-            return $response['fields']['summary'];
-        }
-
-        return false;
+        return $this->getIssue($ticketId)->fields->summary ?? false;
     }
 
     /**
@@ -134,18 +116,18 @@ class Jira extends BugTrackerBase
      */
     public function getTimelogEntries(string $ticketId): array
     {
-        $response = $this->request('GET', 'issue/' . rawurlencode($ticketId) . '/worklog');
+        $response = $this->api->getWorklog($ticketId);
 
         $timelogs = array();
-        foreach ($response['worklogs'] as $entry) {
-            $timelog = $this->parseComment($entry['comment']);
+        foreach ($response->getWorklogs() as $entry) {
+            $timelog = $this->parseComment((string) $entry->comment);
             // Harvest uses two decimals, so we do the same. Using floor
             // rather than round seem to hit the munged value we set in
             // saveTimelogEntry() better.
-            $timelog->hours = (string) floor($entry['timeSpentSeconds'] / 36) / 100;
-            $timelog->started = $entry['started'];
-            $timelog->spentAt = date('Y-m-d', strtotime($entry['started']));
-            $timelog->remoteId = $entry['id'];
+            $timelog->hours = (string) floor($entry->timeSpentSeconds / 36) / 100;
+            $timelog->started = $entry->started;
+            $timelog->spentAt = date('Y-m-d', strtotime($entry->started));
+            $timelog->remoteId = $entry->id;
             $timelogs[] = $timelog;
         }
         return $timelogs;
@@ -159,7 +141,8 @@ class Jira extends BugTrackerBase
         // Weed out newlines in notes.
         $timelog->notes = preg_replace('/[\n\r]+/m', ' ', $timelog->notes);
 
-        $worklog = new \stdClass();
+        $worklog = new Worklog();
+        $worklogId = null;
 
         // Set the Jira worklog ID on the worklog object if this Harvest
         // entry is already tracked in Jira.
@@ -168,7 +151,7 @@ class Jira extends BugTrackerBase
             if (isset($entry->harvestId) && ($entry->harvestId == $timelog->harvestId)) {
                 // if we are about to update an existing Harvest entry set the
                 // Jira id on the worklog entry
-                $worklog->id = $entry->remoteId;
+                $worklogId = (int) $entry->remoteId;
             } else {
                 // if this is an existing Harvest entry - but it doesn't match
                 // this Jira entry OR if this is not a BugYield entry continue
@@ -190,7 +173,7 @@ class Jira extends BugTrackerBase
             }
         }
 
-        $worklog->comment = $this->formatComment($timelog);
+        $worklog->setComment($this->formatComment($timelog));
         // Try to account for Harvest and Jira being lax about time-frames. An
         // example: 50 minutes is 0.833333333333 (with as many decimals as
         // precision allows) hour. But Harvest rounds hours to two decimals
@@ -206,10 +189,10 @@ class Jira extends BugTrackerBase
         // sending it to Jira, then Jira at least wont loose time, and when we
         // convert that into hours and limit to two decimals, we'll hopefully
         // hit the same number as we got from Harvest.
-        $worklog->timeSpentSeconds = round($timelog->hours * 60) * 60;
+        $worklog->setTimeSpentSeconds((int) round($timelog->hours * 60) * 60);
         // We don't know when the entry was actually started, so we'll use the
         // spentAt date and use 23:00.
-        $worklog->started = $timelog->spentAt . "T23:00:00.000+0200";
+        $worklog->setStarted($timelog->spentAt . "T23:00:00.000+0200");
 
 
         // Check if individual logging is enabled.
@@ -247,22 +230,18 @@ class Jira extends BugTrackerBase
         }
 
         // If this is an existing entry update it - otherwise add it.
-        if (isset($worklog->id)) {
+        if (!is_null($worklogId)) {
             // Update the Registered time. Jira can't log worklog entries
             // with hours == 0 so delete the worklog entry in that case.
             if ($timelog->hours == 0) {
-                $this->deleteWorkLogEntry($worklog->id, $ticketId);
+                $this->deleteWorkLogEntry($worklogId, $ticketId);
             } else {
-                $this->request(
-                    'PUT',
-                    'issue/' . rawurlencode($ticketId) . '/worklog/' . rawurlencode((string) $worklog->id),
-                    (array) $worklog
-                );
+                $this->api->editWorklog($ticketId, $worklog, $worklogId);
             }
         } else {
             // Jira can't log entries with hours == 0
             if ($timelog->hours != 0) {
-                $this->request('POST', 'issue/' . rawurlencode($ticketId) . '/worklog', (array) $worklog);
+                $this->api->addWorklog($ticketId, $worklog);
             } else {
                 // intentionally left blank
             }
@@ -280,7 +259,7 @@ class Jira extends BugTrackerBase
      */
     public function deleteWorkLogEntry($worklogId, $issueId): bool
     {
-        $this->request('DELETE', 'issue/' . rawurlencode($issueId) . '/worklog/' . rawurlencode((string) $worklogId));
+        $this->api->deleteWorklog($issueId, (int) $worklogId);
         return true;
     }
 
