@@ -1,5 +1,5 @@
 FROM composer:2 AS composer
-FROM php:8.5-cli
+FROM php:8.6-cli
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
         cron git unzip util-linux libcurl4-openssl-dev libonig-dev libxml2-dev libgmp-dev && \
