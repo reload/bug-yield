@@ -2,7 +2,7 @@
 
 namespace BugYield\BugTracker;
 
-use JiraApi\Clients\IssueClient as JiraApi;
+use GuzzleHttp\Client;
 
 class Jira extends BugTrackerBase
 {
@@ -44,7 +44,7 @@ class Jira extends BugTrackerBase
     /**
      * {@inheritdoc}
      */
-    public function getTicketURL(string $ticketId, string $remoteId = null): string
+    public function getTicketURL(string $ticketId, ?string $remoteId = null): string
     {
 
         $urlTicketPattern = $this->bugtrackerConfig('url_ticket_pattern');
@@ -64,7 +64,31 @@ class Jira extends BugTrackerBase
     protected function getApi(string $url, string $username, string $password): void
     {
         $this->currentUsername = $username;
-        $this->api = new JiraApi(rtrim($url, '/') . '/rest/api/2/', $username, $password);
+        $this->api = new Client([
+            'base_uri' => rtrim($url, '/') . '/rest/api/2/',
+            'auth' => [$username, $password],
+        ]);
+    }
+
+    /**
+     * Send a request to the Jira REST API and decode the JSON response.
+     *
+     * Guzzle throws an exception on 4xx and 5xx responses.
+     */
+    private function request(string $method, string $uri, ?array $json = null): ?array
+    {
+        $options = [];
+        if (!is_null($json)) {
+            $options['json'] = $json;
+        }
+
+        $body = (string) $this->api->request($method, $uri, $options)->getBody();
+
+        if ($body === '') {
+            return null;
+        }
+
+        return json_decode($body, true, 512, JSON_THROW_ON_ERROR);
     }
 
     /**
@@ -72,7 +96,7 @@ class Jira extends BugTrackerBase
      */
     public function getIssue(string $ticketId): array
     {
-        return $this->api->get($ticketId)->json();
+        return $this->request('GET', 'issue/' . rawurlencode($ticketId));
     }
 
     /**
@@ -110,7 +134,7 @@ class Jira extends BugTrackerBase
      */
     public function getTimelogEntries(string $ticketId): array
     {
-        $response = $this->api->getFullWorklog($ticketId)->json();
+        $response = $this->request('GET', 'issue/' . rawurlencode($ticketId) . '/worklog');
 
         $timelogs = array();
         foreach ($response['worklogs'] as $entry) {
@@ -229,12 +253,16 @@ class Jira extends BugTrackerBase
             if ($timelog->hours == 0) {
                 $this->deleteWorkLogEntry($worklog->id, $ticketId);
             } else {
-                $this->api->updateWorklog($ticketId, $worklog->id, (array) $worklog);
+                $this->request(
+                    'PUT',
+                    'issue/' . rawurlencode($ticketId) . '/worklog/' . rawurlencode((string) $worklog->id),
+                    (array) $worklog
+                );
             }
         } else {
             // Jira can't log entries with hours == 0
             if ($timelog->hours != 0) {
-                $this->api->createWorklog($ticketId, (array) $worklog);
+                $this->request('POST', 'issue/' . rawurlencode($ticketId) . '/worklog', (array) $worklog);
             } else {
                 // intentionally left blank
             }
@@ -252,7 +280,7 @@ class Jira extends BugTrackerBase
      */
     public function deleteWorkLogEntry($worklogId, $issueId): bool
     {
-        $this->api->deleteWorklog($issueId, $worklogId);
+        $this->request('DELETE', 'issue/' . rawurlencode($issueId) . '/worklog/' . rawurlencode((string) $worklogId));
         return true;
     }
 
